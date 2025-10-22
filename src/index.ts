@@ -28,6 +28,7 @@ const port = 3000;
 
 async function bootstrap() {
   const orm = await MikroORM.init(ormConfig);
+  const sessionStore = new SessionStore(orm);
 
   app.use((req, _, next) => {
 		req.orm = orm;
@@ -39,8 +40,15 @@ async function bootstrap() {
 		RequestContext.create(orm.em.fork(), next),
 	);
 
+  app.use((req, _, next) => {
+    if (req.sessionID) {
+      sessionStore.setRequestData(req.sessionID, req.ip || '', req.get('User-Agent') || '');
+    }
+    next();
+  });
+
   app.use(session({
-    store: new SessionStore(orm),
+    store: sessionStore,
     secret: variables.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -51,7 +59,6 @@ async function bootstrap() {
     }
   }));
 
-  // Inject auth utilities middleware
   app.use((req, _, next) => {
     const { injectAuthUtilities } = require('./middleware/authUtils');
     injectAuthUtilities(req, _, next);
