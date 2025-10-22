@@ -1,14 +1,25 @@
+import 'dotenv-defaults/config';
 import express from 'express';
+import session from 'express-session';
 import path from 'path';
 import routes from './routes/route';
 import ormConfig from './database/orm.config';
 import { MikroORM, RequestContext } from '@mikro-orm/core';
 import { PinoLogger } from './logger/pinoLogger';
+import variables from './config/variables';
+import { User } from './models/User';
+import { SessionStore } from './middleware/sessionStore';
 
 declare module "express-serve-static-core" {
 	interface Request {
 		orm: MikroORM;
     logger: PinoLogger;
+    user(): Promise<User | null>;
+    user_id(): User["id"] | null;
+    is_authenticated(): boolean;
+    is_guest(): boolean;
+    authenticate(user: User): void;
+    logout(): Promise<void>;
 	}
 }
 
@@ -27,6 +38,25 @@ async function bootstrap() {
   app.use((_, __, next) =>
 		RequestContext.create(orm.em.fork(), next),
 	);
+
+  app.use(session({
+    store: new SessionStore(orm),
+    secret: variables.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: variables.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: variables.SESSION_MAX_AGE,
+    }
+  }));
+
+  // Inject auth utilities middleware
+  app.use((req, _, next) => {
+    const { injectAuthUtilities } = require('./middleware/authUtils');
+    injectAuthUtilities(req, _, next);
+  });
+
   // Middleware
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
@@ -34,9 +64,6 @@ async function bootstrap() {
 
   // Serve static files from public directory (template.html)
   app.use('/', express.static(path.join(process.cwd(), 'public')));
-
-  // Serve built assets from dist directory
-  app.use('/', express.static(path.join(process.cwd(), 'dist')));
 
   // Routes
   app.use('/', routes);
