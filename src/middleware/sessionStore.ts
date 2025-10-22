@@ -4,10 +4,15 @@ import { Session } from '@/models/Session';
 
 export class SessionStore extends Store {
   private orm: MikroORM;
+  private requestStore = new Map<string, { ip?: string; userAgent?: string }>();
 
   constructor(orm: MikroORM) {
     super();
     this.orm = orm;
+  }
+
+  setRequestData(sessionId: string, ip: string, userAgent: string) {
+    this.requestStore.set(sessionId, { ip, userAgent });
   }
 
   async get(sid: string, callback: (err: any, session?: any) => void) {
@@ -31,17 +36,22 @@ export class SessionStore extends Store {
       const em = this.orm.em.fork();
       const payload = JSON.stringify(session);
       const last_activity = Math.floor(Date.now() / 1000);
+      const requestData = this.requestStore.get(sid);
 
       let sessionRecord = await em.findOne(Session, { id: sid });
 
       if (sessionRecord) {
         sessionRecord.payload = payload;
         sessionRecord.last_activity = last_activity;
+        sessionRecord.user_id = session.userId || null;
       } else {
         sessionRecord = em.create(Session, {
           id: sid,
           payload,
-          last_activity
+          last_activity,
+          user_id: session.userId || null,
+          ip_address: requestData?.ip || null,
+          user_agent: requestData?.userAgent || null
         });
       }
 
@@ -56,6 +66,7 @@ export class SessionStore extends Store {
     try {
       const em = this.orm.em.fork();
       await em.nativeDelete(Session, { id: sid });
+      this.requestStore.delete(sid);
       callback?.();
     } catch (error) {
       callback?.(error);
