@@ -79,7 +79,7 @@ async function bootstrap() {
   app.use('/', routes);
 
   app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    PinoLogger.info('App', `Server running at http://localhost:${port}`);
   });
 }
 
