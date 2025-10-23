@@ -15,7 +15,7 @@
     "isolatedModules": true,
   },
   "include": ["src/**/*"],
-  "exclude": ["src/views/**/*"],
+  "exclude": ["src/views/**/*", "tests/**/*", "**/*.test.ts"],
   "ts-node": {
 		"require": ["tsconfig-paths/register"]
 	}

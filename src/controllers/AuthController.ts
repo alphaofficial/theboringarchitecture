@@ -102,6 +102,7 @@ export class AuthController extends BaseController {
     }
 
     public async dashboard(req: Request, res: Response) {
-        return this.render(req, res, 'Auth/Dashboard');
+        const user = await req.user();
+        return this.render(req, res, 'Auth/Dashboard', { user });
     }
 }
