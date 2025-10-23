@@ -46,7 +46,7 @@ export default function Home(pageProps: Props) {
 								<div className="mt-10 flex items-center justify-center gap-x-6">
 									<Link
 										href="/register"
-										className="rounded-md bg-black-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-black-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black-600"
+										className="rounded-md bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
 									>
 										Get started
 									</Link>
@@ -55,7 +55,7 @@ export default function Home(pageProps: Props) {
 									</Link>
 								</div>
 							) : (
-							<div className="mt-10 flex items-center justify-center gap-x-6">
+							<div className="mt-10 flex items-center justify-center">
 								<Link href="/login" className="text-sm font-semibold leading-6 text-gray-900">
 										 Go to app <span aria-hidden="true">→</span>
 									</Link>
