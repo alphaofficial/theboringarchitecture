@@ -1,13 +1,30 @@
 import "dotenv-defaults/config";
 import type { Options } from "@mikro-orm/core";
 import { Migrator } from "@mikro-orm/migrations";
-import {SqliteDriver} from "@mikro-orm/sqlite";
+import { SqliteDriver } from "@mikro-orm/sqlite";
 
 const mikroOrmOptions: Options = {
 	entities: ["**/mappings/*.map.js"],
 	entitiesTs: ["**/mappings/*.map.ts"],
 	dbName: 'express-inertia.db',
 	driver: SqliteDriver,
+	pool: {
+		// WAL (Write-Ahead Log):
+		// - Stores all database changes before they're written to the main .db file
+		// - New writes go to the WAL file first, then get "checkpointed" to the main database later
+		// - Enables concurrent reads while writes are happening
+
+		// SHM (Shared Memory):
+		// - Index file that tracks which pages in the WAL file are valid
+		// - Helps coordinate between multiple database connections
+		// - Used for WAL file management and reader/writer coordination
+		afterCreate: (conn: any, done: any) => {
+			conn.exec('PRAGMA journal_mode=WAL;');
+			conn.exec('PRAGMA synchronous=NORMAL;');
+			conn.exec('PRAGMA busy_timeout=5000;');
+			done(null, conn);
+		}
+	},
 	migrations: {
 		path: "dist/database/migrations",
 		pathTs: "src/database/migrations",
