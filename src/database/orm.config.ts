@@ -10,6 +10,9 @@ const mikroOrmOptions: Options = {
 	dbName: env("DB_PATH", "express-inertia.db") as string,
 	driver: SqliteDriver,
 	pool: {
+		// this will setup wal mode for sqlite
+		// see https://www.sqlite.org/wal.html for more details
+		// this will introduce two additional files alongside your main .db file:å
 		// WAL (Write-Ahead Log):
 		// - Stores all database changes before they're written to the main .db file
 		// - New writes go to the WAL file first, then get "checkpointed" to the main database later
