@@ -19,8 +19,8 @@ const globalTeardown = async (): Promise<void> => {
 	await new Promise(resolve => setTimeout(resolve, 200));
 
 	// remove test db file - it's created in the project root
-	const dbPath = path.join(process.cwd(), "express_inertia_test.db");
-	
+	const dbPath = path.join(process.cwd(), "express_inertia_test.db*");
+
 	try {
 		if (fs.existsSync(dbPath)) {
 			// Make sure file is writable before deletion
