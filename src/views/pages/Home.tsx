@@ -174,16 +174,16 @@ export default function Home(pageProps: Props) {
 
 				{/* Big tagline / Optimized for X */}
 				<section className="border-b border-gray-200 bg-gray-50">
-					<div className="mx-auto max-w-6xl px-6 py-24">
+					<div className="mx-auto max-w-6xl px-6 py-24 text-center">
 						<p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
 							Optimized for shipping
 						</p>
-						<h2 className="mt-4 text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl max-w-4xl">
+						<h2 className="mx-auto mt-4 max-w-4xl text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">
 							The boring stack you already know,
 							<br />
 							wired for the way you actually build.
 						</h2>
-						<p className="mt-6 max-w-2xl text-lg text-gray-600">
+						<p className="mx-auto mt-6 max-w-2xl text-lg text-gray-600">
 							Express handles the request. Your controller queries the database and calls
 							<code className="mx-1 rounded-sm bg-gray-200 px-1.5 py-0.5 text-sm font-mono text-gray-900">res.inertia(...)</code>.
 							React renders the page on the server, hydrates on the client, and Inertia takes
@@ -195,19 +195,21 @@ export default function Home(pageProps: Props) {
 				{/* Code sample */}
 				<section className="border-b border-gray-200">
 					<div className="mx-auto max-w-6xl px-6 py-24">
-						<div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
+						<div className="mx-auto max-w-3xl text-center">
+							<p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+								Controller → Component
+							</p>
+							<h2 className="mt-4 text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+								Props flow straight from Express to React.
+							</h2>
+							<p className="mx-auto mt-6 max-w-2xl text-lg text-gray-600">
+								No REST layer. No data-fetching hook. The same object you return from your
+								controller arrives as typed props in your page component.
+							</p>
+						</div>
+						<div className="mt-16 grid gap-12 lg:grid-cols-2 lg:gap-16">
 							<div>
-								<p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-									Controller → Component
-								</p>
-								<h2 className="mt-4 text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-									Props flow straight from Express to React.
-								</h2>
-								<p className="mt-6 text-lg text-gray-600">
-									No REST layer. No data-fetching hook. The same object you return from your
-									controller arrives as typed props in your page component.
-								</p>
-								<ul className="mt-8 space-y-3 text-base text-gray-700">
+								<ul className="space-y-3 text-base text-gray-700">
 									<li className="flex gap-x-3">
 										<span className="font-bold text-gray-900">→</span>
 										Server-side rendered on first load
@@ -263,7 +265,7 @@ export default function Home(pageProps: Props) {
 
 				{/* Features */}
 				<section id="features" className="border-b border-gray-200 bg-gray-50">
-					<div className="mx-auto max-w-6xl px-6 py-24">
+					<div className="mx-auto max-w-6xl px-6 py-24 text-center">
 						<p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
 							Batteries included
 						</p>
@@ -272,11 +274,11 @@ export default function Home(pageProps: Props) {
 							<br />
 							nothing assumed.
 						</h2>
-						<div className="mt-16 grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+						<div className="mt-16 grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 text-center">
 							{FEATURES.map((f) => (
 								<div key={f.title}>
 									<h3 className="text-base font-bold text-gray-900">{f.title}</h3>
-									<p className="mt-2 text-sm leading-6 text-gray-600">{f.description}</p>
+									<p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-gray-600">{f.description}</p>
 								</div>
 							))}
 						</div>
@@ -285,21 +287,21 @@ export default function Home(pageProps: Props) {
 
 				{/* How it works */}
 				<section id="how" className="border-b border-gray-200">
-					<div className="mx-auto max-w-6xl px-6 py-24">
+					<div className="mx-auto max-w-6xl px-6 py-24 text-center">
 						<p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
 							How it works
 						</p>
 						<h2 className="mt-4 text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">
 							From zero to shipping in three steps.
 						</h2>
-						<ol className="mt-16 grid grid-cols-1 gap-12 md:grid-cols-3">
+						<ol className="mt-16 grid grid-cols-1 gap-12 md:grid-cols-3 text-center">
 							{STEPS.map((step, i) => (
 								<li key={step.title} className="border-t-2 border-gray-900 pt-6">
 									<div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
 										Step {i + 1}
 									</div>
 									<h3 className="mt-2 text-xl font-bold text-gray-900">{step.title}</h3>
-									<p className="mt-3 text-sm leading-6 text-gray-600">{step.description}</p>
+									<p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-gray-600">{step.description}</p>
 								</li>
 							))}
 						</ol>
@@ -308,18 +310,18 @@ export default function Home(pageProps: Props) {
 
 				{/* FAQ */}
 				<section id="faq" className="border-b border-gray-200 bg-gray-50">
-					<div className="mx-auto max-w-6xl px-6 py-24">
+					<div className="mx-auto max-w-6xl px-6 py-24 text-center">
 						<p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
 							FAQ
 						</p>
 						<h2 className="mt-4 text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">
 							Questions you might be asking.
 						</h2>
-						<dl className="mt-16 divide-y divide-gray-300">
+						<dl className="mx-auto mt-16 max-w-3xl divide-y divide-gray-300 text-center">
 							{FAQS.map((qa) => (
-								<div key={qa.q} className="py-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-									<dt className="text-lg font-bold text-gray-900 lg:col-span-1">{qa.q}</dt>
-									<dd className="text-base text-gray-600 lg:col-span-2">{qa.a}</dd>
+								<div key={qa.q} className="py-8">
+									<dt className="text-lg font-bold text-gray-900">{qa.q}</dt>
+									<dd className="mx-auto mt-3 max-w-2xl text-base text-gray-600">{qa.a}</dd>
 								</div>
 							))}
 						</dl>
