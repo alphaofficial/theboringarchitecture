@@ -162,12 +162,198 @@ export default function Home({ message, user }) {
 					</div>
 				</div>
 
-				<footer className="bg-white">
-					<div className="mx-auto max-w-2xl lg:max-w-4xl mt-24 mb-8">
-						<div className="mt-8 md:order-1 md:mt-0">
-							<p className="text-right text-xs leading-5 text-gray-500">
-								&copy; 2025 {applicationName}. All rights reserved
+				{/* Tech stack row */}
+				<section className="mx-auto max-w-2xl lg:max-w-4xl px-6 mt-24 lg:px-8">
+					<p className="text-center text-xs font-semibold uppercase tracking-wide text-gray-500">
+						Built on the boring stack that scales
+					</p>
+					<ul className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm font-medium text-gray-600">
+						<li>Express 5</li>
+						<li aria-hidden="true" className="text-gray-300">·</li>
+						<li>Inertia.js 2</li>
+						<li aria-hidden="true" className="text-gray-300">·</li>
+						<li>React 19</li>
+						<li aria-hidden="true" className="text-gray-300">·</li>
+						<li>MikroORM 6</li>
+						<li aria-hidden="true" className="text-gray-300">·</li>
+						<li>Vite 6</li>
+						<li aria-hidden="true" className="text-gray-300">·</li>
+						<li>Tailwind 3</li>
+						<li aria-hidden="true" className="text-gray-300">·</li>
+						<li>TypeScript 5</li>
+					</ul>
+				</section>
+
+				{/* How it works */}
+				<section className="mx-auto max-w-2xl lg:max-w-4xl px-6 mt-24 lg:px-8">
+					<div className="text-center">
+						<h2 className="text-base font-semibold leading-7 text-gray-900">How it works</h2>
+						<p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+							From zero to running app in three steps
+						</p>
+					</div>
+					<ol className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
+						<li className="rounded-lg border border-gray-200 p-6">
+							<div className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold text-gray-900">1</div>
+							<h3 className="mt-4 text-base font-semibold text-gray-900">Install</h3>
+							<p className="mt-2 text-sm leading-6 text-gray-600">
+								One curl command scaffolds the project, generates a session secret,
+								and runs migrations.
 							</p>
+						</li>
+						<li className="rounded-lg border border-gray-200 p-6">
+							<div className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold text-gray-900">2</div>
+							<h3 className="mt-4 text-base font-semibold text-gray-900">Define a route</h3>
+							<p className="mt-2 text-sm leading-6 text-gray-600">
+								Add an Express controller and call <code className="text-xs">res.inertia(&apos;Page&apos;, props)</code>.
+								No API endpoints, no client-side data fetching.
+							</p>
+						</li>
+						<li className="rounded-lg border border-gray-200 p-6">
+							<div className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold text-gray-900">3</div>
+							<h3 className="mt-4 text-base font-semibold text-gray-900">Render React</h3>
+							<p className="mt-2 text-sm leading-6 text-gray-600">
+								Drop a TSX file in <code className="text-xs">src/views/pages</code>.
+								Props arrive type-safe, the page is server-rendered, and Inertia handles
+								client-side navigation.
+							</p>
+						</li>
+					</ol>
+				</section>
+
+				{/* What's included */}
+				<section className="mx-auto max-w-2xl lg:max-w-4xl px-6 mt-24 lg:px-8">
+					<div className="text-center">
+						<h2 className="text-base font-semibold leading-7 text-gray-900">What&apos;s in the box</h2>
+						<p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+							No glue code required
+						</p>
+						<p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-gray-600">
+							Every line below is wired up and tested. Delete what you don&apos;t need.
+						</p>
+					</div>
+					<ul className="mt-12 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3 text-sm leading-6 text-gray-700">
+						{[
+							'Email + password auth',
+							'DB-backed sessions',
+							'Route guards (auth / guest)',
+							'MikroORM with migrations',
+							'SQLite by default, Postgres ready',
+							'Type-safe page registry',
+							'Helmet security headers',
+							'gzip compression',
+							'Body size limits',
+							'Health & readiness probes',
+							'Graceful shutdown',
+							'Structured Pino logs',
+							'Configurable rate limiting',
+							'XSS-safe page props',
+							'Global Inertia error page',
+							'Vite + Tailwind build pipeline',
+							'Integration test suite',
+							'Zod env validation',
+						].map((item) => (
+							<li key={item} className="flex items-start gap-x-2">
+								<svg className="mt-0.5 h-5 w-5 flex-none text-gray-900" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+									<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+								</svg>
+								<span>{item}</span>
+							</li>
+						))}
+					</ul>
+				</section>
+
+				{/* FAQ */}
+				<section className="mx-auto max-w-2xl lg:max-w-4xl px-6 mt-24 lg:px-8">
+					<div className="text-center">
+						<h2 className="text-base font-semibold leading-7 text-gray-900">FAQ</h2>
+						<p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+							Questions you might be asking
+						</p>
+					</div>
+					<dl className="mt-12 space-y-8">
+						<div className="border-t border-gray-200 pt-6">
+							<dt className="text-base font-semibold text-gray-900">Why not Next.js?</dt>
+							<dd className="mt-2 text-sm leading-6 text-gray-600">
+								Next.js is great when you want a meta-framework. Express Inertia is for
+								teams who already know Express, want full control of the request lifecycle,
+								and would rather render React from a controller than learn another router.
+							</dd>
+						</div>
+						<div className="border-t border-gray-200 pt-6">
+							<dt className="text-base font-semibold text-gray-900">Can I use Postgres instead of SQLite?</dt>
+							<dd className="mt-2 text-sm leading-6 text-gray-600">
+								Yes. The Postgres MikroORM driver is already installed — switch it on in
+								<code className="text-xs"> src/database/orm.config.ts</code> and set your
+								connection string.
+							</dd>
+						</div>
+						<div className="border-t border-gray-200 pt-6">
+							<dt className="text-base font-semibold text-gray-900">Is this production-ready?</dt>
+							<dd className="mt-2 text-sm leading-6 text-gray-600">
+								The starter ships with helmet, compression, health checks, graceful shutdown,
+								structured logs, and an integration test suite. Add your features and deploy.
+							</dd>
+						</div>
+						<div className="border-t border-gray-200 pt-6">
+							<dt className="text-base font-semibold text-gray-900">Where do I deploy it?</dt>
+							<dd className="mt-2 text-sm leading-6 text-gray-600">
+								Anywhere that runs Node 20+. Fly.io, Railway, Render, a plain VPS, Docker —
+								your choice. Point the liveness probe at <code className="text-xs">/healthz</code> and
+								readiness at <code className="text-xs">/readyz</code>.
+							</dd>
+						</div>
+					</dl>
+				</section>
+
+				{/* Bottom CTA */}
+				<section className="mx-auto max-w-2xl lg:max-w-4xl px-6 mt-24 lg:px-8">
+					<div className="rounded-2xl border border-gray-200 bg-gray-50 px-6 py-12 text-center sm:px-12">
+						<h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+							Ready to ship?
+						</h2>
+						<p className="mx-auto mt-3 max-w-xl text-base leading-7 text-gray-600">
+							Scaffold a fresh app in under a minute. No accounts, no signup, no telemetry.
+						</p>
+						<div className="mt-6 mx-auto max-w-xl rounded-md border border-gray-200 bg-white p-4 text-left">
+							<pre className="overflow-x-auto text-sm text-gray-900">
+								<code>{`curl -fsSL https://raw.githubusercontent.com/alphaofficial/express-inertia/main/install.sh | bash -s my-app`}</code>
+							</pre>
+						</div>
+						<div className="mt-6 flex items-center justify-center gap-x-6">
+							<a
+								href="https://github.com/alphaofficial/express-inertia"
+								className="rounded-md bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800"
+							>
+								View on GitHub
+							</a>
+							<a
+								href="https://github.com/alphaofficial/express-inertia#readme"
+								className="text-sm font-semibold leading-6 text-gray-900"
+							>
+								Read the docs <span aria-hidden="true">→</span>
+							</a>
+						</div>
+					</div>
+				</section>
+
+				<footer className="bg-white">
+					<div className="mx-auto max-w-2xl lg:max-w-4xl mt-24 mb-8 px-6 lg:px-8">
+						<div className="border-t border-gray-200 pt-8 flex flex-col sm:flex-row items-center justify-between gap-y-4">
+							<p className="text-xs leading-5 text-gray-500">
+								&copy; 2025 {applicationName}. Released under the MIT license.
+							</p>
+							<ul className="flex items-center gap-x-6 text-xs leading-5 text-gray-500">
+								<li>
+									<a href="https://github.com/alphaofficial/express-inertia" className="hover:text-gray-900">GitHub</a>
+								</li>
+								<li>
+									<a href="https://github.com/alphaofficial/express-inertia#readme" className="hover:text-gray-900">Docs</a>
+								</li>
+								<li>
+									<a href="https://github.com/alphaofficial/express-inertia/issues" className="hover:text-gray-900">Issues</a>
+								</li>
+							</ul>
 						</div>
 					</div>
 				</footer>
