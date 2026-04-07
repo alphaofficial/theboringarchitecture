@@ -362,8 +362,7 @@ than one release ships on the same day, a numeric suffix is appended:
 
 Releases are produced by `.github/workflows/release.yml`:
 
-- Auto-runs on every push to `main` (skip with `[skip release]` in the commit message).
-- Or trigger manually from the GitHub Actions tab.
+- Manually triggered from the GitHub Actions tab (`workflow_dispatch`).
 - Creates an annotated git tag and a GitHub release with auto-generated notes.
 
 The installer always pulls the **latest released tag** by default. Override with:

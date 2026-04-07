@@ -5,15 +5,10 @@ name: Release
 # Tags are formatted as YYYY.MM.DD, with a `.N` suffix for additional releases
 # on the same day (e.g. 2026.04.07, 2026.04.07.1, 2026.04.07.2).
 #
-# Triggers:
-#   • workflow_dispatch — manual run from the Actions tab.
-#   • push to main      — auto-release on every merge (skip with `[skip release]`
-#     in the commit message).
+# Manual only: trigger from the Actions tab when you're ready to cut a release.
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 
 permissions:
   contents: write
@@ -24,7 +19,6 @@ concurrency:
 
 jobs:
   release:
-    if: "!contains(github.event.head_commit.message, '[skip release]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
