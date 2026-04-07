@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
 
 interface Props {
 	applicationName: string;
@@ -8,6 +9,57 @@ interface Props {
 
 const INSTALL_CMD =
 	'curl -fsSL https://raw.githubusercontent.com/alphaofficial/express-inertia/main/install.sh | bash';
+
+function CopyButton({ text }: { text: string }) {
+	const [copied, setCopied] = useState(false);
+
+	const handleCopy = async () => {
+		try {
+			if (navigator.clipboard?.writeText) {
+				await navigator.clipboard.writeText(text);
+			} else {
+				// Fallback for older browsers / non-secure contexts
+				const ta = document.createElement('textarea');
+				ta.value = text;
+				ta.style.position = 'fixed';
+				ta.style.opacity = '0';
+				document.body.appendChild(ta);
+				ta.select();
+				document.execCommand('copy');
+				document.body.removeChild(ta);
+			}
+			setCopied(true);
+			setTimeout(() => setCopied(false), 1800);
+		} catch {
+			/* no-op */
+		}
+	};
+
+	return (
+		<button
+			type="button"
+			onClick={handleCopy}
+			aria-label="Copy install command"
+			className="ml-3 inline-flex items-center gap-x-1.5 rounded-sm border border-gray-700 bg-gray-800 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-gray-200 hover:bg-gray-700"
+		>
+			{copied ? (
+				<>
+					<svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+						<path fillRule="evenodd" d="M16.704 5.29a1 1 0 010 1.42l-7.5 7.5a1 1 0 01-1.42 0l-3.5-3.5a1 1 0 011.42-1.42l2.79 2.79 6.79-6.79a1 1 0 011.42 0z" clipRule="evenodd"/>
+					</svg>
+					Copied
+				</>
+			) : (
+				<>
+					<svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+						<path d="M8 2a2 2 0 00-2 2v1H5a2 2 0 00-2 2v9a2 2 0 002 2h8a2 2 0 002-2v-1h1a2 2 0 002-2V4a2 2 0 00-2-2H8zm6 11V7a2 2 0 00-2-2H8V4h8v9h-2z"/>
+					</svg>
+					Copy
+				</>
+			)}
+		</button>
+	);
+}
 
 export default function Home(pageProps: Props) {
 	const { applicationName, isAuthenticated } = pageProps;
@@ -80,7 +132,7 @@ export default function Home(pageProps: Props) {
 									href="/register"
 									className="inline-flex items-center justify-center rounded-sm bg-gray-900 px-5 py-3 text-sm font-bold uppercase tracking-wider text-white hover:bg-black"
 								>
-									Get started →
+									Try the sandbox →
 								</Link>
 							) : (
 								<Link
@@ -102,12 +154,19 @@ export default function Home(pageProps: Props) {
 							<p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
 								Install
 							</p>
-							<div className="mt-2 rounded-sm border border-gray-900 bg-gray-900 p-4 font-mono text-sm text-gray-100">
-								<span className="select-none text-gray-500">$ </span>
-								<span>{INSTALL_CMD}</span>
+							<div className="mt-2 flex items-center justify-between gap-x-3 rounded-sm border border-gray-900 bg-gray-900 p-4 font-mono text-sm text-gray-100">
+								<div className="min-w-0 flex-1 overflow-x-auto">
+									<span className="select-none text-gray-500">$ </span>
+									<span>{INSTALL_CMD}</span>
+								</div>
+								<CopyButton text={INSTALL_CMD} />
 							</div>
 							<p className="mt-2 text-xs text-gray-500">
 								Interactive setup. Add <code>--quick my-app</code> for a one-shot scaffold with defaults.
+							</p>
+							<p className="mt-3 text-xs text-gray-500">
+								The login &amp; dashboard on this site are a live sandbox of the included
+								auth scaffold — feel free to register and explore.
 							</p>
 						</div>
 					</div>
