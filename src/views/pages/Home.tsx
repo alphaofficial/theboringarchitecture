@@ -111,7 +111,7 @@ export default function Home(pageProps: Props) {
 
 				{/* Hero */}
 				<section className="border-b border-gray-200">
-					<div className="mx-auto max-w-6xl px-6 py-24 lg:py-32">
+					<div className="mx-auto max-w-6xl px-6 py-24 lg:py-32 text-center">
 						<span className="inline-flex items-center gap-x-2 rounded-sm border border-gray-300 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-gray-600">
 							<span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-900" />
 							v0.1 · early preview
@@ -121,12 +121,12 @@ export default function Home(pageProps: Props) {
 							<br />
 							of modern web apps.
 						</h1>
-						<p className="mt-8 max-w-2xl text-xl leading-8 text-gray-600">
+						<p className="mx-auto mt-8 max-w-2xl text-xl leading-8 text-gray-600">
 							Hatch JS is a server-rendered React stack on top of Express. No API layer.
 							No fetch glue. No meta-framework. Write controllers, render pages, ship.
 						</p>
 
-						<div className="mt-10 flex flex-col sm:flex-row sm:items-center gap-4">
+						<div className="mt-10 flex flex-col sm:flex-row sm:items-center justify-center gap-4">
 							{!isAuthenticated ? (
 								<Link
 									href="/register"
@@ -150,8 +150,8 @@ export default function Home(pageProps: Props) {
 							</a>
 						</div>
 
-						<div className="mt-12 max-w-3xl">
-							<p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+						<div className="mx-auto mt-12 max-w-3xl text-left">
+							<p className="text-center text-xs font-semibold uppercase tracking-wider text-gray-500">
 								Install
 							</p>
 							<div className="mt-2 flex items-center justify-between gap-x-3 rounded-sm border border-gray-900 bg-gray-900 p-4 font-mono text-sm text-gray-100">
@@ -161,10 +161,10 @@ export default function Home(pageProps: Props) {
 								</div>
 								<CopyButton text={INSTALL_CMD} />
 							</div>
-							<p className="mt-2 text-xs text-gray-500">
+							<p className="mt-2 text-center text-xs text-gray-500">
 								Interactive setup. Add <code>--quick my-app</code> for a one-shot scaffold with defaults.
 							</p>
-							<p className="mt-3 text-xs text-gray-500">
+							<p className="mt-3 text-center text-xs text-gray-500">
 								The login &amp; dashboard on this site are a live sandbox of the included
 								auth scaffold — feel free to register and explore.
 							</p>
