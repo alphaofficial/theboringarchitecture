@@ -19,8 +19,8 @@ describe("Pages Integration Tests", () => {
 		await testDataFactory.cleanupAll();
 	});
 
-	beforeEach(async () => {
-		await testDataFactory.cleanupAll();
+	afterAll(async () => {
+		await database?.close(true);
 	});
 
 	describe("Public Pages", () => {
