@@ -40,6 +40,37 @@ src/
 
 A "page" is a React component rendered by a controller via Inertia.
 
+### Fast path — scaffold it
+
+```bash
+npm run scaffold -- page Posts
+```
+
+This creates `src/controllers/PostsController.ts`, `src/views/pages/Posts.tsx`,
+and a `GET /posts` route wired up in `src/routes/route.ts`. Pass an explicit
+path as the second argument to override the default kebab URL, and use a
+nested name for subdirectories:
+
+```bash
+npm run scaffold -- page Posts /articles
+npm run scaffold -- page Auth/Profile /profile
+```
+
+Other scaffold subcommands:
+
+```bash
+npm run scaffold -- controller Billing
+npm run scaffold -- route get /health Public.health
+npm run scaffold -- route post /posts Posts.create --auth
+npm run scaffold -- model Post --fields "title:string,body:text,publishedAt:datetime?"
+npm run scaffold -- page Post --model --fields "title:string,body:text"  # page + controller + route + model + mapping
+```
+
+Field types: `string`, `text`, `int`, `bool`, `date`, `datetime`, `decimal`, `uuid`, `json`. Append `?` for nullable (e.g. `publishedAt:datetime?`). After scaffolding a model, run `npm run migrate` to apply it to the database.
+
+The steps below describe what the scaffold produces so you can do it by hand
+or tweak what was generated.
+
 ### Step 1 — Create the component
 
 Drop a `.tsx` file in `src/views/pages/`. Pages can be nested with `/`.
@@ -342,14 +373,11 @@ npm run test:integration
 
 ## 8. End-to-end checklist for a new feature
 
-1. Create the model in `src/models/Foo.ts`.
-2. Create the mapping in `src/database/mappings/foo.map.ts`.
-3. Run `npm run migration:generate && npm run migration:run`.
-4. Create the controller in `src/controllers/FooController.ts`.
-5. Create the page component in `src/views/pages/Foo.tsx` (`pages.ts` regenerates automatically).
-6. Wire the route in `src/routes/route.ts`.
-7. Add an integration test in `test/integration/requests/`.
-8. `npm run build && npm run test:integration`.
+1. `npm run scaffold -- model Foo` (model + mapping).
+2. Edit the generated mapping to add your columns.
+3. `npm run migrate`.
+4. `npm run scaffold -- page Foo` (controller + page + route in one shot).
+5. `npm run build`.
 
 ---
 

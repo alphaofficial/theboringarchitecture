@@ -7,6 +7,7 @@
     "dev": "concurrently \"npm run pages:watch\" \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "nodemon --exec tsx src/index.ts",
     "dev:client": "vite build --watch",
+    "scaffold": "bash scripts/scaffold.sh",
     "pages:generate": "tsx scripts/generate-pages.ts",
     "pages:watch": "chokidar \"src/views/pages/**/*.tsx\" -c \"npm run pages:generate\" --initial",
     "predev": "npm run pages:generate",
@@ -22,6 +23,7 @@
     "migration:create": "mikro-orm migration:create",
     "migration:status": "mikro-orm migration:check",
     "migration:generate": "mikro-orm migration:generate",
+    "migrate": "npm run migration:generate && npm run migration:run",
     "db:seed": "mikro-orm seeder:run"
   },
   "keywords": [],
