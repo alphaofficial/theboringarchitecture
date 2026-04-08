@@ -2,17 +2,19 @@
 # Hatch scaffold — generate pages, controllers, and routes.
 #
 # Usage:
-#   scripts/scaffold.sh page <Name> [path]
+#   scripts/scaffold.sh page <Name> [path] [--model] [--fields "a:type,b:type"]
 #   scripts/scaffold.sh controller <Name>
 #   scripts/scaffold.sh route <method> <path> <Controller.action> [--auth|--guest]
-#   scripts/scaffold.sh model <Name>                       # model + mapping
+#   scripts/scaffold.sh model <Name> [--fields "a:type,b:type"]
+#
+# Field types: string, text, int, bool, date, datetime, decimal, uuid, json
+# Append "?" for nullable, e.g. publishedAt:datetime?
 #
 # Examples:
-#   scripts/scaffold.sh page Posts                       # page + controller + GET /posts
-#   scripts/scaffold.sh page Auth/Profile /profile       # nested page
-#   scripts/scaffold.sh controller Billing                # controller only
-#   scripts/scaffold.sh route get /health Public.health   # route only
-#   scripts/scaffold.sh model Post                        # Post model + post.map.ts
+#   scripts/scaffold.sh page Posts
+#   scripts/scaffold.sh page Post --model --fields "title:string,body:text"
+#   scripts/scaffold.sh model Post --fields "title:string,views:int"
+#   scripts/scaffold.sh route get /health Public.health
 
 set -euo pipefail
 
@@ -148,29 +150,91 @@ TSX
 	green "created src/views/pages/${page_path}.tsx"
 }
 
+# Resolve a field type spec ("string", "text?", "int", "datetime?") to:
+#   echo "<ts_type> <mikro_type> <nullable:0|1>"
+resolve_type() {
+	local spec="$1"
+	local nullable=0
+	case "$spec" in
+		*\?) nullable=1; spec="${spec%\?}" ;;
+	esac
+	local ts mikro
+	case "$spec" in
+		string|varchar)       ts=string;  mikro=string ;;
+		text)                 ts=string;  mikro=text ;;
+		int|integer|number)   ts=number;  mikro=number ;;
+		bool|boolean)         ts=boolean; mikro=boolean ;;
+		date|datetime)        ts=Date;    mikro=Date ;;
+		decimal)              ts=string;  mikro=decimal ;;
+		uuid)                 ts=string;  mikro=uuid ;;
+		json)                 ts=any;     mikro=json ;;
+		*) die "unknown field type: $spec (expected string|text|int|bool|date|decimal|uuid|json, optional ? suffix)" ;;
+	esac
+	printf '%s %s %s' "$ts" "$mikro" "$nullable"
+}
+
+# Emit TS class-property lines from FIELDS ("title:string,body:text?")
+emit_model_fields() {
+	local fields="$1"
+	[ -z "$fields" ] && return
+	local IFS=','
+	for pair in $fields; do
+		local fname="${pair%%:*}"
+		local spec="${pair#*:}"
+		local resolved ts _mikro nullable
+		resolved="$(resolve_type "$spec")"
+		IFS=' ' read -r ts _mikro nullable <<< "$resolved"
+		if [ "$nullable" = "1" ]; then
+			printf '\t%s?: %s;\n' "$fname" "$ts"
+		else
+			printf '\t%s!: %s;\n' "$fname" "$ts"
+		fi
+	done
+}
+
+# Emit mikro EntitySchema property entries from FIELDS
+emit_mapping_fields() {
+	local fields="$1"
+	[ -z "$fields" ] && return
+	local IFS=','
+	for pair in $fields; do
+		local fname="${pair%%:*}"
+		local spec="${pair#*:}"
+		local resolved _ts mikro nullable
+		resolved="$(resolve_type "$spec")"
+		IFS=' ' read -r _ts mikro nullable <<< "$resolved"
+		if [ "$nullable" = "1" ]; then
+			printf '\t\t%s: { type: "%s", nullable: true },\n' "$fname" "$mikro"
+		else
+			printf '\t\t%s: { type: "%s" },\n' "$fname" "$mikro"
+		fi
+	done
+}
+
 make_model() {
 	local name="$1"              # Post
+	local fields="${2:-}"        # "title:string,body:text"
 	local file="$MODELS_DIR/${name}.ts"
 	if [ -e "$file" ]; then
 		info "model exists: ${name}.ts"
 		return
 	fi
-	cat > "$file" <<TS
-export class ${name} {
-	id: string;
-	createdAt: Date = new Date();
-	updatedAt: Date = new Date();
-
-	constructor(id: string) {
-		this.id = id;
-	}
-}
-TS
+	local field_lines
+	field_lines="$(emit_model_fields "$fields")"
+	{
+		printf 'export class %s {\n' "$name"
+		printf '\tid!: string;\n'
+		[ -n "$field_lines" ] && printf '%s\n' "$field_lines"
+		printf '\tcreatedAt: Date = new Date();\n'
+		printf '\tupdatedAt: Date = new Date();\n'
+		printf '}\n'
+	} > "$file"
 	green "created src/models/${name}.ts"
 }
 
 make_mapping() {
 	local name="$1"              # Post
+	local fields="${2:-}"        # "title:string,body:text"
 	local lower
 	lower="$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]')"
 	local table
@@ -180,27 +244,22 @@ make_mapping() {
 		info "mapping exists: ${lower}.map.ts"
 		return
 	fi
-	cat > "$file" <<TS
-import { EntitySchema } from "@mikro-orm/postgresql";
-import { ${name} } from "@/models/${name}";
-
-export const ${name}Mapper = new EntitySchema<${name}>({
-	class: ${name},
-	tableName: "${table}",
-	properties: {
-		id: { type: "string", primary: true },
-		createdAt: {
-			type: "Date",
-			defaultRaw: "CURRENT_TIMESTAMP",
-		},
-		updatedAt: {
-			type: "Date",
-			defaultRaw: "CURRENT_TIMESTAMP",
-			onUpdate: () => new Date(),
-		},
-	},
-});
-TS
+	local prop_lines
+	prop_lines="$(emit_mapping_fields "$fields")"
+	{
+		printf 'import { EntitySchema } from "@mikro-orm/postgresql";\n'
+		printf 'import { %s } from "@/models/%s";\n\n' "$name" "$name"
+		printf 'export const %sMapper = new EntitySchema<%s>({\n' "$name" "$name"
+		printf '\tclass: %s,\n' "$name"
+		printf '\ttableName: "%s",\n' "$table"
+		printf '\tproperties: {\n'
+		printf '\t\tid: { type: "string", primary: true },\n'
+		[ -n "$prop_lines" ] && printf '%s\n' "$prop_lines"
+		printf '\t\tcreatedAt: { type: "Date", defaultRaw: "CURRENT_TIMESTAMP" },\n'
+		printf '\t\tupdatedAt: { type: "Date", defaultRaw: "CURRENT_TIMESTAMP", onUpdate: () => new Date() },\n'
+		printf '\t},\n'
+		printf '});\n'
+	} > "$file"
 	green "created src/database/mappings/${lower}.map.ts"
 }
 
@@ -234,26 +293,53 @@ add_route() {
 # --- commands --------------------------------------------------------------
 
 cmd_page() {
-	local name="${1:-}"
-	[ -z "$name" ] && die "usage: scaffold.sh page <Name> [path]"
+	local name="" url="" with_model=0 fields=""
+	while [ $# -gt 0 ]; do
+		case "$1" in
+			--model)  with_model=1; shift ;;
+			--fields) fields="${2:-}"; shift 2 ;;
+			--)       shift; break ;;
+			-*)       die "unknown flag: $1" ;;
+			*)
+				if [ -z "$name" ]; then name="$1"
+				elif [ -z "$url" ]; then url="$1"
+				else die "unexpected arg: $1"
+				fi
+				shift ;;
+		esac
+	done
+	[ -z "$name" ] && die "usage: scaffold.sh page <Name> [path] [--model] [--fields \"a:string,b:text\"]"
 	assert_pascal "$(basename_of "$name")"
 
 	local base
 	base="$(basename_of "$name")"
-	local url="${2:-/$(kebab "$base")}"
+	[ -z "$url" ] && url="/$(kebab "$base")"
+	[ -n "$fields" ] && [ "$with_model" = "0" ] && with_model=1
 
 	make_controller "$base"
 	make_page "$name"
 	add_route get "$url" "${base}.index" ""
+	if [ "$with_model" = "1" ]; then
+		make_model "$base" "$fields"
+		make_mapping "$base" "$fields"
+		info "next: npm run migration:generate && npm run migration:run"
+	fi
 	green "done. visit ${url}"
 }
 
 cmd_model() {
-	local name="${1:-}"
-	[ -z "$name" ] && die "usage: scaffold.sh model <Name>"
+	local name="" fields=""
+	while [ $# -gt 0 ]; do
+		case "$1" in
+			--fields) fields="${2:-}"; shift 2 ;;
+			-*)       die "unknown flag: $1" ;;
+			*)        [ -z "$name" ] && name="$1" || die "unexpected arg: $1"; shift ;;
+		esac
+	done
+	[ -z "$name" ] && die "usage: scaffold.sh model <Name> [--fields \"a:string,b:text\"]"
 	assert_pascal "$name"
-	make_model "$name"
-	make_mapping "$name"
+	make_model "$name" "$fields"
+	make_mapping "$name" "$fields"
 	info "next: npm run migration:generate && npm run migration:run"
 }
 
@@ -290,7 +376,7 @@ case "$sub" in
 	route)      cmd_route "$@" ;;
 	model)      cmd_model "$@" ;;
 	""|-h|--help)
-		sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
+		sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'
 		;;
 	*) die "unknown command: $sub" ;;
 esac

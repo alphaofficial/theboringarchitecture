@@ -62,8 +62,11 @@ Other scaffold subcommands:
 npm run scaffold -- controller Billing
 npm run scaffold -- route get /health Public.health
 npm run scaffold -- route post /posts Posts.create --auth
-npm run scaffold -- model Post                     # model + mapping
+npm run scaffold -- model Post --fields "title:string,body:text,publishedAt:datetime?"
+npm run scaffold -- page Post --model --fields "title:string,body:text"  # page + controller + route + model + mapping
 ```
+
+Field types: `string`, `text`, `int`, `bool`, `date`, `datetime`, `decimal`, `uuid`, `json`. Append `?` for nullable (e.g. `publishedAt:datetime?`). After scaffolding a model, run `npm run migration:generate && npm run migration:run` to apply it to the database.
 
 The steps below describe what the scaffold produces so you can do it by hand
 or tweak what was generated.
