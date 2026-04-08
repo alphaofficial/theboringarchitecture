@@ -373,8 +373,7 @@ npm run test:integration
 2. Create the mapping in `src/database/mappings/foo.map.ts`.
 3. Run `npm run migration:generate && npm run migration:run`.
 4. `npm run scaffold -- page Foo` (controller + page + route in one shot).
-5. Add an integration test in `test/integration/requests/`.
-6. `npm run build && npm run test:integration`.
+5. `npm run build`.
 
 ---
 
