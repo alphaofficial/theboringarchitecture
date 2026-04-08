@@ -218,25 +218,46 @@ describe("scaffold.sh", () => {
 				.replace(`from "@mikro-orm/postgresql"`, `from "@mikro-orm/sqlite"`);
 			writeFileSync(mappingPath, mappingSrc);
 
+			interface PostRow {
+				id: string;
+				title: string;
+				body: string;
+				publishedAt?: Date | null;
+				createdAt: Date;
+				updatedAt: Date;
+			}
+			type PostCtor = new () => PostRow;
+
 			const { MikroORM } = await import("@mikro-orm/sqlite");
-			const { PostMapper } = await import(mappingPath);
+			const mappingModule = (await import(mappingPath)) as {
+				PostMapper: Parameters<typeof MikroORM.init>[0]["entities"] extends
+					| infer E
+					| undefined
+					? E extends ReadonlyArray<infer Item>
+						? Item
+						: never
+					: never;
+			};
+			const modelModule = (await import(
+				join(dir, "src/models/Post.ts")
+			)) as { Post: PostCtor };
+			const Post = modelModule.Post;
 
 			const orm = await MikroORM.init({
 				dbName: ":memory:",
-				entities: [PostMapper],
+				entities: [mappingModule.PostMapper],
 				allowGlobalContext: true,
 			});
 			await orm.schema.createSchema();
 
 			const em = orm.em.fork();
-			const { Post } = await import(join(dir, "src/models/Post.ts"));
 			const post = new Post();
 			post.id = "p1";
 			post.title = "Hello";
 			post.body = "World";
 			await em.persistAndFlush(post);
 
-			const found = await em.fork().findOneOrFail(Post, { id: "p1" });
+			const found = await em.fork().findOneOrFail<PostRow>(Post, { id: "p1" });
 			expect(found.title).toBe("Hello");
 			expect(found.body).toBe("World");
 			expect(found.publishedAt).toBeNull();
