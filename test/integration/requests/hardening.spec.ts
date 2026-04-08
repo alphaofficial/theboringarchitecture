@@ -181,6 +181,10 @@ describe("Hardening", () => {
 			factory = new TestDataFactory(orm);
 		});
 
+		afterAll(async () => {
+			await orm?.close(true);
+		});
+
 		beforeEach(async () => factory.cleanupAll());
 
 		it("persists auth across requests via the session cookie", async () => {

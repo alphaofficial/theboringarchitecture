@@ -14,6 +14,9 @@ module.exports = {
 		...tsJestTransformCfg,
 	},
 	passWithNoTests: true,
+	// Integration suites share a single sqlite file (express_inertia_test.db),
+	// so parallel workers race on cleanupAll and leak state across specs.
+	maxWorkers: 1,
 	moduleNameMapper: {
 		"^@/(.*)$": "<rootDir>/../../src/$1",
 	},
