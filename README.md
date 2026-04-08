@@ -116,6 +116,7 @@ npm run scaffold -- page Posts                     # controller + page + GET /po
 npm run scaffold -- page Auth/Profile /profile     # nested page at an explicit path
 npm run scaffold -- controller Billing             # controller only
 npm run scaffold -- route post /posts Posts.create --auth
+npm run scaffold -- model Post                     # model + mapping
 ```
 
 ## Database

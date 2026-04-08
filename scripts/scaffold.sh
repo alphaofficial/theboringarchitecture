@@ -5,12 +5,14 @@
 #   scripts/scaffold.sh page <Name> [path]
 #   scripts/scaffold.sh controller <Name>
 #   scripts/scaffold.sh route <method> <path> <Controller.action> [--auth|--guest]
+#   scripts/scaffold.sh model <Name>                       # model + mapping
 #
 # Examples:
 #   scripts/scaffold.sh page Posts                       # page + controller + GET /posts
 #   scripts/scaffold.sh page Auth/Profile /profile       # nested page
 #   scripts/scaffold.sh controller Billing                # controller only
 #   scripts/scaffold.sh route get /health Public.health   # route only
+#   scripts/scaffold.sh model Post                        # Post model + post.map.ts
 
 set -euo pipefail
 
@@ -18,6 +20,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PAGES_DIR="$ROOT/src/views/pages"
 CTRL_DIR="$ROOT/src/controllers"
 ROUTES_FILE="$ROOT/src/routes/route.ts"
+MODELS_DIR="$ROOT/src/models"
+MAPPINGS_DIR="$ROOT/src/database/mappings"
 
 red()   { printf '\033[31m%s\033[0m\n' "$*" >&2; }
 green() { printf '\033[32m%s\033[0m\n' "$*"; }
@@ -144,6 +148,62 @@ TSX
 	green "created src/views/pages/${page_path}.tsx"
 }
 
+make_model() {
+	local name="$1"              # Post
+	local file="$MODELS_DIR/${name}.ts"
+	if [ -e "$file" ]; then
+		info "model exists: ${name}.ts"
+		return
+	fi
+	cat > "$file" <<TS
+export class ${name} {
+	id: string;
+	createdAt: Date = new Date();
+	updatedAt: Date = new Date();
+
+	constructor(id: string) {
+		this.id = id;
+	}
+}
+TS
+	green "created src/models/${name}.ts"
+}
+
+make_mapping() {
+	local name="$1"              # Post
+	local lower
+	lower="$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]')"
+	local table
+	table="$(kebab "$name" | tr '-' '_')s"
+	local file="$MAPPINGS_DIR/${lower}.map.ts"
+	if [ -e "$file" ]; then
+		info "mapping exists: ${lower}.map.ts"
+		return
+	fi
+	cat > "$file" <<TS
+import { EntitySchema } from "@mikro-orm/postgresql";
+import { ${name} } from "@/models/${name}";
+
+export const ${name}Mapper = new EntitySchema<${name}>({
+	class: ${name},
+	tableName: "${table}",
+	properties: {
+		id: { type: "string", primary: true },
+		createdAt: {
+			type: "Date",
+			defaultRaw: "CURRENT_TIMESTAMP",
+		},
+		updatedAt: {
+			type: "Date",
+			defaultRaw: "CURRENT_TIMESTAMP",
+			onUpdate: () => new Date(),
+		},
+	},
+});
+TS
+	green "created src/database/mappings/${lower}.map.ts"
+}
+
 add_route() {
 	local method="$1"            # get/post/put/delete
 	local url="$2"               # /posts
@@ -188,6 +248,15 @@ cmd_page() {
 	green "done. visit ${url}"
 }
 
+cmd_model() {
+	local name="${1:-}"
+	[ -z "$name" ] && die "usage: scaffold.sh model <Name>"
+	assert_pascal "$name"
+	make_model "$name"
+	make_mapping "$name"
+	info "next: npm run migration:generate && npm run migration:run"
+}
+
 cmd_controller() {
 	local name="${1:-}"
 	[ -z "$name" ] && die "usage: scaffold.sh controller <Name>"
@@ -219,8 +288,9 @@ case "$sub" in
 	page)       cmd_page "$@" ;;
 	controller) cmd_controller "$@" ;;
 	route)      cmd_route "$@" ;;
+	model)      cmd_model "$@" ;;
 	""|-h|--help)
-		sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'
+		sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
 		;;
 	*) die "unknown command: $sub" ;;
 esac

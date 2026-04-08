@@ -62,6 +62,7 @@ Other scaffold subcommands:
 npm run scaffold -- controller Billing
 npm run scaffold -- route get /health Public.health
 npm run scaffold -- route post /posts Posts.create --auth
+npm run scaffold -- model Post                     # model + mapping
 ```
 
 The steps below describe what the scaffold produces so you can do it by hand
@@ -369,9 +370,9 @@ npm run test:integration
 
 ## 8. End-to-end checklist for a new feature
 
-1. Create the model in `src/models/Foo.ts`.
-2. Create the mapping in `src/database/mappings/foo.map.ts`.
-3. Run `npm run migration:generate && npm run migration:run`.
+1. `npm run scaffold -- model Foo` (model + mapping).
+2. Edit the generated mapping to add your columns.
+3. `npm run migration:generate && npm run migration:run`.
 4. `npm run scaffold -- page Foo` (controller + page + route in one shot).
 5. `npm run build`.
 
