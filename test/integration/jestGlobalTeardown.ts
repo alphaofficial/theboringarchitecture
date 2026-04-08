@@ -18,20 +18,19 @@ const globalTeardown = async (): Promise<void> => {
 	// Wait a bit to ensure all connections are closed
 	await new Promise(resolve => setTimeout(resolve, 200));
 
-	// remove test db file - it's created in the project root
-	const dbPath = path.join(process.cwd(), "express_inertia_test.db*");
-
-	try {
-		if (fs.existsSync(dbPath)) {
-			// Make sure file is writable before deletion
-			fs.chmodSync(dbPath, 0o666);
-			fs.unlinkSync(dbPath);
-			console.info("Test database file removed:", dbPath);
-		} else {
-			console.info("Test database file not found at:", dbPath);
+	// remove test db file and its sqlite -shm / -wal siblings
+	const base = path.join(process.cwd(), "express_inertia_test.db");
+	for (const suffix of ["", "-shm", "-wal", "-journal"]) {
+		const p = base + suffix;
+		try {
+			if (fs.existsSync(p)) {
+				fs.chmodSync(p, 0o666);
+				fs.unlinkSync(p);
+				console.info("Removed", p);
+			}
+		} catch (error) {
+			console.error("Error removing", p, error);
 		}
-	} catch (error) {
-		console.error("Error removing test database file:", error);
 	}
 
 	console.info("\n", "Teardown completed");
