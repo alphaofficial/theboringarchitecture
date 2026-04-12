@@ -31,6 +31,14 @@ const baseSchema = z.object({
 	MAIL_PORT: z.coerce.number().optional().default(587),
 	MAIL_USER: z.string().optional(),
 	MAIL_PASS: z.string().optional(),
+	// Queue (Graphile Worker — requires PostgreSQL)
+	DATABASE_URL: z.string().optional(),
+	// Scheduler
+	SCHEDULER_ENABLED: z
+		.string()
+		.optional()
+		.default('false')
+		.transform(v => v === 'true' || v === '1'),
 });
 
 const parsed = baseSchema.parse(process.env);
