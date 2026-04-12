@@ -22,6 +22,7 @@ const baseSchema = z.object({
 	RATE_LIMIT_AUTH_WINDOW_MS: z.coerce.number().optional().default(60_000),
 	PASSWORD_RESET_EXPIRY: z.coerce.number().optional().default(60), // minutes
 	EMAIL_VERIFICATION_EXPIRY: z.coerce.number().optional().default(60), // minutes
+	CACHE_DRIVER: z.string().optional().default('memory'),
 	MAIL_DRIVER: z.string().optional().default('log'),
 	MAIL_FROM: z.string().optional().default('noreply@example.com'),
 	MAIL_HOST: z.string().optional(),
