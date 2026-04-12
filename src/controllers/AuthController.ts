@@ -96,6 +96,7 @@ export class AuthController extends BaseController {
             }
 
             req.authenticate(user);
+            emitter.emit('user.login', { id: user.id, email: user.email });
             return res.redirect('/home');
 
         } catch (error) {
@@ -132,6 +133,7 @@ export class AuthController extends BaseController {
             );
 
             await em.persistAndFlush(user);
+            emitter.emit('user.registered', { id: user.id, email: user.email });
 
             const token = makeVerificationToken(user.id, user.email);
             const appUrl = variables.APP_URL;
