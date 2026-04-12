@@ -235,6 +235,34 @@ npm run scheduler
 
 > **Note:** Set `SCHEDULER_ENABLED=true` in your env to allow the scheduler worker to start tasks. The `SCHEDULER_ENABLED` flag has no effect on `Scheduler.schedule` registration — tasks are registered at import time and only start when `Scheduler.startAll()` is called (done automatically by `npm run scheduler`).
 
+## Events
+
+A typed in-process event bus backed by Node's `EventEmitter`. Built-in events (`user.registered`, `user.login`, `user.verified`) are defined in `HatchEvents`. Extend the interface to add your own:
+
+```ts
+import { Emitter, HatchEvents } from './lib/events';
+
+// Extend HatchEvents for custom typed events
+declare module './lib/events' {
+  interface HatchEvents {
+    'order.placed': { orderId: string; total: number };
+  }
+}
+
+// Listen
+Emitter.on('order.placed', ({ orderId, total }) => {
+  console.log(`Order ${orderId} placed for $${total}`);
+});
+
+// Emit
+Emitter.emit('order.placed', { orderId: 'abc-123', total: 49.99 });
+
+// Remove a listener
+Emitter.off('order.placed', handler);
+```
+
+> **Note:** Events are synchronous and in-process — listeners run immediately in the same Node.js event loop tick. For async/background work, dispatch a Queue job from within the listener.
+
 ## Render an Inertia page
 
 ```ts
