@@ -23,8 +23,17 @@ export function injectAuthHelpers(req: Request, _: any, next: NextFunction) {
         return Boolean(!(req.session as any)?.userId);
     };
 
-    req.authenticate = (user: User): void => {
-        (req.session as any).userId = user.id;
+    req.authenticate = (user: User): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            req.session.regenerate((err) => {
+                if (err) return reject(err);
+                (req.session as any).userId = user.id;
+                req.session.save((saveErr) => {
+                    if (saveErr) return reject(saveErr);
+                    resolve();
+                });
+            });
+        });
     };
 
     req.logout = (): Promise<void> => {

@@ -97,7 +97,7 @@ export class AuthController extends BaseController {
                 });
             }
 
-            req.authenticate(user);
+            await req.authenticate(user);
             Emitter.emit('user.login', { id: user.id, email: user.email });
             return res.redirect('/home');
 
@@ -147,7 +147,7 @@ export class AuthController extends BaseController {
             `;
             await Mailer.send(user.email, 'Verify your email address', html);
 
-            req.authenticate(user);
+            await req.authenticate(user);
             return res.redirect('/verify-email');
 
         } catch (error) {

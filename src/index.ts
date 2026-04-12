@@ -22,7 +22,7 @@ declare module "express-serve-static-core" {
     user_id(): User["id"] | null;
     is_authenticated(): boolean;
     is_guest(): boolean;
-    authenticate(user: User): void;
+    authenticate(user: User): Promise<void>;
     logout(): Promise<void>;
 	}
 }

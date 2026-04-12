@@ -1,6 +1,7 @@
 import { Store } from 'express-session';
 import { MikroORM } from '@mikro-orm/core';
 import { Session } from '@/models/Session';
+import variables from '../config/variables';
 
 export class SessionStore extends Store {
   private orm: MikroORM;
@@ -87,7 +88,7 @@ export class SessionStore extends Store {
 
   private isExpired(session: Session): boolean {
     const now = Math.floor(Date.now() / 1000);
-    const maxAge = 24 * 60 * 60; // 24 hours in seconds
+    const maxAge = Math.floor(variables.SESSION_MAX_AGE / 1000);
     return (now - session.last_activity) > maxAge;
   }
 }
