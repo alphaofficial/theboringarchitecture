@@ -214,6 +214,27 @@ Mailer.registerDriver('postmark', new PostmarkTransport());
 // then set MAIL_DRIVER=postmark in your env
 ```
 
+## Scheduler
+
+Register recurring tasks with a cron expression via `Scheduler.schedule`:
+
+```ts
+import { Scheduler } from './lib/scheduler';
+
+Scheduler.schedule('0 * * * *', async () => {
+  // runs at the start of every hour
+  await cleanUpExpiredSessions();
+});
+```
+
+Start the scheduler process:
+
+```bash
+npm run scheduler
+```
+
+> **Note:** Set `SCHEDULER_ENABLED=true` in your env to allow the scheduler worker to start tasks. The `SCHEDULER_ENABLED` flag has no effect on `Scheduler.schedule` registration — tasks are registered at import time and only start when `Scheduler.startAll()` is called (done automatically by `npm run scheduler`).
+
 ## Render an Inertia page
 
 ```ts
