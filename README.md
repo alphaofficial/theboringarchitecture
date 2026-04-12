@@ -263,6 +263,45 @@ Emitter.off('order.placed', handler);
 
 > **Note:** Events are synchronous and in-process — listeners run immediately in the same Node.js event loop tick. For async/background work, dispatch a Queue job from within the listener.
 
+## Cache
+
+A simple key/value cache backed by an in-process `memory` driver (default). Switch drivers with the `CACHE_DRIVER` env var.
+
+```ts
+import { Cache } from './lib/cache';
+
+// Store a value (no expiry)
+await Cache.set('user:42', { name: 'Alice' });
+
+// Store with a TTL (seconds)
+await Cache.set('session:token', 'abc123', 300); // expires in 5 minutes
+
+// Retrieve a value (returns undefined if missing or expired)
+const user = await Cache.get<{ name: string }>('user:42');
+
+// Delete a single key
+await Cache.delete('user:42');
+
+// Clear the entire cache
+await Cache.flush();
+```
+
+Register a custom driver that implements the `CacheDriver` interface:
+
+```ts
+import { Cache, CacheDriver } from './lib/cache';
+
+class RedisCacheDriver implements CacheDriver {
+    async get<T>(key: string): Promise<T | undefined> { /* ... */ }
+    async set(key: string, value: unknown, ttlSeconds?: number): Promise<void> { /* ... */ }
+    async delete(key: string): Promise<void> { /* ... */ }
+    async flush(): Promise<void> { /* ... */ }
+}
+
+Cache.registerDriver('redis', new RedisCacheDriver());
+// then set CACHE_DRIVER=redis in your env
+```
+
 ## Render an Inertia page
 
 ```ts
