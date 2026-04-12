@@ -1,4 +1,4 @@
-import { storage, registerDriver, StorageDriver } from '@/lib/storage';
+import { Storage, StorageDriver } from '@/lib/storage';
 
 describe('storage (memory driver)', () => {
     let prevDriver: string | undefined;
@@ -14,39 +14,39 @@ describe('storage (memory driver)', () => {
     });
 
     it('returns false for non-existent file', async () => {
-        expect(await storage.exists('missing.txt')).toBe(false);
+        expect(await Storage.exists('missing.txt')).toBe(false);
     });
 
     it('puts and gets a string file', async () => {
-        await storage.put('hello.txt', 'world');
-        const buf = await storage.get('hello.txt');
+        await Storage.put('hello.txt', 'world');
+        const buf = await Storage.get('hello.txt');
         expect(buf.toString()).toBe('world');
     });
 
     it('puts and gets a Buffer file', async () => {
         const data = Buffer.from([1, 2, 3]);
-        await storage.put('bytes.bin', data);
-        const result = await storage.get('bytes.bin');
+        await Storage.put('bytes.bin', data);
+        const result = await Storage.get('bytes.bin');
         expect(result).toEqual(data);
     });
 
     it('exists returns true after put', async () => {
-        await storage.put('exists.txt', 'yes');
-        expect(await storage.exists('exists.txt')).toBe(true);
+        await Storage.put('exists.txt', 'yes');
+        expect(await Storage.exists('exists.txt')).toBe(true);
     });
 
     it('deletes a file', async () => {
-        await storage.put('delete-me.txt', 'bye');
-        await storage.delete('delete-me.txt');
-        expect(await storage.exists('delete-me.txt')).toBe(false);
+        await Storage.put('delete-me.txt', 'bye');
+        await Storage.delete('delete-me.txt');
+        expect(await Storage.exists('delete-me.txt')).toBe(false);
     });
 
     it('get throws for missing file', async () => {
-        await expect(storage.get('no-such-file.txt')).rejects.toThrow('File not found');
+        await expect(Storage.get('no-such-file.txt')).rejects.toThrow('File not found');
     });
 
     it('url returns a URL for the file', () => {
-        const u = storage.url('avatar.png');
+        const u = Storage.url('avatar.png');
         expect(u).toContain('avatar.png');
     });
 
@@ -63,13 +63,13 @@ describe('storage (memory driver)', () => {
             url: (p) => `https://cdn.example.com/${p}`,
             exists: async (p) => data.has(p),
         };
-        registerDriver('custom-storage', customDriver);
+        Storage.registerDriver('custom-storage', customDriver);
         const prev = process.env.STORAGE_DRIVER;
         try {
             process.env.STORAGE_DRIVER = 'custom-storage';
-            await storage.put('test.txt', 'custom');
-            expect((await storage.get('test.txt')).toString()).toBe('custom');
-            expect(storage.url('test.txt')).toBe('https://cdn.example.com/test.txt');
+            await Storage.put('test.txt', 'custom');
+            expect((await Storage.get('test.txt')).toString()).toBe('custom');
+            expect(Storage.url('test.txt')).toBe('https://cdn.example.com/test.txt');
         } finally {
             process.env.STORAGE_DRIVER = prev;
         }
@@ -79,7 +79,7 @@ describe('storage (memory driver)', () => {
         const prev = process.env.STORAGE_DRIVER;
         try {
             process.env.STORAGE_DRIVER = 'nonexistent';
-            expect(() => storage.exists('any')).toThrow("Storage driver 'nonexistent' is not registered");
+            expect(() => Storage.exists('any')).toThrow("Storage driver 'nonexistent' is not registered");
         } finally {
             process.env.STORAGE_DRIVER = prev;
         }

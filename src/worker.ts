@@ -1,5 +1,5 @@
 import 'dotenv-defaults/config';
-import { startWorker } from './lib/queue';
+import { Queue } from './lib/queue';
 import { sendWelcomeEmail } from './jobs/sendWelcomeEmail';
 import { PinoLogger } from './logger/pinoLogger';
 
@@ -16,7 +16,7 @@ const taskList = {
 
 PinoLogger.info('worker', 'Starting Graphile Worker...');
 
-startWorker(connectionString, taskList)
+Queue.start(connectionString, taskList)
 	.then(runner => {
 		PinoLogger.info('worker', 'Worker started and listening for jobs.');
 		const shutdown = async () => {

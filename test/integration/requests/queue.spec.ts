@@ -1,11 +1,11 @@
-import { dispatch } from '@/lib/queue';
+import { Queue } from '@/lib/queue';
 
 describe('queue dispatch', () => {
     it('is a no-op when DATABASE_URL is not set', async () => {
         const prev = process.env.DATABASE_URL;
         try {
             delete process.env.DATABASE_URL;
-            await expect(dispatch('send-email', { to: 'test@example.com' })).resolves.toBeUndefined();
+            await expect(Queue.dispatch('send-email', { to: 'test@example.com' })).resolves.toBeUndefined();
         } finally {
             if (prev === undefined) delete process.env.DATABASE_URL;
             else process.env.DATABASE_URL = prev;
@@ -16,7 +16,7 @@ describe('queue dispatch', () => {
         const prev = process.env.DATABASE_URL;
         try {
             delete process.env.DATABASE_URL;
-            await expect(dispatch('process-order', { orderId: 42 })).resolves.not.toThrow();
+            await expect(Queue.dispatch('process-order', { orderId: 42 })).resolves.not.toThrow();
         } finally {
             if (prev === undefined) delete process.env.DATABASE_URL;
             else process.env.DATABASE_URL = prev;
@@ -27,7 +27,7 @@ describe('queue dispatch', () => {
         const prev = process.env.DATABASE_URL;
         try {
             delete process.env.DATABASE_URL;
-            await expect(dispatch('cleanup')).resolves.toBeUndefined();
+            await expect(Queue.dispatch('cleanup')).resolves.toBeUndefined();
         } finally {
             if (prev === undefined) delete process.env.DATABASE_URL;
             else process.env.DATABASE_URL = prev;

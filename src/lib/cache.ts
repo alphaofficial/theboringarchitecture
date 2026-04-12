@@ -1,4 +1,4 @@
-export interface Cache {
+export interface CacheDriver {
     get<T = unknown>(key: string): Promise<T | undefined>;
     set(key: string, value: unknown, ttlSeconds?: number): Promise<void>;
     delete(key: string): Promise<void>;
@@ -10,7 +10,7 @@ interface CacheEntry {
     expiresAt: number | null;
 }
 
-class MemoryCache implements Cache {
+class MemoryCache implements CacheDriver {
     private store = new Map<string, CacheEntry>();
 
     async get<T = unknown>(key: string): Promise<T | undefined> {
@@ -39,14 +39,10 @@ class MemoryCache implements Cache {
     }
 }
 
-const drivers = new Map<string, Cache>();
+const drivers = new Map<string, CacheDriver>();
 drivers.set('memory', new MemoryCache());
 
-export function registerDriver(name: string, driver: Cache): void {
-    drivers.set(name, driver);
-}
-
-function getDriver(): Cache {
+function getDriver(): CacheDriver {
     const name = process.env.CACHE_DRIVER ?? 'memory';
     const driver = drivers.get(name);
     if (!driver) {
@@ -55,10 +51,24 @@ function getDriver(): Cache {
     return driver;
 }
 
-export const cache = {
-    get: <T = unknown>(key: string) => getDriver().get<T>(key),
-    set: (key: string, value: unknown, ttlSeconds?: number) => getDriver().set(key, value, ttlSeconds),
-    delete: (key: string) => getDriver().delete(key),
-    flush: () => getDriver().flush(),
-    registerDriver,
-};
+export class Cache {
+    static registerDriver(name: string, driver: CacheDriver): void {
+        drivers.set(name, driver);
+    }
+
+    static get<T = unknown>(key: string): Promise<T | undefined> {
+        return getDriver().get<T>(key);
+    }
+
+    static set(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
+        return getDriver().set(key, value, ttlSeconds);
+    }
+
+    static delete(key: string): Promise<void> {
+        return getDriver().delete(key);
+    }
+
+    static flush(): Promise<void> {
+        return getDriver().flush();
+    }
+}

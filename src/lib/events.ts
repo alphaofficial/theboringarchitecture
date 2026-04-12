@@ -20,4 +20,26 @@ class TypedEmitter extends EventEmitter {
     }
 }
 
-export const emitter = new TypedEmitter();
+const instance = new TypedEmitter();
+
+export class Emitter {
+    static emit<K extends keyof HatchEvents>(event: K, payload: HatchEvents[K]): boolean {
+        return instance.emit(event, payload);
+    }
+
+    static on<K extends keyof HatchEvents>(event: K, listener: (payload: HatchEvents[K]) => void): void {
+        instance.on(event, listener);
+    }
+
+    static off<K extends keyof HatchEvents>(event: K, listener: (payload: HatchEvents[K]) => void): void {
+        instance.off(event, listener);
+    }
+
+    static removeAllListeners(event?: keyof HatchEvents): void {
+        if (event === undefined) {
+            instance.removeAllListeners();
+        } else {
+            instance.removeAllListeners(event as string);
+        }
+    }
+}

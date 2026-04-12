@@ -83,10 +83,6 @@ class MemoryDriver implements StorageDriver {
 
 const drivers = new Map<string, StorageDriver>();
 
-export function registerDriver(name: string, driver: StorageDriver): void {
-    drivers.set(name, driver);
-}
-
 function getDriver(): StorageDriver {
     const name = process.env.STORAGE_DRIVER ?? 'local';
     const driver = drivers.get(name);
@@ -105,11 +101,28 @@ function initDrivers(): void {
 
 initDrivers();
 
-export const storage = {
-    put: (filePath: string, data: Buffer | string) => getDriver().put(filePath, data),
-    get: (filePath: string) => getDriver().get(filePath),
-    delete: (filePath: string) => getDriver().delete(filePath),
-    url: (filePath: string) => getDriver().url(filePath),
-    exists: (filePath: string) => getDriver().exists(filePath),
-    registerDriver,
-};
+export class Storage {
+    static registerDriver(name: string, driver: StorageDriver): void {
+        drivers.set(name, driver);
+    }
+
+    static put(filePath: string, data: Buffer | string): Promise<void> {
+        return getDriver().put(filePath, data);
+    }
+
+    static get(filePath: string): Promise<Buffer> {
+        return getDriver().get(filePath);
+    }
+
+    static delete(filePath: string): Promise<void> {
+        return getDriver().delete(filePath);
+    }
+
+    static url(filePath: string): string {
+        return getDriver().url(filePath);
+    }
+
+    static exists(filePath: string): Promise<boolean> {
+        return getDriver().exists(filePath);
+    }
+}

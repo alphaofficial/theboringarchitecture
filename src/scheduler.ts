@@ -1,7 +1,7 @@
 import 'dotenv-defaults/config';
 import { MikroORM } from '@mikro-orm/core';
 import ormConfig from './database/orm.config';
-import { schedule, getRegisteredTasks } from './lib/scheduler';
+import { Scheduler } from './lib/scheduler';
 import { Session } from './models/Session';
 import { PinoLogger } from './logger/pinoLogger';
 
@@ -19,9 +19,9 @@ async function main() {
     const orm = await MikroORM.init(ormConfig);
 
     // Clean expired sessions every hour
-    schedule('0 * * * *', () => cleanExpiredSessions(orm));
+    Scheduler.schedule('0 * * * *', () => cleanExpiredSessions(orm));
 
-    const registered = getRegisteredTasks();
+    const registered = Scheduler.getRegisteredTasks();
     PinoLogger.info('scheduler', `Scheduler started with ${registered.length} task(s)`, {
         tasks: registered.map(t => t.expression),
     });

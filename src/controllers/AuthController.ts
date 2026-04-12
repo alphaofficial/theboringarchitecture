@@ -4,8 +4,8 @@ import { Hash } from '../utils/Hash';
 import { User } from '../models/User';
 import { PasswordReset } from '../models/PasswordReset';
 import { Session } from '../models/Session';
-import { sendMail } from '../lib/mail';
-import { emitter } from '../lib/events';
+import { Mailer } from '../lib/mail';
+import { Emitter } from '../lib/events';
 import { z } from 'zod';
 import crypto from 'crypto';
 import variables from '../config/variables';
@@ -96,7 +96,7 @@ export class AuthController extends BaseController {
             }
 
             req.authenticate(user);
-            emitter.emit('user.login', { id: user.id, email: user.email });
+            Emitter.emit('user.login', { id: user.id, email: user.email });
             return res.redirect('/home');
 
         } catch (error) {
@@ -133,7 +133,7 @@ export class AuthController extends BaseController {
             );
 
             await em.persistAndFlush(user);
-            emitter.emit('user.registered', { id: user.id, email: user.email });
+            Emitter.emit('user.registered', { id: user.id, email: user.email });
 
             const token = makeVerificationToken(user.id, user.email);
             const appUrl = variables.APP_URL;
@@ -143,7 +143,7 @@ export class AuthController extends BaseController {
                 <p><a href="${verifyUrl}">Click here to verify your email address</a></p>
                 <p>If you did not create an account, please ignore this email.</p>
             `;
-            await sendMail(user.email, 'Verify your email address', html);
+            await Mailer.send(user.email, 'Verify your email address', html);
 
             req.authenticate(user);
             return res.redirect('/verify-email');
@@ -209,7 +209,7 @@ export class AuthController extends BaseController {
                     <p>If you did not request this, please ignore this email.</p>
                 `;
 
-                await sendMail(email, 'Password Reset Request', html);
+                await Mailer.send(email, 'Password Reset Request', html);
             }
 
             return instance.render(req, res, 'Auth/ForgotPassword', {
@@ -323,7 +323,7 @@ export class AuthController extends BaseController {
         if (!user.emailVerifiedAt) {
             user.emailVerifiedAt = new Date();
             await em.flush();
-            emitter.emit('user.verified', { id: user.id, email: user.email });
+            Emitter.emit('user.verified', { id: user.id, email: user.email });
         }
 
         return res.redirect('/home');
@@ -352,7 +352,7 @@ export class AuthController extends BaseController {
             <p><a href="${verifyUrl}">Click here to verify your email address</a></p>
             <p>If you did not create an account, please ignore this email.</p>
         `;
-        await sendMail(user.email, 'Verify your email address', html);
+        await Mailer.send(user.email, 'Verify your email address', html);
 
         return instance.render(req, res, 'Auth/VerifyEmail', {
             email: user.email,

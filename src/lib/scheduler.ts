@@ -9,31 +9,33 @@ export interface ScheduledTask {
 
 const tasks: ScheduledTask[] = [];
 
-export function schedule(expression: string, handler: () => void | Promise<void>): CronTask {
-    if (!cron.validate(expression)) {
-        throw new Error(`Invalid cron expression: "${expression}"`);
+export class Scheduler {
+    static schedule(expression: string, handler: () => void | Promise<void>): CronTask {
+        if (!cron.validate(expression)) {
+            throw new Error(`Invalid cron expression: "${expression}"`);
+        }
+
+        const task = cron.schedule(expression, async () => {
+            try {
+                await handler();
+            } catch (err) {
+                console.error(`[scheduler] Task failed (${expression}):`, err);
+            }
+        });
+
+        tasks.push({ expression, handler, task });
+        return task;
     }
 
-    const task = cron.schedule(expression, async () => {
-        try {
-            await handler();
-        } catch (err) {
-            console.error(`[scheduler] Task failed (${expression}):`, err);
-        }
-    });
+    static startAll(): void {
+        tasks.forEach(t => t.task.start());
+    }
 
-    tasks.push({ expression, handler, task });
-    return task;
-}
+    static stopAll(): void {
+        tasks.forEach(t => t.task.stop());
+    }
 
-export function startAll(): void {
-    tasks.forEach(t => t.task.start());
-}
-
-export function stopAll(): void {
-    tasks.forEach(t => t.task.stop());
-}
-
-export function getRegisteredTasks(): ReadonlyArray<{ expression: string }> {
-    return tasks.map(t => ({ expression: t.expression }));
+    static getRegisteredTasks(): ReadonlyArray<{ expression: string }> {
+        return tasks.map(t => ({ expression: t.expression }));
+    }
 }

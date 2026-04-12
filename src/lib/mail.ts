@@ -46,16 +46,18 @@ const drivers = new Map<string, MailTransport>();
 drivers.set('log', new LogTransport());
 drivers.set('smtp', new SmtpTransport());
 
-export function registerDriver(name: string, driver: MailTransport): void {
-    drivers.set(name, driver);
-}
-
-export async function sendMail(to: string, subject: string, html: string): Promise<void> {
-    const driverName = process.env.MAIL_DRIVER ?? 'log';
-    const driver = drivers.get(driverName);
-    if (!driver) {
-        throw new Error(`Mail driver '${driverName}' is not registered`);
+export class Mailer {
+    static registerDriver(name: string, driver: MailTransport): void {
+        drivers.set(name, driver);
     }
-    const from = process.env.MAIL_FROM ?? 'noreply@example.com';
-    await driver.sendMail({ to, subject, html, from });
+
+    static async send(to: string, subject: string, html: string): Promise<void> {
+        const driverName = process.env.MAIL_DRIVER ?? 'log';
+        const driver = drivers.get(driverName);
+        if (!driver) {
+            throw new Error(`Mail driver '${driverName}' is not registered`);
+        }
+        const from = process.env.MAIL_FROM ?? 'noreply@example.com';
+        await driver.sendMail({ to, subject, html, from });
+    }
 }
