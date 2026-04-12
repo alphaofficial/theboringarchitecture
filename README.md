@@ -32,18 +32,23 @@ Flags: `--quick`, `--branch <name>`, `--no-install`, `--no-git`.
 
 ## Scripts
 
-| Command                      | Description                           |
-| ---------------------------- | ------------------------------------- |
-| `npm run dev`                | Start Express server + Vite watch     |
-| `npm run build`              | Production build (client + server)    |
-| `npm start`                  | Run built server (`dist/index.js`)    |
-| `npm test`                   | Run integration tests                 |
-| `npm run migrate`            | Generate + apply migrations           |
-| `npm run migration:run`      | Apply pending migrations              |
-| `npm run migration:create`   | Create a blank migration              |
-| `npm run migration:generate` | Generate a migration from entity diff |
-| `npm run db:seed`            | Run seeders                           |
-| `npm run scaffold -- ...`    | Generate pages, controllers, routes   |
+| Command                      | Description                                  |
+| ---------------------------- | -------------------------------------------- |
+| `npm run dev`                | Start Express server + Vite watch            |
+| `npm run build`              | Production build (client + server)           |
+| `npm start`                  | Run built server (`dist/index.js`)           |
+| `npm test`                   | Run integration + E2E tests                  |
+| `npm run test:integration`   | Run integration tests (Jest + supertest)     |
+| `npm run test:e2e`           | Run Playwright E2E tests                     |
+| `npm run work`               | Start the Graphile Worker queue worker       |
+| `npm run scheduler`          | Start the node-cron task scheduler           |
+| `npm run migrate`            | Generate + apply migrations                  |
+| `npm run migration:run`      | Apply pending migrations                     |
+| `npm run migration:revert`   | Revert the last applied migration            |
+| `npm run migration:create`   | Create a blank migration                     |
+| `npm run migration:status`   | Show pending / applied migration status      |
+| `npm run db:seed`            | Run seeders                                  |
+| `npm run scaffold -- ...`    | Generate pages, controllers, routes          |
 
 ## Environment variables
 
