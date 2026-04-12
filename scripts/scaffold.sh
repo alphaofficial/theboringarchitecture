@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# Hatch scaffold — generate pages, controllers, and routes.
+# Hatch scaffold — generate pages, controllers, routes, jobs, mail templates, and event listeners.
 #
 # Usage:
 #   scripts/scaffold.sh page <Name> [path] [--model] [--fields "a:type,b:type"]
 #   scripts/scaffold.sh controller <Name>
 #   scripts/scaffold.sh route <method> <path> <Controller.action> [--auth|--guest]
 #   scripts/scaffold.sh model <Name> [--fields "a:type,b:type"]
+#   scripts/scaffold.sh job <Name>
+#   scripts/scaffold.sh mail <Name>
+#   scripts/scaffold.sh event <Name>
 #
 # Field types: string, text, int, bool, date, datetime, decimal, uuid, json
 # Append "?" for nullable, e.g. publishedAt:datetime?
@@ -15,6 +18,9 @@
 #   scripts/scaffold.sh page Post --model --fields "title:string,body:text"
 #   scripts/scaffold.sh model Post --fields "title:string,views:int"
 #   scripts/scaffold.sh route get /health Public.health
+#   scripts/scaffold.sh job SendWelcomeEmail
+#   scripts/scaffold.sh mail OrderConfirmation
+#   scripts/scaffold.sh event UserSubscribed
 
 set -euo pipefail
 
@@ -24,6 +30,9 @@ CTRL_DIR="$ROOT/src/controllers"
 ROUTES_FILE="$ROOT/src/routes/route.ts"
 MODELS_DIR="$ROOT/src/models"
 MAPPINGS_DIR="$ROOT/src/database/mappings"
+JOBS_DIR="$ROOT/src/jobs"
+MAIL_DIR="$ROOT/src/mail/templates"
+LISTENERS_DIR="$ROOT/src/listeners"
 
 red()   { printf '\033[31m%s\033[0m\n' "$*" >&2; }
 green() { printf '\033[32m%s\033[0m\n' "$*"; }
@@ -373,6 +382,96 @@ cmd_route() {
 	add_route "$method" "$url" "$target" "$guard"
 }
 
+make_job() {
+	local name="$1"              # SendWelcomeEmail
+	mkdir -p "$JOBS_DIR"
+	local camel
+	camel="$(printf '%s' "$name" | awk '{print tolower(substr($0,1,1)) substr($0,2)}')"
+	local file="$JOBS_DIR/${camel}.ts"
+	if [ -e "$file" ]; then
+		info "job exists: ${camel}.ts"
+		return
+	fi
+	cat > "$file" <<TS
+interface ${name}Payload {
+	// add your payload fields here
+}
+
+export async function ${camel}(payload: unknown): Promise<void> {
+	const data = payload as ${name}Payload;
+	// TODO: implement job logic
+	void data;
+}
+TS
+	green "created src/jobs/${camel}.ts"
+}
+
+make_mail() {
+	local name="$1"              # OrderConfirmation
+	mkdir -p "$MAIL_DIR"
+	local file="$MAIL_DIR/${name}.ts"
+	if [ -e "$file" ]; then
+		info "mail template exists: ${name}.ts"
+		return
+	fi
+	cat > "$file" <<TS
+export interface ${name}Data {
+	// add your template variables here
+}
+
+export function ${name}(data: ${name}Data): string {
+	void data;
+	return \`
+		<p><!-- TODO: implement ${name} template --></p>
+	\`;
+}
+TS
+	green "created src/mail/templates/${name}.ts"
+}
+
+make_event_listener() {
+	local name="$1"              # UserSubscribed
+	mkdir -p "$LISTENERS_DIR"
+	local camel
+	camel="$(printf '%s' "$name" | awk '{print tolower(substr($0,1,1)) substr($0,2)}')"
+	local file="$LISTENERS_DIR/${camel}.ts"
+	if [ -e "$file" ]; then
+		info "listener exists: ${camel}.ts"
+		return
+	fi
+	cat > "$file" <<TS
+import { emitter } from '../lib/events';
+
+// TODO: replace 'user.registered' with the event you want to listen for
+emitter.on('user.registered', (payload) => {
+	// TODO: implement ${name} listener logic
+	void payload;
+});
+TS
+	green "created src/listeners/${camel}.ts"
+}
+
+cmd_job() {
+	local name="${1:-}"
+	[ -z "$name" ] && die "usage: scaffold.sh job <Name>"
+	assert_pascal "$name"
+	make_job "$name"
+}
+
+cmd_mail() {
+	local name="${1:-}"
+	[ -z "$name" ] && die "usage: scaffold.sh mail <Name>"
+	assert_pascal "$name"
+	make_mail "$name"
+}
+
+cmd_event() {
+	local name="${1:-}"
+	[ -z "$name" ] && die "usage: scaffold.sh event <Name>"
+	assert_pascal "$name"
+	make_event_listener "$name"
+}
+
 # --- entrypoint ------------------------------------------------------------
 
 sub="${1:-}"
@@ -382,8 +481,11 @@ case "$sub" in
 	controller) cmd_controller "$@" ;;
 	route)      cmd_route "$@" ;;
 	model)      cmd_model "$@" ;;
+	job)        cmd_job "$@" ;;
+	mail)       cmd_mail "$@" ;;
+	event)      cmd_event "$@" ;;
 	""|-h|--help)
-		sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'
+		sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'
 		;;
 	*) die "unknown command: $sub" ;;
 esac

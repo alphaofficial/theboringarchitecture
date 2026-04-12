@@ -32,6 +32,9 @@ function sandbox(): string {
 	mkdirSync(join(dir, "src", "views", "pages"), { recursive: true });
 	mkdirSync(join(dir, "src", "models"), { recursive: true });
 	mkdirSync(join(dir, "src", "database", "mappings"), { recursive: true });
+	mkdirSync(join(dir, "src", "jobs"), { recursive: true });
+	mkdirSync(join(dir, "src", "mail", "templates"), { recursive: true });
+	mkdirSync(join(dir, "src", "listeners"), { recursive: true });
 	copyFileSync(SCAFFOLD_SRC, join(dir, "scripts", "scaffold.sh"));
 	writeFileSync(join(dir, "src", "routes", "route.ts"), ROUTE_SEED);
 	// Symlink node_modules so dynamic imports of generated mapping files can
@@ -200,6 +203,66 @@ describe("scaffold.sh", () => {
 			const mapping = read(dir, "src/database/mappings/post.map.ts");
 			expect(mapping).toContain('title: { type: "string" }');
 			expect(mapping).toContain('body: { type: "text" }');
+		});
+	});
+
+	describe("job", () => {
+		it("creates a job handler file", () => {
+			run(dir, "job SendWelcomeEmail");
+
+			const file = join(dir, "src/jobs/sendWelcomeEmail.ts");
+			expect(existsSync(file)).toBe(true);
+
+			const src = read(dir, "src/jobs/sendWelcomeEmail.ts");
+			expect(src).toContain("interface SendWelcomeEmailPayload");
+			expect(src).toContain("export async function sendWelcomeEmail(payload: unknown)");
+		});
+
+		it("is idempotent — second run does not overwrite", () => {
+			run(dir, "job ProcessOrder");
+			const before = read(dir, "src/jobs/processOrder.ts");
+			run(dir, "job ProcessOrder");
+			expect(read(dir, "src/jobs/processOrder.ts")).toBe(before);
+		});
+	});
+
+	describe("mail", () => {
+		it("creates a mail template file", () => {
+			run(dir, "mail OrderConfirmation");
+
+			const file = join(dir, "src/mail/templates/OrderConfirmation.ts");
+			expect(existsSync(file)).toBe(true);
+
+			const src = read(dir, "src/mail/templates/OrderConfirmation.ts");
+			expect(src).toContain("interface OrderConfirmationData");
+			expect(src).toContain("export function OrderConfirmation(");
+		});
+
+		it("is idempotent — second run does not overwrite", () => {
+			run(dir, "mail ResetPassword");
+			const before = read(dir, "src/mail/templates/ResetPassword.ts");
+			run(dir, "mail ResetPassword");
+			expect(read(dir, "src/mail/templates/ResetPassword.ts")).toBe(before);
+		});
+	});
+
+	describe("event", () => {
+		it("creates a listener file", () => {
+			run(dir, "event UserSubscribed");
+
+			const file = join(dir, "src/listeners/userSubscribed.ts");
+			expect(existsSync(file)).toBe(true);
+
+			const src = read(dir, "src/listeners/userSubscribed.ts");
+			expect(src).toContain("emitter.on(");
+			expect(src).toContain("UserSubscribed");
+		});
+
+		it("is idempotent — second run does not overwrite", () => {
+			run(dir, "event UserUnsubscribed");
+			const before = read(dir, "src/listeners/userUnsubscribed.ts");
+			run(dir, "event UserUnsubscribed");
+			expect(read(dir, "src/listeners/userUnsubscribed.ts")).toBe(before);
 		});
 	});
 
