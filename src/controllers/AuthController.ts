@@ -5,9 +5,38 @@ import { User } from '../models/User';
 import { PasswordReset } from '../models/PasswordReset';
 import { Session } from '../models/Session';
 import { sendMail } from '../lib/mail';
+import { emitter } from '../lib/events';
 import { z } from 'zod';
 import crypto from 'crypto';
 import variables from '../config/variables';
+
+// ---- email-verification token helpers ----
+
+function makeVerificationToken(userId: string, email: string): string {
+    const payload = Buffer.from(JSON.stringify({ id: userId, email, iat: Date.now() })).toString('base64url');
+    const sig = crypto.createHmac('sha256', variables.APP_KEY).update(payload).digest('hex');
+    return `${payload}.${sig}`;
+}
+
+interface VerificationPayload {
+    id: string;
+    email: string;
+    iat: number;
+}
+
+function verifyVerificationToken(token: string): VerificationPayload | null {
+    const dot = token.lastIndexOf('.');
+    if (dot < 0) return null;
+    const payload = token.slice(0, dot);
+    const sig = token.slice(dot + 1);
+    const expected = crypto.createHmac('sha256', variables.APP_KEY).update(payload).digest('hex');
+    if (!crypto.timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex'))) return null;
+    try {
+        return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as VerificationPayload;
+    } catch {
+        return null;
+    }
+}
 
 const loginSchema = z.object({
     email: z.email(),
@@ -104,8 +133,18 @@ export class AuthController extends BaseController {
 
             await em.persistAndFlush(user);
 
+            const token = makeVerificationToken(user.id, user.email);
+            const appUrl = variables.APP_URL;
+            const verifyUrl = `${appUrl}/verify-email/${token}`;
+            const html = `
+                <p>Welcome to ${variables.APP_NAME}!</p>
+                <p><a href="${verifyUrl}">Click here to verify your email address</a></p>
+                <p>If you did not create an account, please ignore this email.</p>
+            `;
+            await sendMail(user.email, 'Verify your email address', html);
+
             req.authenticate(user);
-            return res.redirect('/home');
+            return res.redirect('/verify-email');
 
         } catch (error) {
             if (error instanceof z.ZodError) {
@@ -243,5 +282,79 @@ export class AuthController extends BaseController {
             }
             throw error;
         }
+    }
+
+    static async showVerifyEmail(req: Request, res: Response) {
+        const instance = new AuthController();
+        const user = await req.user();
+        return instance.render(req, res, 'Auth/VerifyEmail', { email: user?.email });
+    }
+
+    static async verifyEmail(req: Request, res: Response) {
+        const instance = new AuthController();
+        const { token } = req.params;
+        const payload = verifyVerificationToken(token);
+
+        if (!payload) {
+            return instance.render(req, res, 'Auth/VerifyEmail', {
+                errors: { email: ['This verification link is invalid.'] }
+            });
+        }
+
+        const expiryMs = variables.EMAIL_VERIFICATION_EXPIRY * 60 * 1000;
+        if (Date.now() - payload.iat > expiryMs) {
+            const user = await req.user();
+            return instance.render(req, res, 'Auth/VerifyEmail', {
+                email: user?.email,
+                errors: { email: ['This verification link has expired. Please request a new one.'] }
+            });
+        }
+
+        const em = req.entityManager;
+        const user = await em.findOne(User, { id: payload.id, email: payload.email });
+        if (!user) {
+            return instance.render(req, res, 'Auth/VerifyEmail', {
+                errors: { email: ['This verification link is invalid.'] }
+            });
+        }
+
+        if (!user.emailVerifiedAt) {
+            user.emailVerifiedAt = new Date();
+            await em.flush();
+            emitter.emit('user.verified', { id: user.id, email: user.email });
+        }
+
+        return res.redirect('/home');
+    }
+
+    static async resendVerification(req: Request, res: Response) {
+        const instance = new AuthController();
+        const user = await req.user();
+
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        if (user.emailVerifiedAt) {
+            return instance.render(req, res, 'Auth/VerifyEmail', {
+                email: user.email,
+                status: 'Your email is already verified.'
+            });
+        }
+
+        const token = makeVerificationToken(user.id, user.email);
+        const appUrl = variables.APP_URL;
+        const verifyUrl = `${appUrl}/verify-email/${token}`;
+        const html = `
+            <p>Please verify your email address.</p>
+            <p><a href="${verifyUrl}">Click here to verify your email address</a></p>
+            <p>If you did not create an account, please ignore this email.</p>
+        `;
+        await sendMail(user.email, 'Verify your email address', html);
+
+        return instance.render(req, res, 'Auth/VerifyEmail', {
+            email: user.email,
+            status: 'A new verification link has been sent to your email address.'
+        });
     }
 }

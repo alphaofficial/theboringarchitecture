@@ -178,7 +178,7 @@ describe("Pages Integration Tests", () => {
 					.send(userData);
 
 				expect(response.status).toBe(302);
-				expect(response.headers.location).toBe("/home");
+				expect(response.headers.location).toBe("/verify-email");
 
 				const em = database.em.fork();
 				const createdUser = await em.findOne(User, { email: "john@example.com" });
