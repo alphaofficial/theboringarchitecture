@@ -453,9 +453,41 @@ Spin up a real browser against a built frontend. Suites under `test/integration/
 
 See `test/integration/` for all test source files.
 
+## Deployment
+
+### Docker
+
+The included `Dockerfile` builds a production image with PM2 as the process manager.
+
+```bash
+# Build the image
+docker build -t hatch-app .
+
+# Run the container
+docker run -d -p 3000:3000 --env-file .env hatch-app
+```
+
+The image installs dependencies, compiles TypeScript, builds the Vite frontend, and starts the app via `pm2-runtime`. Port 3000 is exposed by default.
+
+### PM2 cluster mode
+
+The `ecosystem.config.js` runs the compiled app (`./dist/index.js`) in PM2 cluster mode. Default settings:
+
+| Option | Value | Notes |
+|---|---|---|
+| `exec_mode` | `cluster` | Spreads across available CPUs |
+| `instances` | `1` | Increase to match your CPU count |
+| `max_memory_restart` | `1G` | Auto-restarts if memory exceeds 1 GB |
+| `autorestart` | `true` | Restarts on crash |
+
+To scale across all CPUs, set `instances` to `"max"` or a specific number in `ecosystem.config.js`.
+
+The Docker image also configures `pm2-logrotate` to rotate logs at 5 MB, retain one backup, and compress rotated files every three days.
+
 ## Production checklist
 
 - [ ] Set `NODE_ENV=production`
+- [ ] Set `APP_KEY` (`openssl rand -hex 32`) — used for HMAC token signing
 - [ ] Set `SESSION_SECRET` (`openssl rand -hex 32`)
 - [ ] Set `TRUST_PROXY` to match your reverse proxy
 - [ ] Mount a persistent volume for the SQLite file (or move to Postgres)
