@@ -42,6 +42,22 @@ npm install
 npm run dev
 ```
 
+## Architecture
+
+Hatch JS uses [Inertia.js](https://inertiajs.com/) to bridge Express and React — no separate API layer. Every request flows through a single pipeline:
+
+```
+Browser request
+  → Express router (src/routes/)
+    → Middleware (session, auth, Inertia)
+      → Controller (src/controllers/)
+        → res.inertia('Page', props)
+          → React page (src/views/pages/)
+            → Full HTML response (first visit) or JSON props (subsequent navigation)
+```
+
+On the first visit the server returns a full HTML document with the initial page component and props embedded. Subsequent navigations are handled client-side by Inertia — the browser sends XHR requests and receives only the updated page component name and props as JSON, avoiding full page reloads.
+
 ## What's included
 
 - **Inertia SSR adapter** — `res.inertia('Page', props)` from any controller
