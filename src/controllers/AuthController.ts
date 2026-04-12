@@ -30,7 +30,9 @@ function verifyVerificationToken(token: string): VerificationPayload | null {
     const payload = token.slice(0, dot);
     const sig = token.slice(dot + 1);
     const expected = crypto.createHmac('sha256', variables.APP_KEY).update(payload).digest('hex');
-    if (!crypto.timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex'))) return null;
+    const sigBuf = Buffer.from(sig, 'hex');
+    const expBuf = Buffer.from(expected, 'hex');
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) return null;
     try {
         return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as VerificationPayload;
     } catch {

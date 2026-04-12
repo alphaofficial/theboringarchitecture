@@ -20,6 +20,8 @@ const baseSchema = z.object({
 		.transform(v => v === 'true' || v === '1'),
 	RATE_LIMIT_AUTH_MAX: z.coerce.number().optional().default(5),
 	RATE_LIMIT_AUTH_WINDOW_MS: z.coerce.number().optional().default(60_000),
+	RATE_LIMIT_FEATURE_MAX: z.coerce.number().optional().default(60),
+	RATE_LIMIT_FEATURE_WINDOW_MS: z.coerce.number().optional().default(60_000),
 	PASSWORD_RESET_EXPIRY: z.coerce.number().optional().default(60), // minutes
 	EMAIL_VERIFICATION_EXPIRY: z.coerce.number().optional().default(60), // minutes
 	CACHE_DRIVER: z.string().optional().default('memory'),

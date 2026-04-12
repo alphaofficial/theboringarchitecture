@@ -4,7 +4,7 @@ import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 const noop: RequestHandler = (_req, _res, next) => next();
 
 function bool(v: string | undefined): boolean {
-	return v === 'true' || v === '1';
+return v === 'true' || v === '1';
 }
 
 /**
@@ -19,19 +19,19 @@ function bool(v: string | undefined): boolean {
  * Reads env at the moment the middleware is created (typically app boot).
  */
 export function authRateLimit(): RequestHandler {
-	if (!bool(process.env.RATE_LIMIT_ENABLED)) return noop;
+if (!bool(process.env.RATE_LIMIT_ENABLED)) return noop;
 
-	const max = Number(process.env.RATE_LIMIT_AUTH_MAX ?? 5);
-	const windowMs = Number(process.env.RATE_LIMIT_AUTH_WINDOW_MS ?? 60_000);
+const max = Number(process.env.RATE_LIMIT_AUTH_MAX ?? 5);
+const windowMs = Number(process.env.RATE_LIMIT_AUTH_WINDOW_MS ?? 60_000);
 
-	return rateLimit({
-		windowMs,
-		max,
-		standardHeaders: true,
-		legacyHeaders: false,
-		keyGenerator: (req) => ipKeyGenerator(req.ip ?? ''),
-		message: { error: 'Too many requests, please try again later.' },
-	});
+return rateLimit({
+windowMs,
+max,
+standardHeaders: true,
+legacyHeaders: false,
+keyGenerator: (req) => ipKeyGenerator(req.ip ?? ''),
+message: { error: 'Too many requests, please try again later.' },
+});
 }
 
 /**
@@ -45,20 +45,20 @@ export function authRateLimit(): RequestHandler {
  *   RATE_LIMIT_FEATURE_WINDOW_MS (default 60000)
  */
 export function featureRateLimit(): RequestHandler {
-	if (!bool(process.env.RATE_LIMIT_ENABLED)) return noop;
+if (!bool(process.env.RATE_LIMIT_ENABLED)) return noop;
 
-	const max = Number(process.env.RATE_LIMIT_FEATURE_MAX ?? 60);
-	const windowMs = Number(process.env.RATE_LIMIT_FEATURE_WINDOW_MS ?? 60_000);
+const max = Number(process.env.RATE_LIMIT_FEATURE_MAX ?? 60);
+const windowMs = Number(process.env.RATE_LIMIT_FEATURE_WINDOW_MS ?? 60_000);
 
-	return rateLimit({
-		windowMs,
-		max,
-		standardHeaders: true,
-		legacyHeaders: false,
-		keyGenerator: (req) => {
-			const userId = (req.session as any)?.userId;
-			return userId ? String(userId) : ipKeyGenerator(req.ip ?? '');
-		},
-		message: { error: 'Too many requests, please try again later.' },
-	});
+return rateLimit({
+windowMs,
+max,
+standardHeaders: true,
+legacyHeaders: false,
+keyGenerator: (req) => {
+const userId = (req.session as any)?.userId;
+return userId ? String(userId) : ipKeyGenerator(req.ip ?? '');
+},
+message: { error: 'Too many requests, please try again later.' },
+});
 }

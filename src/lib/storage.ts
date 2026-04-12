@@ -19,7 +19,12 @@ class LocalDiskDriver implements StorageDriver {
     }
 
     private resolve(filePath: string): string {
-        return path.join(this.basePath, filePath);
+        const resolved = path.resolve(this.basePath, filePath);
+        const base = path.resolve(this.basePath);
+        if (!resolved.startsWith(base + path.sep) && resolved !== base) {
+            throw new Error(`Invalid file path: "${filePath}" escapes the storage directory`);
+        }
+        return resolved;
     }
 
     async put(filePath: string, data: Buffer | string): Promise<void> {

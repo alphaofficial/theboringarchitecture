@@ -1,5 +1,6 @@
 import * as cron from 'node-cron';
 import type { ScheduledTask as CronTask } from 'node-cron';
+import { PinoLogger } from '../logger/pinoLogger';
 
 export interface ScheduledTask {
     expression: string;
@@ -19,7 +20,7 @@ export class Scheduler {
             try {
                 await handler();
             } catch (err) {
-                console.error(`[scheduler] Task failed (${expression}):`, err);
+                PinoLogger.error('scheduler', `Task failed (${expression})`, { error: err });
             }
         });
 
