@@ -16,8 +16,9 @@
     "build:client": "vite build",
     "build:server": "tsc --project tsconfig.server.json && tsc-alias -p tsconfig.server.json",
     "start": "node dist/index.js",
-    "test": "npm run test:integration",
+    "test": "npm run test:integration && npm run test:e2e",
     "test:integration": "jest --config test/integration/jest.config.js",
+    "test:e2e": "playwright test",
     "migration:run": "mikro-orm migration:up",
     "migration:revert": "mikro-orm migration:down",
     "migration:create": "mikro-orm migration:create",
@@ -63,6 +64,7 @@
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.5.1",
+    "@playwright/test": "^1.59.1",
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.5.2",
