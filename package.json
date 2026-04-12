@@ -23,7 +23,8 @@
     "migration:create": "mikro-orm migration:create",
     "migration:status": "mikro-orm migration:check",
     "migrate": "npm run migration:create && npm run migration:run",
-    "db:seed": "mikro-orm seeder:run"
+    "db:seed": "mikro-orm seeder:run",
+    "work": "tsx src/worker.ts"
   },
   "keywords": [],
   "author": "",
