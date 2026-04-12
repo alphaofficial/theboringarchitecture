@@ -24,11 +24,19 @@ Flags: `--quick`, `--branch <name>`, `--no-install`, `--no-git`.
 
 - **Inertia SSR adapter** — `res.inertia('Page', props)` from any controller
 - **Auth & sessions** — bcrypt, DB-backed sessions, `req.user()` / `req.is_authenticated()`, `auth`/`guest` route guards
+- **Complete auth flows** — forgot password, password reset, and email verification with the `verified` middleware
 - **MikroORM** — SQLite by default, Postgres-ready, migrations, EntitySchema mappings (no decorators)
 - **Production hardening** — Helmet, gzip compression, `/healthz` + `/readyz`, graceful shutdown, structured Pino logs, HTML-escaped page props
 - **Configurable rate limiting** — off by default, opt-in via env
+- **Queue** — Graphile Worker (`npm run work`), Postgres required; dispatch jobs with `Queue.dispatch('jobName', payload)`
+- **Mailer** — log + SMTP drivers; send mail with `Mailer.send(to, subject, html)`
+- **Task Scheduler** — node-cron (`npm run scheduler`); register recurring tasks with `Scheduler.schedule('0 * * * *', handler)`
+- **Typed Event Bus** — `Emitter.on` / `Emitter.emit` with type-safe `HatchEvents` interface
+- **In-memory Cache** — `Cache.get / set / delete / flush` with optional TTL
+- **File Storage** — local + memory drivers; `Storage.put / get / delete / url`; swap drivers via env
 - **Tailwind CSS** + Vite client build
 - **Integration test suite** — supertest + jest, runs against a real SQLite DB
+- **Playwright E2E test suite** — `npm run test:e2e`, runs against a real server with a browser
 
 ## Scripts
 
