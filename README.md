@@ -182,6 +182,38 @@ npm run work
 
 > **Note:** If `DATABASE_URL` is not set, `Queue.dispatch` is a safe no-op (logs a warning) so the rest of the app continues to work with SQLite.
 
+## Mailer
+
+Send transactional email via `Mailer.send`:
+
+```ts
+import { Mailer } from './lib/mail';
+
+await Mailer.send('user@example.com', 'Welcome!', '<p>Thanks for signing up.</p>');
+```
+
+The active driver is selected by the `MAIL_DRIVER` env var:
+
+| Driver | Description                                              |
+| ------ | -------------------------------------------------------- |
+| `log`  | Writes mail to the application log (default, no config) |
+| `smtp` | Sends via SMTP — requires `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS` |
+
+Register a custom driver at boot time:
+
+```ts
+import { Mailer, MailTransport, MailMessage } from './lib/mail';
+
+class PostmarkTransport implements MailTransport {
+  async sendMail(message: MailMessage): Promise<void> {
+    // call Postmark API …
+  }
+}
+
+Mailer.registerDriver('postmark', new PostmarkTransport());
+// then set MAIL_DRIVER=postmark in your env
+```
+
 ## Render an Inertia page
 
 ```ts
