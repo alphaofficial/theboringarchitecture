@@ -414,3 +414,300 @@ The cloned project records the version it was scaffolded from in
 ```json
 { "hatch": { "version": "2026.04.07", "kind": "tag" } }
 ```
+
+---
+
+## 10. Job Queue
+
+Background jobs are powered by **Graphile Worker** (PostgreSQL-backed). The queue is an opt-in service — it gracefully no-ops when `DATABASE_URL` is not set.
+
+### Dispatching a job
+
+```ts
+import { Queue } from '../lib/queue';
+
+await Queue.dispatch('send-welcome-email', { userId: user.id });
+```
+
+If `DATABASE_URL` is not configured, `dispatch()` logs a warning and returns without throwing.
+
+### Defining a job handler
+
+Create a file in `src/jobs/`:
+
+```ts
+// src/jobs/send-welcome-email.ts
+export default async function sendWelcomeEmail(payload: { userId: string }) {
+  // send the email…
+}
+```
+
+### Starting the worker
+
+Register your handlers and start the worker process:
+
+```ts
+// src/worker.ts
+import { Queue } from './lib/queue';
+import sendWelcomeEmail from './jobs/send-welcome-email';
+
+await Queue.start(process.env.DATABASE_URL!, {
+  'send-welcome-email': sendWelcomeEmail,
+});
+```
+
+```bash
+npm run work
+```
+
+### Environment variables
+
+| Variable       | Default | Notes                               |
+| -------------- | ------- | ----------------------------------- |
+| `DATABASE_URL` | —       | PostgreSQL connection string (opt-in) |
+
+---
+
+## 11. Mailer
+
+The mailer uses a driver-based architecture. All drivers implement `MailTransport`.
+
+### Sending an email
+
+```ts
+import { Mailer } from '../lib/mail';
+
+await Mailer.send('user@example.com', 'Welcome!', '<p>Thanks for joining.</p>');
+```
+
+### Drivers
+
+| Driver | When used | Config required |
+| ------ | --------- | --------------- |
+| `log`  | `MAIL_DRIVER=log` (default in dev) | None — writes to Pino logger |
+| `smtp` | `MAIL_DRIVER=smtp` | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS`, `MAIL_FROM` |
+
+### Registering a custom driver
+
+```ts
+import { Mailer, MailTransport, MailMessage } from '../lib/mail';
+
+class PostmarkTransport implements MailTransport {
+  async sendMail(message: MailMessage) {
+    // call Postmark API…
+  }
+}
+
+Mailer.registerDriver('postmark', new PostmarkTransport());
+// Then set MAIL_DRIVER=postmark in your env
+```
+
+### Environment variables
+
+| Variable    | Default              | Notes                              |
+| ----------- | -------------------- | ---------------------------------- |
+| `MAIL_DRIVER` | `log`              | Active driver                      |
+| `MAIL_FROM`   | `noreply@example.com` | Sender address                  |
+| `MAIL_HOST`   | —                  | SMTP hostname                      |
+| `MAIL_PORT`   | `587`              | SMTP port                          |
+| `MAIL_USER`   | —                  | SMTP username                      |
+| `MAIL_PASS`   | —                  | SMTP password                      |
+
+---
+
+## 12. Task Scheduler
+
+The scheduler wraps **node-cron** and lets you register recurring tasks in code.
+
+### Scheduling a task
+
+```ts
+import { Scheduler } from '../lib/scheduler';
+
+Scheduler.schedule('0 * * * *', async () => {
+  // runs every hour
+  await cleanExpiredSessions();
+});
+```
+
+### Starting the scheduler
+
+```ts
+// src/scheduler.ts
+import { Scheduler } from './lib/scheduler';
+import { cleanExpiredSessions } from './tasks/cleanExpiredSessions';
+
+Scheduler.schedule('0 3 * * *', cleanExpiredSessions);
+Scheduler.startAll();
+```
+
+```bash
+npm run scheduler
+```
+
+### API
+
+| Method | Description |
+| ------ | ----------- |
+| `Scheduler.schedule(expr, fn)` | Register a cron task (validates the expression) |
+| `Scheduler.startAll()` | Start all registered tasks |
+| `Scheduler.stopAll()` | Stop all registered tasks |
+| `Scheduler.getRegisteredTasks()` | Returns `{ expression }[]` for inspection |
+
+---
+
+## 13. Event Bus
+
+A lightweight typed event emitter backed by Node's `EventEmitter`.
+
+### Emitting an event
+
+```ts
+import { Emitter } from '../lib/events';
+
+Emitter.emit('user.registered', { id: user.id, email: user.email });
+```
+
+### Listening to an event
+
+```ts
+import { Emitter } from '../lib/events';
+
+Emitter.on('user.registered', ({ id, email }) => {
+  console.log(`New user: ${email}`);
+});
+```
+
+### Built-in events (`HatchEvents`)
+
+| Event            | Payload                         | Fired when                          |
+| ---------------- | ------------------------------- | ----------------------------------- |
+| `user.registered` | `{ id, email }`                | User signs up                       |
+| `user.login`      | `{ id, email }`                | User signs in                       |
+| `user.verified`   | `{ id, email }`                | User verifies their email address   |
+
+### Adding custom events
+
+Extend `HatchEvents` in `src/lib/events.ts`:
+
+```ts
+export interface HatchEvents {
+  'user.registered': { id: string; email: string };
+  // add your own:
+  'order.placed': { orderId: string; total: number };
+}
+```
+
+### API
+
+| Method | Description |
+| ------ | ----------- |
+| `Emitter.emit(event, payload)` | Emit a typed event |
+| `Emitter.on(event, listener)` | Subscribe to an event |
+| `Emitter.off(event, listener)` | Unsubscribe a listener |
+| `Emitter.removeAllListeners(event?)` | Remove all listeners (or all events) |
+
+---
+
+## 14. Caching
+
+Driver-based in-process cache. The default driver is an in-memory `Map` with TTL support.
+
+### Usage
+
+```ts
+import { Cache } from '../lib/cache';
+
+// Store a value for 60 seconds
+await Cache.set('user:42', { name: 'Alice' }, 60);
+
+// Retrieve it (undefined if missing or expired)
+const user = await Cache.get<{ name: string }>('user:42');
+
+// Delete a key
+await Cache.delete('user:42');
+
+// Clear everything
+await Cache.flush();
+```
+
+### Registering a custom driver
+
+```ts
+import { Cache, CacheDriver } from '../lib/cache';
+
+class RedisCache implements CacheDriver {
+  async get<T>(key: string) { /* … */ }
+  async set(key: string, value: unknown, ttlSeconds?: number) { /* … */ }
+  async delete(key: string) { /* … */ }
+  async flush() { /* … */ }
+}
+
+Cache.registerDriver('redis', new RedisCache());
+// Then set CACHE_DRIVER=redis in your env
+```
+
+### Environment variables
+
+| Variable       | Default  | Notes                      |
+| -------------- | -------- | -------------------------- |
+| `CACHE_DRIVER` | `memory` | Active cache driver        |
+
+---
+
+## 15. File Storage
+
+Driver-based file storage. Ships a local disk driver (default) and a memory driver (tests).
+
+### Usage
+
+```ts
+import { Storage } from '../lib/storage';
+
+// Write a file
+await Storage.put('avatars/alice.png', imageBuffer);
+
+// Read it back
+const data = await Storage.get('avatars/alice.png');
+
+// Check existence
+const exists = await Storage.exists('avatars/alice.png');
+
+// Public URL
+const url = Storage.url('avatars/alice.png');
+// => http://localhost:3000/storage/avatars/alice.png
+
+// Delete
+await Storage.delete('avatars/alice.png');
+```
+
+### Drivers
+
+| Driver   | Default | Description |
+| -------- | ------- | ----------- |
+| `local`  | ✓       | Writes to `STORAGE_PATH` (default: `storage/`) |
+| `memory` | —       | In-memory `Map` — no filesystem side effects (great for tests) |
+
+### Registering a custom driver
+
+```ts
+import { Storage, StorageDriver } from '../lib/storage';
+
+class S3Driver implements StorageDriver {
+  async put(filePath: string, data: Buffer | string) { /* … */ }
+  async get(filePath: string) { /* … */ }
+  async delete(filePath: string) { /* … */ }
+  url(filePath: string) { return `https://my-bucket.s3.amazonaws.com/${filePath}`; }
+  async exists(filePath: string) { /* … */ }
+}
+
+Storage.registerDriver('s3', new S3Driver());
+// Then set STORAGE_DRIVER=s3 in your env
+```
+
+### Environment variables
+
+| Variable        | Default               | Notes                        |
+| --------------- | --------------------- | ---------------------------- |
+| `STORAGE_DRIVER` | `local`              | Active storage driver        |
+| `STORAGE_PATH`   | `storage/`           | Base directory (local driver) |
