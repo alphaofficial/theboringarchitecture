@@ -157,7 +157,7 @@ req.is_authenticated(): boolean
 req.is_guest(): boolean
 req.user_id(): string | null
 req.user(): Promise<User | null>
-req.authenticate(user: User): void
+req.authenticate(user: User): Promise<void>
 req.logout(): Promise<void>
 ```
 
@@ -444,6 +444,12 @@ Boot the full Express stack against a real SQLite database. Suites under `test/i
 | `mail.spec.ts` | `Mailer.send` with log driver; `MAIL_DRIVER` switching |
 | `queue.spec.ts` | `Queue.dispatch` no-op when `DATABASE_URL` unset, payload shape |
 | `storage.spec.ts` | `Storage.put / get / delete / url / exists`, local and memory drivers |
+
+Scaffold script tests live under `test/integration/scripts/`:
+
+| Suite | What it covers |
+|---|---|
+| `scaffold.spec.ts` | `npm run scaffold` code generation for pages, controllers, routes, models, jobs, mail, events |
 
 ### E2E tests (Playwright)
 
