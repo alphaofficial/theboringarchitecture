@@ -55,37 +55,6 @@ class LocalDiskDriver implements StorageDriver {
     }
 }
 
-class MemoryDriver implements StorageDriver {
-    private store = new Map<string, Buffer>();
-    private baseUrl: string;
-
-    constructor(baseUrl: string) {
-        this.baseUrl = baseUrl.replace(/\/$/, '');
-    }
-
-    async put(filePath: string, data: Buffer | string): Promise<void> {
-        this.store.set(filePath, Buffer.isBuffer(data) ? data : Buffer.from(data));
-    }
-
-    async get(filePath: string): Promise<Buffer> {
-        const data = this.store.get(filePath);
-        if (!data) throw new Error(`File not found: ${filePath}`);
-        return data;
-    }
-
-    async delete(filePath: string): Promise<void> {
-        this.store.delete(filePath);
-    }
-
-    url(filePath: string): string {
-        return `${this.baseUrl}/storage/${filePath}`;
-    }
-
-    async exists(filePath: string): Promise<boolean> {
-        return this.store.has(filePath);
-    }
-}
-
 const drivers = new Map<string, StorageDriver>();
 
 function getDriver(): StorageDriver {
@@ -101,7 +70,6 @@ function initDrivers(): void {
     const storagePath = process.env.STORAGE_PATH ?? 'storage';
     const appUrl = process.env.APP_URL ?? 'http://localhost:3000';
     drivers.set('local', new LocalDiskDriver(storagePath, appUrl));
-    drivers.set('memory', new MemoryDriver(appUrl));
 }
 
 initDrivers();

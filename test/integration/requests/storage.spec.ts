@@ -1,16 +1,34 @@
 import { Storage, StorageDriver } from '@/lib/storage';
 
-describe('storage (memory driver)', () => {
+describe('storage (in-memory test driver)', () => {
     let prevDriver: string | undefined;
+    const store = new Map<string, Buffer>();
+
+    const memoryDriver: StorageDriver = {
+        put: async (p, d) => { store.set(p, Buffer.isBuffer(d) ? d : Buffer.from(d)); },
+        get: async (p) => {
+            const v = store.get(p);
+            if (!v) throw new Error(`File not found: ${p}`);
+            return v;
+        },
+        delete: async (p) => { store.delete(p); },
+        url: (p) => `/storage/${p}`,
+        exists: async (p) => store.has(p),
+    };
 
     beforeAll(() => {
         prevDriver = process.env.STORAGE_DRIVER;
-        process.env.STORAGE_DRIVER = 'memory';
+        Storage.registerDriver('test-memory', memoryDriver);
+        process.env.STORAGE_DRIVER = 'test-memory';
     });
 
     afterAll(() => {
         if (prevDriver === undefined) delete process.env.STORAGE_DRIVER;
         else process.env.STORAGE_DRIVER = prevDriver;
+    });
+
+    beforeEach(() => {
+        store.clear();
     });
 
     it('returns false for non-existent file', async () => {
