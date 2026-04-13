@@ -35,6 +35,12 @@ const baseSchema = z.object({
 	MAIL_PASS: z.string().optional(),
 	// Queue (Graphile Worker — requires PostgreSQL)
 	DATABASE_URL: z.string().optional(),
+	// S3 Storage (only required when STORAGE_DRIVER=s3)
+	AWS_ACCESS_KEY_ID: z.string().optional(),
+	AWS_SECRET_ACCESS_KEY: z.string().optional(),
+	AWS_REGION: z.string().optional().default('us-east-1'),
+	AWS_S3_BUCKET: z.string().optional(),
+	AWS_S3_ENDPOINT: z.string().optional(),
 	// Scheduler
 	SCHEDULER_ENABLED: z
 		.string()
