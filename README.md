@@ -30,18 +30,6 @@ curl -fsSL https://raw.githubusercontent.com/alphaofficial/hatchjs/main/install.
 
 Flags: `--quick`, `--branch <name>`, `--no-install`, `--no-git`.
 
-### Manual clone and run
-
-If you prefer not to pipe curl to bash:
-
-```bash
-git clone https://github.com/alphaofficial/hatchjs.git my-app
-cd my-app
-cp env.example .env
-npm install
-npm run dev
-```
-
 ## Architecture
 
 Hatch JS uses [Inertia.js](https://inertiajs.com/) to bridge Express and React — no separate API layer. Every request flows through a single pipeline:
