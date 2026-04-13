@@ -59,7 +59,7 @@ On the first visit the server returns a full HTML document with the initial page
 - **Task Scheduler** — node-cron (`npm run scheduler`); register recurring tasks with `Scheduler.schedule('0 * * * *', handler)`
 - **Typed Event Bus** — `Emitter.on` / `Emitter.emit` with type-safe `HatchEvents` interface
 - **In-memory Cache** — `Cache.get / set / delete / flush` with optional TTL
-- **File Storage** — local + memory drivers; `Storage.put / get / delete / url`; swap drivers via env
+- **File Storage** — local + S3 drivers; `Storage.put / get / delete / url`; swap drivers via env
 - **Tailwind CSS** + Vite client build
 - **Integration test suite** — supertest + jest, runs against a real SQLite DB
 - **Playwright E2E test suite** — `npm run test:e2e`, runs against a real server with a browser
@@ -131,8 +131,13 @@ src/
 | `MAIL_USER`                     | _(none)_                | SMTP username                                                                                 |
 | `MAIL_PASS`                     | _(none)_                | SMTP password                                                                                 |
 | `CACHE_DRIVER`                  | `memory`                | Cache backend driver (built-in: `memory`)                                                     |
-| `STORAGE_DRIVER`                | `local`                 | File-storage driver: `local` (disk) or `memory`                                               |
+| `STORAGE_DRIVER`                | `local`                 | File-storage driver: `local` (disk) or `s3`                                                   |
 | `STORAGE_PATH`                  | `storage`               | Root directory for the `local` storage driver                                                 |
+| `AWS_ACCESS_KEY_ID`             | _(none)_                | AWS access key — required when `STORAGE_DRIVER=s3`                                            |
+| `AWS_SECRET_ACCESS_KEY`         | _(none)_                | AWS secret key — required when `STORAGE_DRIVER=s3`                                            |
+| `AWS_REGION`                    | `us-east-1`             | AWS region for the S3 bucket                                                                  |
+| `AWS_S3_BUCKET`                 | _(none)_                | S3 bucket name — required when `STORAGE_DRIVER=s3`                                            |
+| `AWS_S3_ENDPOINT`               | _(none)_                | Custom S3 endpoint (for MinIO, DigitalOcean Spaces, etc.)                                     |
 | `DATABASE_URL`                  | _(none)_                | PostgreSQL connection URL — required to enable the Queue (Graphile Worker)                    |
 | `SCHEDULER_ENABLED`             | `false`                 | Set to `true` to activate the cron-based task scheduler                                       |
 
@@ -330,7 +335,7 @@ Cache.registerDriver('redis', new RedisCacheDriver());
 
 ## Storage
 
-File storage backed by a `local` driver (default) or an in-process `memory` driver. Switch drivers with the `STORAGE_DRIVER` env var. The local driver writes files under the `STORAGE_PATH` directory and serves them at `/storage/<path>`.
+File storage backed by a `local` driver (default) or an `s3` driver for AWS S3 (and S3-compatible services like MinIO). Switch drivers with the `STORAGE_DRIVER` env var. The local driver writes files under the `STORAGE_PATH` directory and serves them at `/storage/<path>`.
 
 ```ts
 import { Storage } from './lib/storage';
@@ -355,14 +360,14 @@ const exists: boolean = await Storage.exists('uploads/avatar.png');
 | Driver  | Description                                       | Notes                                      |
 | ------- | ------------------------------------------------- | ------------------------------------------ |
 | `local` | Writes to disk under `STORAGE_PATH` (default `storage/`) | Set `STORAGE_DRIVER=local` (default)  |
-| `memory` | Stores files in-process memory                   | Useful for tests; data lost on restart     |
+| `s3`    | AWS S3 (or S3-compatible services like MinIO)     | Set `STORAGE_DRIVER=s3` and configure `AWS_*` env vars |
 
 Register a custom driver that implements the `StorageDriver` interface:
 
 ```ts
 import { Storage, StorageDriver } from './lib/storage';
 
-class S3Driver implements StorageDriver {
+class CloudinaryDriver implements StorageDriver {
     async put(filePath: string, data: Buffer | string): Promise<void> { /* ... */ }
     async get(filePath: string): Promise<Buffer> { /* ... */ }
     async delete(filePath: string): Promise<void> { /* ... */ }
@@ -370,8 +375,8 @@ class S3Driver implements StorageDriver {
     async exists(filePath: string): Promise<boolean> { /* ... */ }
 }
 
-Storage.registerDriver('s3', new S3Driver());
-// then set STORAGE_DRIVER=s3 in your env
+Storage.registerDriver('cloudinary', new CloudinaryDriver());
+// then set STORAGE_DRIVER=cloudinary in your env
 ```
 
 ## Rendering
@@ -431,7 +436,7 @@ Boot the full Express stack against a real SQLite database. Suites under `test/i
 | `events.spec.ts` | `Emitter.on / emit / off`, typed events via `HatchEvents` |
 | `mail.spec.ts` | `Mailer.send` with log driver; `MAIL_DRIVER` switching |
 | `queue.spec.ts` | `Queue.dispatch` no-op when `DATABASE_URL` unset, payload shape |
-| `storage.spec.ts` | `Storage.put / get / delete / url / exists`, local and memory drivers |
+| `storage.spec.ts` | `Storage.put / get / delete / url / exists`, local and S3 drivers |
 
 Scaffold script tests live under `test/integration/scripts/`:
 
