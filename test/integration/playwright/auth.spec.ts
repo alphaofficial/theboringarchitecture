@@ -11,11 +11,74 @@ test.describe("Auth UI flows", () => {
 		await context.clearCookies();
 	});
 
-	test("home page redirects unauthenticated users to login", async ({ page }) => {
+	test("home page renders the redesigned guest hero", async ({ page }) => {
+		await page.addInitScript(() => {
+			Object.defineProperty(navigator, "clipboard", {
+				configurable: true,
+				value: {
+					writeText: async () => undefined,
+				},
+			});
+		});
+
 		await page.goto("/");
-		// The public home page should be accessible
 		await expect(page).toHaveURL("/");
-		await expect(page.locator("body")).toBeVisible();
+		await expect(
+			page.getByRole("heading", {
+				name: /Express controllers\. Inertia pages\. React without the API tax\./i,
+			})
+		).toBeVisible();
+		await expect(page.getByText(/No REST layer, no fetch glue, no meta-framework detour\./i)).toBeVisible();
+
+		const sandboxCta = page.getByRole("link", { name: "Try the sandbox" });
+		await expect(sandboxCta).toBeVisible();
+		await expect(sandboxCta).toHaveAttribute("href", "/register");
+
+		const githubCta = page.getByRole("link", { name: "View on GitHub" });
+		await expect(githubCta).toBeVisible();
+		await expect(githubCta).toHaveAttribute(
+			"href",
+			"https://github.com/alphaofficial/theboringarchitecture"
+		);
+
+		await expect(page.getByText("Install in one command")).toBeVisible();
+		await expect(
+			page.getByText(
+				"curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/install.sh | bash"
+			)
+		).toBeVisible();
+
+		await page.getByRole("button", { name: "Copy install command" }).click();
+		await expect(page.getByRole("button", { name: "Copy install command" })).toContainText("Copied");
+
+		const architectureFlow = page.getByTestId("hero-architecture-flow");
+		await expect(architectureFlow).toBeVisible();
+		await expect(architectureFlow.getByText("Request-to-page flow")).toBeVisible();
+		await expect(architectureFlow.getByText("Express route")).toBeVisible();
+		await expect(architectureFlow.getByText("Controller")).toBeVisible();
+		await expect(architectureFlow.getByText("React page")).toBeVisible();
+
+		const featuresSection = page.getByTestId("features-section");
+		await expect(featuresSection).toBeVisible();
+		await expect(featuresSection.getByText("Server-rendered React")).toBeVisible();
+		await expect(featuresSection.getByText("Complete auth flows")).toBeVisible();
+		await expect(featuresSection.getByText("Production hardened")).toBeVisible();
+		await expect(featuresSection.getByText("Zod env validation")).toBeVisible();
+
+		const howItWorksSection = page.getByTestId("how-it-works-section");
+		await expect(howItWorksSection).toBeVisible();
+		await expect(howItWorksSection.getByText("From zero to shipping in three steps.")).toBeVisible();
+		const pipeline = page.getByTestId("how-it-works-pipeline");
+		await expect(pipeline).toBeVisible();
+
+		const workflowSection = page.getByTestId("workflow-section");
+		await expect(workflowSection).toBeVisible();
+		await expect(workflowSection.getByText("Props flow straight from Express to React.")).toBeVisible();
+		await expect(workflowSection.getByRole("heading", { name: "Define a route" })).toBeVisible();
+		await expect(workflowSection.getByRole("heading", { name: "Call res.inertia()" })).toBeVisible();
+		await expect(workflowSection.getByRole("heading", { name: "React renders the page" })).toBeVisible();
+		await expect(workflowSection.getByText("src/controllers/PostController.ts")).toBeVisible();
+		await expect(workflowSection.getByText("src/views/pages/Post.tsx")).toBeVisible();
 	});
 
 	test("login page renders the sign-in form", async ({ page }) => {
