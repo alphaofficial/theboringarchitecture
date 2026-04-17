@@ -136,7 +136,7 @@ function StepArrow() {
 }
 
 export default function Home(pageProps: Props) {
-	const { applicationName, isAuthenticated } = pageProps;
+	const { applicationName } = pageProps;
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
 	return (
@@ -170,9 +170,6 @@ export default function Home(pageProps: Props) {
 							<a href="#how" className="transition-colors hover:text-slate-900">How it works</a>
 
 							<a href={GITHUB_URL} className="transition-colors hover:text-slate-900">GitHub</a>
-							{!isAuthenticated && (
-								<Link href="/login" className="transition-colors hover:text-slate-900">Log in</Link>
-							)}
 						</nav>
 						<button
 							type="button"
@@ -196,9 +193,6 @@ export default function Home(pageProps: Props) {
 								<a href="#how" className="hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>How it works</a>
 
 								<a href={GITHUB_URL} className="hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>GitHub</a>
-								{!isAuthenticated && (
-									<Link href="/login" className="hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>Log in</Link>
-								)}
 							</div>
 						</nav>
 					)}
