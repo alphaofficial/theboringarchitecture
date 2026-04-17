@@ -341,7 +341,7 @@ export default function Home(pageProps: Props) {
 				</section>
 
 				{/* Bottom CTA */}
-				<section className="border-t border-slate-200 bg-slate-950 text-white" data-testid="bottom-cta-section">
+				<section className="border-t border-slate-200 bg-slate-900 text-white" data-testid="bottom-cta-section">
 					<div className="mx-auto max-w-6xl px-5 py-24 sm:px-6 sm:py-32 text-center">
 						<h2 className="font-display text-4xl font-black tracking-tight sm:text-6xl">
 							Ship something this weekend.
