@@ -15,19 +15,18 @@ export class UserController extends BaseController {
 	];
 
 	static async index(req: Request, res: Response) {
-		const instance = new UserController();
-		return await instance.render(req, res, 'Users', { users: instance.userDirectory });
+		const controller = new UserController(req, res);
+		return controller.render('Users', { users: controller.userDirectory });
 	}
 
 	static async show(req: Request, res: Response) {
-		const id = req.params.id as string;
-		const instance = new UserController();
-		const user = instance.userDirectory.find((u: User) => u.id === parseInt(id));
-		
+		const controller = new UserController(req, res);
+		const user = controller.userDirectory.find((u: User) => u.id === parseInt(req.params.id));
+
 		if (!user) {
 			return res.status(404).json({ error: 'User not found' });
 		}
 
-		return await instance.render(req, res, 'User', { user });
+		return controller.render('User', { user });
 	}
 }

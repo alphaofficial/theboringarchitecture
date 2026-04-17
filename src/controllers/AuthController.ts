@@ -72,18 +72,17 @@ const resetPasswordSchema = z.object({
 export class AuthController extends BaseController {
 
     static async showLogin(req: Request, res: Response) {
-        const instance = new AuthController();
+        const controller = new AuthController(req, res);
         const status = req.query.reset === '1' ? 'Your password has been reset. You may now sign in.' : undefined;
-        return instance.render(req, res, 'Auth/Login', { status });
+        return controller.render('Auth/Login', { status });
     }
 
     static async showRegister(req: Request, res: Response) {
-        const instance = new AuthController();
-        return instance.render(req, res, 'Auth/Register');
+        return new AuthController(req, res).render('Auth/Register');
     }
 
     static async login(req: Request, res: Response) {
-        const instance = new AuthController();
+        const controller = new AuthController(req, res);
 
         try {
             const validatedData = loginSchema.parse(req.body);
@@ -92,7 +91,7 @@ export class AuthController extends BaseController {
             const user = await em.findOne(User, { email: validatedData.email });
 
             if (!user || !(await Hash.check(validatedData.password, user.password))) {
-                return instance.render(req, res, 'Auth/Login', {
+                return controller.render('Auth/Login', {
                     errors: { email: 'Invalid credentials' }
                 });
             }
@@ -103,7 +102,7 @@ export class AuthController extends BaseController {
 
         } catch (error) {
             if (error instanceof z.ZodError) {
-                return instance.render(req, res, 'Auth/Login', {
+                return controller.render('Auth/Login', {
                     errors: error.flatten().fieldErrors
                 });
             }
@@ -112,7 +111,7 @@ export class AuthController extends BaseController {
     }
 
     static async register(req: Request, res: Response) {
-        const instance = new AuthController();
+        const controller = new AuthController(req, res);
 
         try {
             const validatedData = registerSchema.parse(req.body);
@@ -120,7 +119,7 @@ export class AuthController extends BaseController {
 
             const existingUser = await em.findOne(User, { email: validatedData.email });
             if (existingUser) {
-                return instance.render(req, res, 'Auth/Register', {
+                return controller.render('Auth/Register', {
                     errors: { email: 'Email already taken' }
                 });
             }
@@ -152,7 +151,7 @@ export class AuthController extends BaseController {
 
         } catch (error) {
             if (error instanceof z.ZodError) {
-                return instance.render(req, res, 'Auth/Register', {
+                return controller.render('Auth/Register', {
                     errors: error.flatten().fieldErrors
                 });
             }
@@ -171,18 +170,16 @@ export class AuthController extends BaseController {
     }
 
     static async dashboard(req: Request, res: Response) {
-        const instance = new AuthController();
         const user = await req.user();
-        return instance.render(req, res, 'Dashboard', { user });
+        return new AuthController(req, res).render('Dashboard', { user });
     }
 
     static async showForgotPassword(req: Request, res: Response) {
-        const instance = new AuthController();
-        return instance.render(req, res, 'Auth/ForgotPassword');
+        return new AuthController(req, res).render('Auth/ForgotPassword');
     }
 
     static async forgotPassword(req: Request, res: Response) {
-        const instance = new AuthController();
+        const controller = new AuthController(req, res);
 
         try {
             const { email } = forgotPasswordSchema.parse(req.body);
@@ -214,13 +211,13 @@ export class AuthController extends BaseController {
                 await Mailer.send(email, 'Password Reset Request', html);
             }
 
-            return instance.render(req, res, 'Auth/ForgotPassword', {
+            return controller.render('Auth/ForgotPassword', {
                 status: 'We have emailed your password reset link!'
             });
 
         } catch (error) {
             if (error instanceof z.ZodError) {
-                return instance.render(req, res, 'Auth/ForgotPassword', {
+                return controller.render('Auth/ForgotPassword', {
                     errors: error.flatten().fieldErrors
                 });
             }
@@ -229,18 +226,17 @@ export class AuthController extends BaseController {
     }
 
     static async showResetPassword(req: Request, res: Response) {
-        const instance = new AuthController();
-        return instance.render(req, res, 'Auth/ResetPassword', {
+        return new AuthController(req, res).render('Auth/ResetPassword', {
             token: req.params.token,
             email: req.query.email as string ?? ''
         });
     }
 
     static async resetPassword(req: Request, res: Response) {
-        const instance = new AuthController();
+        const controller = new AuthController(req, res);
 
         const renderError = (errors: Record<string, string[]>) =>
-            instance.render(req, res, 'Auth/ResetPassword', {
+            controller.render('Auth/ResetPassword', {
                 token: req.body.token ?? '',
                 email: req.body.email ?? '',
                 errors
@@ -289,18 +285,17 @@ export class AuthController extends BaseController {
     }
 
     static async showVerifyEmail(req: Request, res: Response) {
-        const instance = new AuthController();
         const user = await req.user();
-        return instance.render(req, res, 'Auth/VerifyEmail', { email: user?.email });
+        return new AuthController(req, res).render('Auth/VerifyEmail', { email: user?.email });
     }
 
     static async verifyEmail(req: Request, res: Response) {
-        const instance = new AuthController();
+        const controller = new AuthController(req, res);
         const { token } = req.params;
         const payload = verifyVerificationToken(token);
 
         if (!payload) {
-            return instance.render(req, res, 'Auth/VerifyEmail', {
+            return controller.render('Auth/VerifyEmail', {
                 errors: { email: ['This verification link is invalid.'] }
             });
         }
@@ -308,7 +303,7 @@ export class AuthController extends BaseController {
         const expiryMs = variables.EMAIL_VERIFICATION_EXPIRY * 60 * 1000;
         if (Date.now() - payload.iat > expiryMs) {
             const user = await req.user();
-            return instance.render(req, res, 'Auth/VerifyEmail', {
+            return controller.render('Auth/VerifyEmail', {
                 email: user?.email,
                 errors: { email: ['This verification link has expired. Please request a new one.'] }
             });
@@ -317,7 +312,7 @@ export class AuthController extends BaseController {
         const em = req.entityManager;
         const user = await em.findOne(User, { id: payload.id, email: payload.email });
         if (!user) {
-            return instance.render(req, res, 'Auth/VerifyEmail', {
+            return controller.render('Auth/VerifyEmail', {
                 errors: { email: ['This verification link is invalid.'] }
             });
         }
@@ -332,7 +327,7 @@ export class AuthController extends BaseController {
     }
 
     static async resendVerification(req: Request, res: Response) {
-        const instance = new AuthController();
+        const controller = new AuthController(req, res);
         const user = await req.user();
 
         if (!user) {
@@ -340,7 +335,7 @@ export class AuthController extends BaseController {
         }
 
         if (user.emailVerifiedAt) {
-            return instance.render(req, res, 'Auth/VerifyEmail', {
+            return controller.render('Auth/VerifyEmail', {
                 email: user.email,
                 status: 'Your email is already verified.'
             });
@@ -356,7 +351,7 @@ export class AuthController extends BaseController {
         `;
         await Mailer.send(user.email, 'Verify your email address', html);
 
-        return instance.render(req, res, 'Auth/VerifyEmail', {
+        return controller.render('Auth/VerifyEmail', {
             email: user.email,
             status: 'A new verification link has been sent to your email address.'
         });

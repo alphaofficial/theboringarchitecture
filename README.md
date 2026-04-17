@@ -39,7 +39,7 @@ Browser request
   → Express router (src/routes/)
     → Middleware (session, auth, Inertia)
       → Controller (src/controllers/)
-        → res.inertia('Page', props)
+        → res.render('Page', props)
           → React page (src/views/pages/)
             → Full HTML response (first visit) or JSON props (subsequent navigation)
 ```
@@ -48,7 +48,7 @@ On the first visit the server returns a full HTML document with the initial page
 
 ## What's included
 
-- **Inertia SSR adapter** — `res.inertia('Page', props)` from any controller
+- **Inertia SSR adapter** — `res.render('Page', props)` from any controller
 - **Auth & sessions** — bcrypt, DB-backed sessions, `req.user()` / `req.is_authenticated()`, `auth`/`guest` route guards
 - **Complete auth flows** — forgot password, password reset, and email verification with the `verified` middleware
 - **MikroORM** — SQLite by default, Postgres-ready, migrations, EntitySchema mappings (no decorators)
@@ -383,7 +383,7 @@ Storage.registerDriver('cloudinary', new CloudinaryDriver());
 
 ```ts
 // Controller
-res.inertia('Home', {
+res.render('Home', {
   message: 'Hello from Express',
   user: await req.user(),
 });

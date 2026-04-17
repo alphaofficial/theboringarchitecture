@@ -207,7 +207,7 @@ export default function Home(pageProps: Props) {
 				{/* Hero */}
 				<section data-testid="hero-section">
 					<div className="mx-auto max-w-6xl px-5 pt-20 pb-16 sm:px-6 sm:pt-28 sm:pb-20 lg:pt-36 lg:pb-24 text-center">
-						<h1 className="text-[2.75rem] font-black leading-[1.08] tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
+						<h1 className="font-display text-[2.75rem] font-black leading-[1.08] tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
 							The boring{' '}
 							<span className="text-rose-500">architecture.</span>
 						</h1>
@@ -266,7 +266,7 @@ export default function Home(pageProps: Props) {
 				<section id="features" className="border-t border-slate-200 bg-white" data-testid="features-section">
 					<div className="mx-auto max-w-6xl px-5 py-24 sm:px-6 sm:py-32">
 						<div className="mx-auto max-w-3xl text-center">
-							<h2 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">
+							<h2 className="text-4xl font-display font-black tracking-tight text-slate-900 sm:text-5xl">
 								Batteries included.
 							</h2>
 							<p className="mx-auto mt-4 max-w-2xl text-lg text-slate-500">
@@ -296,7 +296,7 @@ export default function Home(pageProps: Props) {
 				<section id="how" className="border-t border-slate-200 bg-slate-50/50" data-testid="how-it-works-section">
 					<div className="mx-auto max-w-6xl px-5 py-24 sm:px-6 sm:py-32">
 						<div className="mx-auto max-w-3xl text-center">
-							<h2 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">
+							<h2 className="text-4xl font-display font-black tracking-tight text-slate-900 sm:text-5xl">
 								From zero to shipping in three steps.
 							</h2>
 						</div>
@@ -335,7 +335,7 @@ export default function Home(pageProps: Props) {
 				{/* Bottom CTA */}
 				<section className="border-t border-slate-200 bg-slate-950 text-white" data-testid="bottom-cta-section">
 					<div className="mx-auto max-w-6xl px-5 py-24 sm:px-6 sm:py-32 text-center">
-						<h2 className="text-4xl font-black tracking-tight sm:text-6xl">
+						<h2 className="font-display text-4xl font-black tracking-tight sm:text-6xl">
 							Ship something this weekend.
 						</h2>
 						<p className="mx-auto mt-6 max-w-2xl text-lg text-slate-400">

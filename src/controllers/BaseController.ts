@@ -25,7 +25,16 @@ function escapeHtmlAttribute(value: string): string {
 }
 
 export class BaseController {
-	public async render(req: Request, res: Response, componentName: PageName, componentProps: any = {}, documentMetadata: any = {}) {
+	protected req: Request;
+	protected res: Response;
+
+	constructor(req: Request, res: Response) {
+		this.req = req;
+		this.res = res;
+	}
+
+	public async render(componentName: PageName, componentProps: any = {}, documentMetadata: any = {}) {
+		const { req, res } = this;
 		const inertia = req.inertia;
 		const result = inertia.render(req, res, componentName, componentProps);
 

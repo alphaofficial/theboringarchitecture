@@ -3,8 +3,6 @@ import variables from '../config/variables';
 import { BaseController } from '../controllers/BaseController';
 import { PinoLogger } from '../logger/pinoLogger';
 
-const renderer = new BaseController();
-
 /**
  * 404 handler — renders an Inertia Error page if the request reached
  * past static + routes without matching anything.
@@ -12,7 +10,7 @@ const renderer = new BaseController();
 export const notFoundHandler: RequestHandler = async (req, res, next) => {
 	try {
 		if (!req.inertia) return next();
-		await renderer.render(req, res, 'Error' as any, {
+		await new BaseController(req, res).render('Error' as any, {
 			status: 404,
 			message: 'Page not found',
 		});
@@ -44,7 +42,7 @@ export const globalErrorHandler: ErrorRequestHandler = (err, req: Request, res: 
 	if (req.inertia) {
 		try {
 			res.status(status);
-			renderer.render(req, res, 'Error' as any, payload).catch(() => {
+			new BaseController(req, res).render('Error' as any, payload).catch(() => {
 				if (!res.headersSent) res.status(status).json({ error: payload.message });
 			});
 			return;

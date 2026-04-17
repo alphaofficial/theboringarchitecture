@@ -7,7 +7,7 @@ Stack: **Express 5 + Inertia.js 2 + React 19 + MikroORM 6 + TypeScript + Vite + 
 The mental model: an Express controller queries the database, returns props, Inertia hands them to a React page. There is no REST layer between server and client.
 
 ```
-Browser → Express route → Middleware → Controller → res.inertia('Page', props) → React SSR → HTML
+Browser → Express route → Middleware → Controller → res.render('Page', props) → React SSR → HTML
 ```
 
 ---
