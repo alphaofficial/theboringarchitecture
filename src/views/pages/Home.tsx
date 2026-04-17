@@ -76,7 +76,7 @@ function HeroArchitectureIllustration() {
 			className="rounded-xl border border-slate-200 bg-slate-50 p-5"
 			data-testid="hero-architecture-flow"
 		>
-			<figcaption id="hero-architecture-title" className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+			<figcaption id="hero-architecture-title" className="text-xs font-semibold uppercase tracking-widest text-slate-700">
 				Request-to-page flow
 			</figcaption>
 			<div className="mt-4 grid gap-2 sm:grid-cols-3 sm:gap-3">
@@ -90,7 +90,7 @@ function HeroArchitectureIllustration() {
 						</span>
 						<span className="min-w-0">
 							<span className="block text-sm font-bold text-slate-900">{stage.label}</span>
-							<span className="mt-0.5 block break-words font-mono text-xs leading-5 text-slate-500">{stage.detail}</span>
+							<span className="mt-0.5 block break-words font-mono text-xs leading-5 text-slate-700">{stage.detail}</span>
 						</span>
 						{index < HERO_FLOW.length - 1 && (
 							<span aria-hidden="true" className="absolute -right-3 top-1/2 hidden -translate-y-1/2 text-slate-300 sm:inline">
@@ -155,7 +155,7 @@ export default function Home(pageProps: Props) {
 				<meta property="og:type" content="website" />
 			</Head>
 
-			<div className="min-h-screen overflow-x-hidden bg-white text-slate-900 antialiased">
+			<div className="min-h-screen overflow-x-hidden bg-white font-display text-slate-900 antialiased">
 				{/* Nav */}
 				<header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur-lg">
 					<div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
@@ -165,7 +165,7 @@ export default function Home(pageProps: Props) {
 							</span>
 							<span className="text-lg font-bold tracking-tight text-slate-900">{applicationName}</span>
 						</Link>
-						<nav className="hidden md:flex items-center gap-x-8 text-sm font-medium text-slate-500" data-testid="desktop-nav">
+						<nav className="hidden md:flex items-center gap-x-8 text-sm font-medium text-slate-700" data-testid="desktop-nav">
 							<a href="#features" className="transition-colors hover:text-slate-900">Features</a>
 							<a href="#how" className="transition-colors hover:text-slate-900">How it works</a>
 
@@ -176,7 +176,7 @@ export default function Home(pageProps: Props) {
 						</nav>
 						<button
 							type="button"
-							className="md:hidden inline-flex items-center justify-center rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+							className="md:hidden inline-flex items-center justify-center rounded-lg p-2 text-slate-700 hover:bg-slate-100"
 							onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
 							aria-expanded={mobileMenuOpen}
 							aria-label="Toggle navigation menu"
@@ -211,7 +211,7 @@ export default function Home(pageProps: Props) {
 							The boring{' '}
 							<span className="text-rose-500">architecture.</span>
 						</h1>
-						<p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-slate-500 sm:text-xl">
+						<p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-slate-700 sm:text-xl">
 							Express handles routing, React renders the views, Inertia connects the two. That&apos;s it.
 						</p>
 
@@ -252,6 +252,14 @@ export default function Home(pageProps: Props) {
 									<code className="rounded-md bg-slate-800 px-1.5 py-0.5 font-mono text-xs text-white">--quick my-app</code>{' '}
 									for defaults.
 								</p>
+								<a
+									href={`${GITHUB_URL}/blob/main/install.sh`}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="mt-3 inline-block text-sm text-slate-700 underline underline-offset-2 hover:text-slate-300"
+								>
+									View install script on GitHub &rarr;
+								</a>
 							</div>
 						</div>
 					</div>
@@ -269,7 +277,7 @@ export default function Home(pageProps: Props) {
 							<h2 className="text-4xl font-display font-black tracking-tight text-slate-900 sm:text-5xl">
 								Batteries included.
 							</h2>
-							<p className="mx-auto mt-4 max-w-2xl text-lg text-slate-500">
+							<p className="mx-auto mt-4 max-w-2xl text-lg text-slate-700">
 								Everything you need to ship a production app, wired up and ready to go.
 							</p>
 						</div>
@@ -284,7 +292,7 @@ export default function Home(pageProps: Props) {
 									</span>
 									<div className="min-w-0">
 										<h3 className="text-sm font-bold text-slate-900">{f.title}</h3>
-										<p className="mt-1.5 text-sm leading-6 text-slate-500">{f.description}</p>
+										<p className="mt-1.5 text-sm leading-6 text-slate-700">{f.description}</p>
 									</div>
 								</div>
 							))}
@@ -313,7 +321,7 @@ export default function Home(pageProps: Props) {
 									</span>
 									<div>
 										<h3 className="text-xl font-bold text-slate-900">{step.title}</h3>
-										<p className="mt-2 text-base leading-7 text-slate-500">{step.description}</p>
+										<p className="mt-2 text-base leading-7 text-slate-700">{step.description}</p>
 										{step.code && (
 											<div className="mt-4 flex items-center gap-3 overflow-hidden rounded-xl bg-slate-950">
 												<div className="min-w-0 flex-1 overflow-x-auto p-4 font-mono text-sm leading-7 text-slate-100">
