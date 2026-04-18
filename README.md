@@ -140,6 +140,7 @@ src/
 | `AWS_S3_ENDPOINT`               | _(none)_                | Custom S3 endpoint (for MinIO, DigitalOcean Spaces, etc.)                                     |
 | `DATABASE_URL`                  | _(none)_                | PostgreSQL connection URL — required to enable the Queue (Graphile Worker)                    |
 | `SCHEDULER_ENABLED`             | `false`                 | Set to `true` to activate the cron-based task scheduler                                       |
+| `SSR_ENABLED`                   | `true`                  | Server-side render every page. Set to `false` to ship a client-only shell.                    |
 
 ## Authentication helpers
 

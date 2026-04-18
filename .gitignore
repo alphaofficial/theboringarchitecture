@@ -8,10 +8,11 @@ dist/
 
 
 
-# Ignore build output in public but keep template
+# Ignore build output in public but keep template + static assets
 public/*
 !public/template.html
 !public/favicon.svg
+!public/fonts/
 
 test-results/
 playwright-report/
