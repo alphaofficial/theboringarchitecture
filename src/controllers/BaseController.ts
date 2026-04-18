@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { PageName } from '../config/pages';
-import { renderInertiaHtml } from '../views/renderInertiaHtml';
+import { renderHtml } from '../lib/renderHtml';
 
 export class BaseController {
 	protected req: Request;
@@ -19,7 +19,7 @@ export class BaseController {
 			return;
 		}
 
-		const html = await renderInertiaHtml(page, documentMetadata.title, documentMetadata.head);
+		const html = await renderHtml(page, documentMetadata.title, documentMetadata.head);
 		return res.send(html);
 	}
 }

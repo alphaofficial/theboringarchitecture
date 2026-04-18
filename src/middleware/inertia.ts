@@ -1,6 +1,6 @@
 import { type Request, type Response, type NextFunction } from 'express';
 import { InertiaExpressAdapter } from '../adapters/InertiaExpressAdapter';
-import { renderInertiaHtml } from '../views/renderInertiaHtml';
+import { renderHtml } from '../lib/renderHtml';
 import variables from '../config/variables';
 
 declare module 'express-serve-static-core' {
@@ -30,7 +30,7 @@ export class InertiaExpressMiddleware {
 
 			if (res.headersSent) return;
 
-			renderInertiaHtml(page, props._title, props._head)
+			renderHtml(page, props._title, props._head)
 				.then(html => res.send(html))
 				.catch(next);
 		}) as any;

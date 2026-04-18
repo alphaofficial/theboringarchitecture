@@ -35,7 +35,7 @@ async function renderOnSsr(page: unknown): Promise<SsrPayload | null> {
 	}
 }
 
-export async function renderInertiaHtml(
+export async function renderHtml(
 	page: unknown,
 	title?: string,
 	head?: string,
