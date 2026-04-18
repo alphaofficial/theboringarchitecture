@@ -69,9 +69,30 @@ export function render(page: Page): InertiaAppResponse {
 }
 ```
 
-## 3. Create `src/lib/renderHtml.ts`
+## 3. Add the `SSR_ENABLED` flag
 
-Helper that turns the Inertia page object into a full HTML document. Used by the middleware and `BaseController`.
+SSR is controlled by an env var so you can turn it off (e.g. for debugging a hydration mismatch) without reverting the upgrade. It defaults to `true`, so existing `.env` files don't need changes to get the new behavior.
+
+Add to `src/config/variables.ts` (inside the `baseSchema` zod object, next to `SCHEDULER_ENABLED`):
+
+```ts
+SSR_ENABLED: z
+	.string()
+	.optional()
+	.default('true')
+	.transform(v => v === 'true' || v === '1'),
+```
+
+And to `env.example` so it's documented:
+
+```env
+# SSR (server-side rendering). On by default; set to false to ship a client-only shell.
+SSR_ENABLED=true
+```
+
+## 4. Create `src/lib/renderHtml.ts`
+
+Helper that turns the Inertia page object into a full HTML document. Used by the middleware and `BaseController`. Calls the SSR bundle when `SSR_ENABLED=true`; otherwise emits the original client-only `<div id="app" data-page="…">` shell.
 
 ```ts
 import * as fs from 'fs';
@@ -115,7 +136,7 @@ export async function renderHtml(
 	title?: string,
 	head?: string,
 ): Promise<string> {
-	const ssr = await renderOnSsr(page);
+	const ssr = variables.SSR_ENABLED ? await renderOnSsr(page) : null;
 
 	const template = fs.readFileSync(templatePath, 'utf-8');
 	const app = ssr
@@ -131,7 +152,7 @@ export async function renderHtml(
 }
 ```
 
-## 4. Replace `src/views/main.tsx`
+## 5. Replace `src/views/main.tsx`
 
 Hydrate if the server rendered markup, otherwise mount fresh. Same file works for both modes.
 
@@ -159,7 +180,7 @@ createInertiaApp({
 })
 ```
 
-## 5. Patch `public/template.html`
+## 6. Patch `public/template.html`
 
 Replace the hardcoded `<div id="app" ...>` with a `{{APP}}` placeholder so the helper can inject either the SSR body or an empty shell.
 
@@ -168,7 +189,7 @@ Replace the hardcoded `<div id="app" ...>` with a `{{APP}}` placeholder so the h
 +		{{APP}}
 ```
 
-## 6. Replace `src/middleware/inertia.ts`
+## 7. Replace `src/middleware/inertia.ts`
 
 Drop the inline template rendering; delegate to the shared helper.
 
@@ -214,7 +235,7 @@ export class InertiaExpressMiddleware {
 }
 ```
 
-## 7. Replace `src/controllers/BaseController.ts`
+## 8. Replace `src/controllers/BaseController.ts`
 
 Same idea: no inline template code.
 
@@ -246,7 +267,7 @@ export class BaseController {
 }
 ```
 
-## 8. Update `package.json` scripts
+## 9. Update `package.json` scripts
 
 ```diff
 -    "dev": "concurrently --names \"pages,server,client\" --prefix-colors \"yellow,cyan,magenta\" \"npm run pages:watch\" \"npm run dev:server\" \"npm run dev:client\"",
@@ -265,7 +286,7 @@ export class BaseController {
      "build:server": "tsc --project tsconfig.server.json && tsc-alias -p tsconfig.server.json",
 ```
 
-## 9. Build + verify
+## 10. Build + verify
 
 ```bash
 npm install        # no new deps required; safe to skip if nothing in package.json dependencies changed
@@ -277,7 +298,7 @@ If something goes wrong:
 - If `[SSR] render failed, falling back to client-only:` appears in logs on every request, look at the error — usually a missing/renamed page or a broken import in one of your `.tsx` files.
 - `git diff` the five modified files to compare against the snippets above.
 
-## 10. Optional: self-host fonts to fix font flicker
+## 11. Optional: self-host fonts to fix font flicker
 
 SSR makes font flicker more visible: the page paints instantly with a rendered body, then Google Fonts downloads the webfont and swaps — causing a layout shift a few hundred ms in. Fixing it requires the font binary to be present before first paint. The only reliable way is to self-host and preload it.
 

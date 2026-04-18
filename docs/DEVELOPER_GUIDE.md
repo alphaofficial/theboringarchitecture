@@ -30,7 +30,10 @@ src/
 ├── views/
 │   ├── components/  # Shared React components
 │   ├── pages/       # Inertia page components
-│   └── client.tsx   # Client entry
+│   ├── main.tsx     # Client entry (hydrates SSR output)
+│   └── ssr.tsx      # SSR entry (imported by the server to render pages)
+├── lib/
+│   └── renderHtml.ts # Merges SSR output into the HTML template
 └── index.ts         # Server bootstrap
 ```
 
@@ -354,6 +357,7 @@ Defined and validated by Zod in `src/config/variables.ts`. Boot fails fast on mi
 | `RATE_LIMIT_ENABLED`        | `false`                     | Enable auth rate limiter                       |
 | `RATE_LIMIT_AUTH_MAX`       | `5`                         | Max attempts per window                        |
 | `RATE_LIMIT_AUTH_WINDOW_MS` | `60000`                     | Window length in ms                            |
+| `SSR_ENABLED`               | `true`                      | Server-render pages; `false` for client-only   |
 
 Read values via `variables.X` (typed) or `env('KEY', default)`.
 

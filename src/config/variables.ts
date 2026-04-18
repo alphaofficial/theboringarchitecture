@@ -47,6 +47,13 @@ const baseSchema = z.object({
 		.optional()
 		.default('false')
 		.transform(v => v === 'true' || v === '1'),
+	// SSR (server-side rendering). Enabled by default; set to 'false' to
+	// skip the SSR render and ship a client-only shell (no hydration).
+	SSR_ENABLED: z
+		.string()
+		.optional()
+		.default('true')
+		.transform(v => v === 'true' || v === '1'),
 });
 
 const parsed = baseSchema.parse(process.env);

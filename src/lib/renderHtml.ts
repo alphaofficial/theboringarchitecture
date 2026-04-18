@@ -40,7 +40,7 @@ export async function renderHtml(
 	title?: string,
 	head?: string,
 ): Promise<string> {
-	const ssr = await renderOnSsr(page);
+	const ssr = variables.SSR_ENABLED ? await renderOnSsr(page) : null;
 
 	const template = fs.readFileSync(templatePath, 'utf-8');
 	const app = ssr
