@@ -4,7 +4,8 @@ import { PinoLogger } from "../../src/logger/pinoLogger";
 import { mock } from "jest-mock-extended";
 import { MikroORM, RequestContext } from "@mikro-orm/core";
 import ormConfig from "../../src/database/orm.config";
-import { SessionStore } from "../../src/middleware/sessionStore";
+import { SessionStore, generateSessionToken } from "../../src/middleware/sessionStore";
+import { verifyOrigin } from "../../src/middleware/csrf";
 import express from 'express';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -71,6 +72,7 @@ export const bootstrapTestApp = async () => {
 	app.use(session({
 		store: sessionStore,
 		secret: variables.SESSION_SECRET,
+		genid: generateSessionToken,
 		resave: false,
 		saveUninitialized: false,
 		cookie: {
@@ -89,6 +91,9 @@ export const bootstrapTestApp = async () => {
 
 	// Serve static files from public directory (template.html)
 	app.use('/', express.static(path.join(process.cwd(), 'public')));
+
+	// CSRF defense
+	app.use(verifyOrigin);
 
 	// Routes
 	app.use('/', routes);

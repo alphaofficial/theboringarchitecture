@@ -11,7 +11,8 @@ import { mock } from "jest-mock-extended";
 import path from "node:path";
 
 import ormConfig from "../../../src/database/orm.config";
-import { SessionStore } from "../../../src/middleware/sessionStore";
+import { SessionStore, generateSessionToken } from "../../../src/middleware/sessionStore";
+import { Session } from "../../../src/models/Session";
 import { injectAuthHelpers } from "../../../src/middleware/authUtils";
 import { InertiaExpressMiddleware } from "../../../src/middleware/inertia";
 import { PinoLogger } from "../../../src/logger/pinoLogger";
@@ -216,6 +217,139 @@ describe("Hardening", () => {
 			const r = await agent.get("/home");
 			expect(r.status).toBe(302);
 			expect(r.headers.location).toBe("/login");
+		});
+	});
+
+	describe("CSRF origin verification", () => {
+		let app: any;
+		let orm: any;
+
+		beforeAll(async () => {
+			const t = await bootstrapTestApp();
+			app = t.app;
+			orm = t.orm;
+		});
+
+		afterAll(async () => {
+			await orm?.close(true);
+		});
+
+		it("rejects POST with a foreign Origin", async () => {
+			const r = await supertest(app)
+				.post("/login")
+				.set("Origin", "https://evil.example.com")
+				.send({ email: "x@example.com", password: "password123" });
+			expect(r.status).toBe(403);
+		});
+
+		it("rejects POST with a foreign Referer when Origin is absent", async () => {
+			const r = await supertest(app)
+				.post("/login")
+				.set("Referer", "https://evil.example.com/whatever")
+				.send({ email: "x@example.com", password: "password123" });
+			expect(r.status).toBe(403);
+		});
+
+		it("rejects POST with a malformed Origin", async () => {
+			const r = await supertest(app)
+				.post("/login")
+				.set("Origin", "not-a-url")
+				.send({ email: "x@example.com", password: "password123" });
+			expect(r.status).toBe(403);
+		});
+
+		it("allows POST with a matching Origin", async () => {
+			const r = await supertest(app)
+				.post("/login")
+				.set("Origin", "http://localhost:3000")
+				.send({ email: "x@example.com", password: "password123" });
+			// 200 (re-render login with errors for invalid credentials) — not 403
+			expect(r.status).not.toBe(403);
+		});
+
+		it("allows POST when neither Origin nor Referer is present", async () => {
+			const r = await supertest(app)
+				.post("/login")
+				.send({ email: "x@example.com", password: "password123" });
+			expect(r.status).not.toBe(403);
+		});
+
+		it("allows GET regardless of Origin", async () => {
+			const r = await supertest(app)
+				.get("/login")
+				.set("Origin", "https://evil.example.com");
+			expect(r.status).toBe(200);
+		});
+	});
+
+	describe("Split-token session validation", () => {
+		let orm: any;
+		let store: SessionStore;
+
+		beforeAll(async () => {
+			orm = await MikroORM.init({ ...ormConfig, dbName: "express_inertia_test.db" });
+			store = new SessionStore(orm);
+		});
+
+		afterAll(async () => {
+			await orm?.close(true);
+		});
+
+		beforeEach(async () => {
+			const em = orm.em.fork();
+			await em.nativeDelete(Session, {});
+		});
+
+		const storeSet = (sid: string, data: any) =>
+			new Promise<void>((resolve, reject) => {
+				store.set(sid, data, (err) => (err ? reject(err) : resolve()));
+			});
+
+		const storeGet = (sid: string) =>
+			new Promise<any>((resolve, reject) => {
+				store.get(sid, (err, data) => (err ? reject(err) : resolve(data)));
+			});
+
+		it("round-trips a valid token", async () => {
+			const token = generateSessionToken();
+			await storeSet(token, { userId: "user-1", foo: "bar" });
+			const loaded = await storeGet(token);
+			expect(loaded).toEqual({ userId: "user-1", foo: "bar" });
+		});
+
+		it("returns null for a token with the right id but a wrong secret", async () => {
+			const token = generateSessionToken();
+			await storeSet(token, { userId: "user-2" });
+
+			const [id] = token.split(".");
+			const forged = `${id}.${generateSessionToken().split(".")[1]}`;
+			const loaded = await storeGet(forged);
+			expect(loaded).toBeNull();
+		});
+
+		it("returns null for a malformed token (no separator)", async () => {
+			const loaded = await storeGet("nodotshere");
+			expect(loaded).toBeNull();
+		});
+
+		it("returns null for an unknown id", async () => {
+			const loaded = await storeGet(generateSessionToken());
+			expect(loaded).toBeNull();
+		});
+
+		it("persists secret_hash (never the raw secret) and stamps created_at", async () => {
+			const token = generateSessionToken();
+			const [, secret] = token.split(".");
+			await storeSet(token, { userId: "user-3" });
+
+			const em = orm.em.fork();
+			const rows = await em.find(Session, {});
+			expect(rows).toHaveLength(1);
+			const row = rows[0];
+			expect(row.secret_hash).not.toBe(secret);
+			expect(row.secret_hash).toMatch(/^[a-f0-9]{64}$/);
+			expect(typeof row.created_at).toBe("number");
+			expect(row.created_at).toBeGreaterThan(0);
 		});
 	});
 });

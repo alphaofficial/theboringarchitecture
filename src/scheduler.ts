@@ -4,9 +4,10 @@ import ormConfig from './database/orm.config';
 import { Scheduler } from './lib/scheduler';
 import { Session } from './models/Session';
 import { PinoLogger } from './logger/pinoLogger';
+import variables from './config/variables';
 
 async function cleanExpiredSessions(orm: MikroORM): Promise<void> {
-    const maxAgeSeconds = 24 * 60 * 60;
+    const maxAgeSeconds = Math.floor(variables.SESSION_MAX_AGE / 1000);
     const cutoff = Math.floor(Date.now() / 1000) - maxAgeSeconds;
     const em = orm.em.fork();
     const deleted = await em.nativeDelete(Session, { last_activity: { $lte: cutoff } });
