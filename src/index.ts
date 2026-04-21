@@ -10,7 +10,8 @@ import { MikroORM, RequestContext } from '@mikro-orm/core';
 import { PinoLogger } from './logger/pinoLogger';
 import variables from './config/variables';
 import { User } from './models/User';
-import { SessionStore } from './middleware/sessionStore';
+import { SessionStore, generateSessionToken } from './middleware/sessionStore';
+import { verifyOrigin } from './middleware/csrf';
 import { notFoundHandler, globalErrorHandler } from './middleware/errorHandler';
 
 declare module "express-serve-static-core" {
@@ -85,6 +86,7 @@ async function bootstrap() {
   app.use(session({
     store: sessionStore,
     secret: variables.SESSION_SECRET,
+    genid: generateSessionToken,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -108,6 +110,9 @@ async function bootstrap() {
 
   // Serve static files from public directory (template.html)
   app.use('/', express.static(path.join(process.cwd(), 'public')));
+
+  // CSRF defense: reject state-changing requests from foreign origins.
+  app.use(verifyOrigin);
 
   // Routes
   app.use('/', routes);
