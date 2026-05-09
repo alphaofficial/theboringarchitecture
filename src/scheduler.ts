@@ -2,7 +2,7 @@ import 'dotenv-defaults/config';
 import { MikroORM } from '@mikro-orm/core';
 import ormConfig from './database/orm.config';
 import { Scheduler } from './lib/scheduler';
-import { Session } from './models/Session';
+import { Session } from '@/core/models/Session';
 import { PinoLogger } from './logger/pinoLogger';
 import variables from './config/variables';
 

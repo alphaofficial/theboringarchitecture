@@ -12,7 +12,7 @@ import path from "node:path";
 
 import ormConfig from "../../../src/database/orm.config";
 import { SessionStore, generateSessionToken } from "../../../src/middleware/sessionStore";
-import { Session } from "../../../src/models/Session";
+import { Session } from "@/core/models/Session";
 import { injectAuthHelpers } from "../../../src/middleware/authUtils";
 import { InertiaExpressMiddleware } from "../../../src/middleware/inertia";
 import { PinoLogger } from "../../../src/logger/pinoLogger";

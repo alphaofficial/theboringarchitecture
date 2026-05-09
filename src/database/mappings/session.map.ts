@@ -1,5 +1,5 @@
 import { EntitySchema } from "@mikro-orm/postgresql";
-import { Session } from "@/models/Session";
+import { Session } from "@/core/models/Session";
 
 export const SessionMapper = new EntitySchema<Session>({
 	class: Session,

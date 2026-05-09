@@ -1,6 +1,6 @@
 import { MikroORM } from "@mikro-orm/core";
 import { User } from "../../src/core/models/User";
-import { Session } from "../../src/models/Session";
+import { Session } from "../../src/core/models/Session";
 import { Hash } from "../../src/utils/Hash";
 
 function generateId(prefix: string): string {
