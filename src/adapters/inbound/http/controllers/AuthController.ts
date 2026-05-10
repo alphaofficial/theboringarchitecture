@@ -6,8 +6,8 @@ import { RegisterUser } from '@/core/use-cases/RegisterUser';
 import { ResendVerification } from '@/core/use-cases/ResendVerification';
 import { ResetPassword } from '@/core/use-cases/ResetPassword';
 import { VerifyEmail } from '@/core/use-cases/VerifyEmail';
-import { Mailer } from '@/lib/mail';
 import { Emitter } from '@/adapters/shared/events';
+import { sendConfiguredMail } from '@/adapters/outbound/mail/configuredTransport';
 import { z } from 'zod';
 import crypto from 'crypto';
 import variables from '@/config/variables';
@@ -349,6 +349,6 @@ function createUserRepository(
 
 function createMailTransport(): MailTransport {
     return {
-        sendMail: ({ to, subject, html }) => Mailer.send(to, subject, html),
+        sendMail: message => sendConfiguredMail(message),
     };
 }

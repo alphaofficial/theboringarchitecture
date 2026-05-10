@@ -1,5 +1,5 @@
 import 'dotenv-defaults/config';
-import { Queue } from './lib/queue';
+import { Queue } from './adapters/outbound/queue/graphileWorker';
 import { sendWelcomeEmail } from './adapters/inbound/jobs/sendWelcomeEmail';
 import { PinoLogger } from './adapters/shared/logger/pinoLogger';
 

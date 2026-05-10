@@ -1,8 +1,8 @@
 import { run, quickAddJob } from 'graphile-worker';
 import type { Runner } from 'graphile-worker';
 import type { QueueDriver } from '@/ports/queue';
-import { PinoLogger } from '../adapters/shared/logger/pinoLogger';
-import variables from '../config/variables';
+import { PinoLogger } from '@/adapters/shared/logger/pinoLogger';
+import variables from '@/config/variables';
 
 let runner: Runner | null = null;
 
@@ -10,21 +10,30 @@ const driver: QueueDriver = {
     async dispatch(jobName, payload = {}) {
         const connectionString = variables.DATABASE_URL;
         if (!connectionString) {
-            PinoLogger.warn({ scope: 'queue', message: 'DATABASE_URL not set — job dispatch is a no-op', params: { jobName } });
+            PinoLogger.warn({
+                scope: 'queue',
+                message: 'DATABASE_URL not set — job dispatch is a no-op',
+                params: { jobName },
+            });
             return;
         }
+
         await quickAddJob({ connectionString }, jobName, payload);
     },
 };
 
 export class Queue {
-    static async start(connectionString: string, taskList: Record<string, (payload: unknown) => Promise<void>>): Promise<Runner> {
+    static async start(
+        connectionString: string,
+        taskList: Record<string, (payload: unknown) => Promise<void>>,
+    ): Promise<Runner> {
         runner = await run({
             connectionString,
             taskList,
             parsedCronItems: [],
             crontabFile: undefined,
         });
+
         return runner;
     }
 
