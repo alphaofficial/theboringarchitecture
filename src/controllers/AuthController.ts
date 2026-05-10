@@ -4,11 +4,14 @@ import { Hash } from '@/core/utils/Hash';
 import { User } from '@/core/models/User';
 import { PasswordReset } from '@/core/models/PasswordReset';
 import { Session } from '@/core/models/Session';
+import { RegisterUser } from '@/core/use-cases/RegisterUser';
 import { Mailer } from '../lib/mail';
 import { Emitter } from '../lib/events';
 import { z } from 'zod';
 import crypto from 'crypto';
 import variables from '../config/variables';
+import type { MailTransport } from '@/ports/mail';
+import type { RegisterUserDependencies } from '@/core/use-cases/RegisterUser';
 
 // ---- email-verification token helpers ----
 
@@ -115,38 +118,29 @@ export class AuthController extends BaseController {
 
         try {
             const validatedData = registerSchema.parse(req.body);
-            const em = req.orm.em;
+            const registerUser = new RegisterUser({
+                users: createUserRepository(req.orm.em),
+                mailTransport: createMailTransport(),
+                emit: Emitter.emit.bind(Emitter),
+                appName: variables.APP_NAME,
+                appUrl: variables.APP_URL,
+                uuid: crypto.randomUUID,
+                makeVerificationToken: user => makeVerificationToken(user.id, user.email),
+            });
 
-            const existingUser = await em.findOne(User, { email: validatedData.email });
-            if (existingUser) {
+            const result = await registerUser.execute({
+                name: validatedData.name,
+                email: validatedData.email,
+                password: validatedData.password,
+            });
+
+            if (result.status === 'email_taken') {
                 return controller.render('Auth/Register', {
                     errors: { email: 'Email already taken' }
                 });
             }
 
-            const hashedPassword = await Hash.make(validatedData.password);
-
-            const user = new User(
-                crypto.randomUUID(),
-                validatedData.name,
-                validatedData.email,
-                hashedPassword
-            );
-
-            await em.persistAndFlush(user);
-            Emitter.emit('user.registered', { id: user.id, email: user.email });
-
-            const token = makeVerificationToken(user.id, user.email);
-            const appUrl = variables.APP_URL;
-            const verifyUrl = `${appUrl}/verify-email/${token}`;
-            const html = `
-                <p>Welcome to ${variables.APP_NAME}!</p>
-                <p><a href="${verifyUrl}">Click here to verify your email address</a></p>
-                <p>If you did not create an account, please ignore this email.</p>
-            `;
-            await Mailer.send(user.email, 'Verify your email address', html);
-
-            await req.authenticate(user);
+            await req.authenticate(result.user);
             return res.redirect('/verify-email');
 
         } catch (error) {
@@ -356,4 +350,17 @@ export class AuthController extends BaseController {
             status: 'A new verification link has been sent to your email address.'
         });
     }
+}
+
+function createUserRepository(entityManager: Request['orm']['em']): RegisterUserDependencies['users'] {
+    return {
+        findOne: (entity, where) => entityManager.findOne(entity, where),
+        persistAndFlush: entity => entityManager.persistAndFlush(entity),
+    };
+}
+
+function createMailTransport(): MailTransport {
+    return {
+        sendMail: ({ to, subject, html }) => Mailer.send(to, subject, html),
+    };
 }
