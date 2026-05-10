@@ -1,4 +1,5 @@
-import { Storage, StorageDriver, S3Driver } from '@/lib/storage';
+import { Storage, S3Driver } from '@/lib/storage';
+import type { StorageDriver } from '@/ports/storage';
 import { S3Client } from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
 import { sdkStreamMixin } from '@smithy/util-stream';
