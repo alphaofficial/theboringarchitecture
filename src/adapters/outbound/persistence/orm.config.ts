@@ -41,8 +41,8 @@ const mikroOrmOptions: Options = {
 	extensions: [Migrator],
 	allowGlobalContext: process.env.NODE_ENV === "test",
 	seeder: {
-		path: "dist/database/seeder",
-		pathTs: "src/database/seeder",
+		path: "dist/adapters/outbound/persistence/seeder",
+		pathTs: "src/adapters/outbound/persistence/seeder",
 		defaultSeeder: "DatabaseSeeder",
 		emit: "ts",
 	},
