@@ -1,12 +1,10 @@
 import { Request, Response } from 'express';
 import { BaseController } from './BaseController';
-import { Hash } from '@/core/utils/Hash';
 import { User } from '@/core/models/User';
-import { PasswordReset } from '@/core/models/PasswordReset';
-import { Session } from '@/core/models/Session';
 import { ForgotPassword } from '@/core/use-cases/ForgotPassword';
 import { LoginUser } from '@/core/use-cases/LoginUser';
 import { RegisterUser } from '@/core/use-cases/RegisterUser';
+import { ResetPassword } from '@/core/use-cases/ResetPassword';
 import { Mailer } from '../lib/mail';
 import { Emitter } from '../lib/events';
 import { z } from 'zod';
@@ -232,35 +230,25 @@ export class AuthController extends BaseController {
 
         try {
             const validated = resetPasswordSchema.parse(req.body);
-            const em = req.entityManager;
+            const resetPassword = new ResetPassword({
+                users: createUserRepository(req.entityManager),
+                passwordResetExpiryMinutes: variables.PASSWORD_RESET_EXPIRY,
+                makeTokenHash: token => crypto
+                    .createHmac('sha256', variables.APP_KEY)
+                    .update(token)
+                    .digest('hex'),
+                now: () => new Date(),
+            });
 
-            const tokenHash = crypto
-                .createHmac('sha256', variables.APP_KEY)
-                .update(validated.token)
-                .digest('hex');
+            const result = await resetPassword.execute(validated);
 
-            const reset = await em.findOne(PasswordReset, { email: validated.email, tokenHash });
-
-            if (!reset) {
+            if (result.status === 'invalid_token') {
                 return renderError({ token: ['This password reset link is invalid.'] });
             }
 
-            const expiryMs = variables.PASSWORD_RESET_EXPIRY * 60 * 1000;
-            if (Date.now() - reset.createdAt.getTime() > expiryMs) {
-                await em.nativeDelete(PasswordReset, { email: validated.email });
+            if (result.status === 'expired_token') {
                 return renderError({ token: ['This password reset link has expired. Please request a new one.'] });
             }
-
-            const user = await em.findOne(User, { email: validated.email });
-            if (!user) {
-                return renderError({ token: ['This password reset link is invalid.'] });
-            }
-
-            user.password = await Hash.make(validated.password);
-            await em.nativeDelete(PasswordReset, { email: validated.email });
-            // Invalidate all sessions for this user
-            await em.nativeDelete(Session, { user_id: user.id });
-            await em.flush();
 
             return res.redirect('/login?reset=1');
 
@@ -348,11 +336,12 @@ export class AuthController extends BaseController {
 
 function createUserRepository(
     entityManager: Request['orm']['em']
-): Pick<UserRepository, 'findOne' | 'persistAndFlush' | 'nativeDelete'> {
+): Pick<UserRepository, 'findOne' | 'persistAndFlush' | 'nativeDelete' | 'flush'> {
     return {
         findOne: (entity, where) => entityManager.findOne(entity, where),
         persistAndFlush: entity => entityManager.persistAndFlush(entity),
         nativeDelete: (entity, where) => entityManager.nativeDelete(entity, where),
+        flush: () => entityManager.flush(),
     };
 }
 
