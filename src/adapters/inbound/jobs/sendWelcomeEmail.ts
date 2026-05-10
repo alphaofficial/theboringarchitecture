@@ -1,4 +1,4 @@
-import { PinoLogger } from '../logger/pinoLogger';
+import { PinoLogger } from '@/logger/pinoLogger';
 
 interface SendWelcomeEmailPayload {
 	to: string;
@@ -7,6 +7,7 @@ interface SendWelcomeEmailPayload {
 
 export async function sendWelcomeEmail(payload: unknown): Promise<void> {
 	const { to, name } = payload as SendWelcomeEmailPayload;
+
 	PinoLogger.info({
 		scope: 'job:sendWelcomeEmail',
 		message: `Sending welcome email to ${to}`,
