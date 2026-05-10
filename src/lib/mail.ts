@@ -1,16 +1,6 @@
 import nodemailer from 'nodemailer';
-import { PinoLogger } from '../logger/pinoLogger';
 import type { MailMessage, MailTransport } from '@/ports/mail';
-
-class LogTransport implements MailTransport {
-    async sendMail(message: MailMessage): Promise<void> {
-        PinoLogger.info({
-            scope: 'mail',
-            message: `[LOG DRIVER] To: ${message.to} | Subject: ${message.subject}`,
-            params: { html: message.html },
-        });
-    }
-}
+import { LogTransport } from '@/adapters/outbound/mail/log';
 
 class SmtpTransport implements MailTransport {
     private transporter: nodemailer.Transporter | null = null;

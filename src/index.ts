@@ -13,6 +13,8 @@ import { User } from '@/core/models/User';
 import { SessionStore, generateSessionToken } from '@/adapters/inbound/http/middleware/sessionStore';
 import { verifyOrigin } from '@/adapters/inbound/http/middleware/csrf';
 import { notFoundHandler, globalErrorHandler } from '@/adapters/inbound/http/middleware/errorHandler';
+import { Mailer } from '@/lib/mail';
+import { LogTransport } from '@/adapters/outbound/mail/log';
 
 declare module "express-serve-static-core" {
 	interface Request {
@@ -35,6 +37,7 @@ const port = variables.PORT;
 app.set('trust proxy', variables.TRUST_PROXY);
 
 async function bootstrap() {
+  Mailer.registerDriver('log', new LogTransport());
   const orm = await MikroORM.init(ormConfig);
   const sessionStore = new SessionStore(orm);
 
