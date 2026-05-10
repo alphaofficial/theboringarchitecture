@@ -5,7 +5,7 @@ import path from 'path';
 import helmet from 'helmet';
 import compression from 'compression';
 import routes from './adapters/inbound/http/routes/route';
-import ormConfig from './database/orm.config';
+import ormConfig from './adapters/outbound/persistence/orm.config';
 import { MikroORM, RequestContext } from '@mikro-orm/core';
 import { PinoLogger } from './logger/pinoLogger';
 import variables from './config/variables';

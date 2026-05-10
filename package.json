@@ -92,8 +92,8 @@
   },
   "mikro-orm": {
     "configPaths": [
-      "./src/database/orm.config.ts",
-      "./dist/database/orm.config.js"
+      "./src/adapters/outbound/persistence/orm.config.ts",
+      "./dist/adapters/outbound/persistence/orm.config.js"
     ]
   }
 }

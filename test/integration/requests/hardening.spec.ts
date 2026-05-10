@@ -9,7 +9,7 @@ import { MikroORM, RequestContext } from "@mikro-orm/core";
 import { mock } from "jest-mock-extended";
 import path from "node:path";
 
-import ormConfig from "../../../src/database/orm.config";
+import ormConfig from "../../../src/adapters/outbound/persistence/orm.config";
 import { SessionStore, generateSessionToken } from "../../../src/adapters/inbound/http/middleware/sessionStore";
 import { Session } from "@/core/models/Session";
 import { injectAuthHelpers } from "../../../src/adapters/inbound/http/middleware/authUtils";
