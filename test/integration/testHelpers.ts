@@ -30,11 +30,17 @@ interface BootstrapTestAppOptions {
 	dbName?: string;
 }
 
+export const openTestOrm = async (dbName = "express_inertia_test.db") => {
+	const orm = await MikroORM.init({ ...ormConfig, dbName });
+	await orm.schema.updateSchema();
+	return orm;
+};
+
 export const bootstrapTestApp = async (options: BootstrapTestAppOptions = {}) => {
 	const log = PinoLogger;
 	const app = express();
 
-	const orm = await MikroORM.init({ ...ormConfig, dbName: options.dbName ?? "express_inertia_test.db" });
+	const orm = await openTestOrm(options.dbName ?? "express_inertia_test.db");
 	const sessionStore = new SessionStore(orm);
 
 	app.use(helmet({ contentSecurityPolicy: false }));

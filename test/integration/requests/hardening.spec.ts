@@ -5,11 +5,10 @@ import express from "express";
 import helmet from "helmet";
 import compression from "compression";
 import session from "express-session";
-import { MikroORM, RequestContext } from "@mikro-orm/core";
+import { RequestContext } from "@mikro-orm/core";
 import { mock } from "jest-mock-extended";
 import path from "node:path";
 
-import ormConfig from "../../../src/adapters/outbound/persistence/orm.config";
 import { SessionStore, generateSessionToken } from "../../../src/adapters/inbound/http/middleware/sessionStore";
 import { Session } from "@/core/models/Session";
 import { injectAuthHelpers } from "../../../src/adapters/inbound/http/middleware/authUtils";
@@ -18,7 +17,7 @@ import { PinoLogger } from "../../../src/logger/pinoLogger";
 import { Hash } from "../../../src/core/utils/Hash";
 import { authRateLimit } from "../../../src/adapters/inbound/http/middleware/rateLimit";
 import { notFoundHandler, globalErrorHandler } from "../../../src/adapters/inbound/http/middleware/errorHandler";
-import { bootstrapTestApp } from "../testHelpers";
+import { bootstrapTestApp, openTestOrm } from "../testHelpers";
 import { TestDataFactory } from "../testDataFactory";
 import { agent, request } from "../http";
 
@@ -33,7 +32,7 @@ interface BootOpts {
  */
 async function bootApp(opts: BootOpts = {}) {
 	const app = express();
-	const orm = await MikroORM.init({ ...ormConfig, dbName: "express_inertia_test.db" });
+	const orm = await openTestOrm("express_inertia_test.db");
 	const sessionStore = new SessionStore(orm);
 
 	app.use(helmet({ contentSecurityPolicy: false }));
@@ -287,7 +286,7 @@ describe("Hardening", () => {
 		let store: SessionStore;
 
 		beforeAll(async () => {
-			orm = await MikroORM.init({ ...ormConfig, dbName: "express_inertia_test.db" });
+			orm = await openTestOrm("express_inertia_test.db");
 			store = new SessionStore(orm);
 		});
 
