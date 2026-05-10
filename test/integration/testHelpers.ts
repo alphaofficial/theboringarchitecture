@@ -1,7 +1,7 @@
-import { PinoLogger } from "../../src/adapters/shared/logger/pinoLogger";
 import { MikroORM } from "@mikro-orm/core";
-import ormConfig from "../../src/adapters/outbound/persistence/orm.config";
-import { createHttpApp } from "../../src/index";
+import ormConfig from "@/adapters/outbound/persistence/orm.config";
+import { PinoLogger } from "@/adapters/shared/logger/pinoLogger";
+import { createHttpApp } from "@/index";
 
 declare module "express-serve-static-core" {
 	interface Request {

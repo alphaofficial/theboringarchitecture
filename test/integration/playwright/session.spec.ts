@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
+import { Hash } from "@/core/utils/Hash";
 import { agent, injectApp } from "../http";
 import { createAppHarness } from "./appHarness";
-import { Hash } from "../../../src/core/utils/Hash";
 
 let harness: Awaited<ReturnType<typeof createAppHarness>>;
 

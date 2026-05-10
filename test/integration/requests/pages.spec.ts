@@ -1,6 +1,6 @@
+import { User } from "@/core/models/User";
 import { bootstrapTestApp } from "../testHelpers";
 import { TestDataFactory } from "../testDataFactory";
-import { User } from "../../../src/core/models/User";
 import { agent, request } from "../http";
 
 describe("Pages Integration Tests", () => {

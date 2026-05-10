@@ -1,9 +1,9 @@
 import crypto from "crypto";
+import { PasswordReset } from "@/core/models/PasswordReset";
+import { User } from "@/core/models/User";
+import variables from "@/config/variables";
 import { bootstrapTestApp } from "../testHelpers";
 import { TestDataFactory } from "../testDataFactory";
-import { User } from "../../../src/core/models/User";
-import { PasswordReset } from "../../../src/core/models/PasswordReset";
-import variables from "../../../src/config/variables";
 import { agent, request } from "../http";
 
 function extractInertiaPageData(html: string): any {
