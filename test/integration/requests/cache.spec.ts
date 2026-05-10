@@ -1,4 +1,6 @@
-import { Cache, CacheDriver } from '@/lib/cache';
+import { Cache } from '@/lib/cache';
+import type { CacheDriver } from '@/ports/cache';
+
 
 describe('cache (in-memory driver)', () => {
     beforeEach(async () => {
