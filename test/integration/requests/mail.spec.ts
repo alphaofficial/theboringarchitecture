@@ -1,4 +1,5 @@
-import { Mailer, MailTransport, MailMessage } from '@/lib/mail';
+import { Mailer } from '@/lib/mail';
+import type { MailMessage, MailTransport } from '@/ports/mail';
 
 describe('mailer', () => {
     it('sends via log driver by default (no error thrown)', async () => {
