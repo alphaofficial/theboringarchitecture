@@ -20,3 +20,4 @@ playwright-report/
 *.db*
 *.log*
 tmp/
+docs/plans/
