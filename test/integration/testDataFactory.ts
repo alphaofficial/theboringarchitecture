@@ -1,7 +1,7 @@
 import { MikroORM } from "@mikro-orm/core";
 import { Session } from "@/core/models/Session";
 import { User } from "@/core/models/User";
-import { Hash } from "@/core/utils/Hash";
+import { Hash } from "@/adapters/outbound/crypto/Hash";
 
 function generateId(prefix: string): string {
 	return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;

@@ -16,7 +16,7 @@ import { authRateLimit } from "@/adapters/inbound/http/middleware/rateLimit";
 import { SessionStore, generateSessionToken } from "@/adapters/inbound/http/middleware/sessionStore";
 import { PinoLogger } from "@/adapters/shared/logger/pinoLogger";
 import { Session } from "@/core/models/Session";
-import { Hash } from "@/core/utils/Hash";
+import { Hash } from "@/adapters/outbound/crypto/Hash";
 import { bootstrapTestApp, openTestOrm } from "../testHelpers";
 import { TestDataFactory } from "../testDataFactory";
 import { agent, request } from "../http";

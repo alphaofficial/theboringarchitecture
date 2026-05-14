@@ -43,7 +43,7 @@ const IDE_FILES: Record<string, { lang: string; lines: { n: number; t: ReactNode
 		lines: [
 			{ n: 1, t: <><span className="text-[#c586c0]">import</span> {'{'} Request, Response {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;express&apos;</span></> },
 			{ n: 2, t: <><span className="text-[#c586c0]">import</span> {'{'} BaseController {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/adapters/inbound/http/controllers/BaseController&apos;</span></> },
-			{ n: 3, t: <><span className="text-[#c586c0]">import</span> {'{'} Hash {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/core/utils/Hash&apos;</span></> },
+			{ n: 3, t: <><span className="text-[#c586c0]">import</span> {'{'} Hash {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/adapters/outbound/crypto/Hash&apos;</span></> },
 			{ n: 4, t: <><span className="text-[#c586c0]">import</span> {'{'} User {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/core/models/User&apos;</span></> },
 			{ n: 5, t: <><span className="text-[#c586c0]">import</span> {'{'} MailTransport {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/ports/mail&apos;</span></> },
 			{ n: 6, t: <><span className="text-[#c586c0]">import</span> {'{'} z {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;zod&apos;</span></> },

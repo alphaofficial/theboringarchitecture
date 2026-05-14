@@ -1,6 +1,6 @@
 import type { AppEvents } from '@/core/events/AppEvents';
 import { User } from '@/core/models/User';
-import { Hash } from '@/core/utils/Hash';
+import type { Hasher } from '@/ports/hasher';
 import type { MailTransport } from '@/ports/mail';
 import type { UserRepository } from '@/ports/user-repository';
 
@@ -18,6 +18,7 @@ type RegisterUserEmitter = <K extends keyof AppEvents>(event: K, payload: AppEve
 
 export interface RegisterUserDependencies {
     users: Pick<UserRepository, 'findOne' | 'persistAndFlush'>;
+    hasher: Hasher;
     mailTransport: MailTransport;
     emit: RegisterUserEmitter;
     appName: string;
@@ -28,6 +29,7 @@ export interface RegisterUserDependencies {
 
 export class RegisterUser {
     private readonly users: RegisterUserDependencies['users'];
+    private readonly hasher: Hasher;
     private readonly mailTransport: MailTransport;
     private readonly emit: RegisterUserEmitter;
     private readonly appName: string;
@@ -37,6 +39,7 @@ export class RegisterUser {
 
     constructor({
         users,
+        hasher,
         mailTransport,
         emit,
         appName,
@@ -45,6 +48,7 @@ export class RegisterUser {
         makeVerificationToken,
     }: RegisterUserDependencies) {
         this.users = users;
+        this.hasher = hasher;
         this.mailTransport = mailTransport;
         this.emit = emit;
         this.appName = appName;
@@ -60,7 +64,7 @@ export class RegisterUser {
             return { status: 'email_taken' };
         }
 
-        const hashedPassword = await Hash.make(input.password);
+        const hashedPassword = await this.hasher.make(input.password);
         const user = new User(this.uuid(), input.name, input.email, hashedPassword);
 
         await this.users.persistAndFlush(user);

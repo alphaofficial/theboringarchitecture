@@ -1,6 +1,6 @@
 import type { AppEvents } from '@/core/events/AppEvents';
 import { User } from '@/core/models/User';
-import { Hash } from '@/core/utils/Hash';
+import type { Hasher } from '@/ports/hasher';
 import type { UserRepository } from '@/ports/user-repository';
 
 export interface LoginUserInput {
@@ -16,22 +16,25 @@ type LoginUserEmitter = <K extends keyof AppEvents>(event: K, payload: AppEvents
 
 export interface LoginUserDependencies {
     users: Pick<UserRepository, 'findOne'>;
+    hasher: Hasher;
     emit: LoginUserEmitter;
 }
 
 export class LoginUser {
     private readonly users: LoginUserDependencies['users'];
+    private readonly hasher: Hasher;
     private readonly emit: LoginUserEmitter;
 
-    constructor({ users, emit }: LoginUserDependencies) {
+    constructor({ users, hasher, emit }: LoginUserDependencies) {
         this.users = users;
+        this.hasher = hasher;
         this.emit = emit;
     }
 
     async execute(input: LoginUserInput): Promise<LoginUserResult> {
         const user = await this.users.findOne(User, { email: input.email });
 
-        if (!user || !(await Hash.check(input.password, user.password))) {
+        if (!user || !(await this.hasher.check(input.password, user.password))) {
             return { status: 'invalid_credentials' };
         }
 

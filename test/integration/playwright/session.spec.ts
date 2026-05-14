@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { Hash } from "@/core/utils/Hash";
+import { Hash } from "@/adapters/outbound/crypto/Hash";
 import { agent, injectApp } from "../http";
 import { createAppHarness } from "./appHarness";
 

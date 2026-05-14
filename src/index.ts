@@ -24,6 +24,7 @@ import { SmtpTransport } from '@/adapters/outbound/mail/smtp';
 import { LocalDiskDriver } from '@/adapters/outbound/storage/local';
 import { S3Driver } from '@/adapters/outbound/storage/s3';
 import { MikroOrmUserRepository } from '@/adapters/outbound/persistence/MikroOrmUserRepository';
+import { Hash } from '@/adapters/outbound/crypto/Hash';
 import { Emitter } from '@/adapters/shared/events';
 import { LoginUser } from '@/core/use-cases/LoginUser';
 import { RegisterUser } from '@/core/use-cases/RegisterUser';
@@ -174,10 +175,12 @@ export function createHttpApp(orm: MikroORM): { app: Express; sessionStore: Sess
   const authController = AuthController.fromDependencies({
     loginUser: new LoginUser({
       users: userRepository,
+      hasher: Hash,
       emit,
     }),
     registerUser: new RegisterUser({
       users: userRepository,
+      hasher: Hash,
       mailTransport,
       emit,
       appName: variables.APP_NAME,
@@ -203,6 +206,7 @@ export function createHttpApp(orm: MikroORM): { app: Express; sessionStore: Sess
     }),
     resetPassword: new ResetPassword({
       users: userRepository,
+      hasher: Hash,
       passwordResetExpiryMinutes: variables.PASSWORD_RESET_EXPIRY,
       makeTokenHash: token =>
         crypto.createHmac('sha256', variables.APP_KEY).update(token).digest('hex'),

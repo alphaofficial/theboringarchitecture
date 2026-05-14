@@ -1,7 +1,7 @@
 import type { AppEvents } from '@/core/events/AppEvents';
 import { User } from '@/core/models/User';
 import { RegisterUser } from '@/core/use-cases/RegisterUser';
-import { Hash } from '@/core/utils/Hash';
+import { Hash } from '@/adapters/outbound/crypto/Hash';
 import type { MailMessage, MailTransport } from '@/ports/mail';
 import type { UserRepository } from '@/ports/user-repository';
 
@@ -40,6 +40,7 @@ describe('RegisterUser', () => {
         const events: Array<{ event: keyof AppEvents; payload: AppEvents[keyof AppEvents] }> = [];
         const useCase = new RegisterUser({
             users,
+            hasher: Hash,
             mailTransport,
             emit: (event, payload) => {
                 events.push({ event, payload });
@@ -94,6 +95,7 @@ describe('RegisterUser', () => {
         const events: Array<{ event: keyof AppEvents; payload: AppEvents[keyof AppEvents] }> = [];
         const useCase = new RegisterUser({
             users,
+            hasher: Hash,
             mailTransport,
             emit: (event, payload) => {
                 events.push({ event, payload });

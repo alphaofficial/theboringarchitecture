@@ -1,7 +1,7 @@
 import { PasswordReset } from '@/core/models/PasswordReset';
 import { Session } from '@/core/models/Session';
 import { User } from '@/core/models/User';
-import { Hash } from '@/core/utils/Hash';
+import type { Hasher } from '@/ports/hasher';
 import type { UserRepository } from '@/ports/user-repository';
 
 export interface ResetPasswordInput {
@@ -17,6 +17,7 @@ export type ResetPasswordResult =
 
 export interface ResetPasswordDependencies {
     users: Pick<UserRepository, 'findOne' | 'nativeDelete' | 'flush'>;
+    hasher: Hasher;
     passwordResetExpiryMinutes: number;
     makeTokenHash: (token: string) => string;
     now: () => Date;
@@ -24,17 +25,20 @@ export interface ResetPasswordDependencies {
 
 export class ResetPassword {
     private readonly users: ResetPasswordDependencies['users'];
+    private readonly hasher: Hasher;
     private readonly passwordResetExpiryMinutes: number;
     private readonly makeTokenHash: ResetPasswordDependencies['makeTokenHash'];
     private readonly now: () => Date;
 
     constructor({
         users,
+        hasher,
         passwordResetExpiryMinutes,
         makeTokenHash,
         now,
     }: ResetPasswordDependencies) {
         this.users = users;
+        this.hasher = hasher;
         this.passwordResetExpiryMinutes = passwordResetExpiryMinutes;
         this.makeTokenHash = makeTokenHash;
         this.now = now;
@@ -59,7 +63,7 @@ export class ResetPassword {
             return { status: 'invalid_token' };
         }
 
-        user.password = await Hash.make(input.password);
+        user.password = await this.hasher.make(input.password);
         await this.users.nativeDelete(PasswordReset, { email: input.email });
         await this.users.nativeDelete(Session, { user_id: user.id });
         await this.users.flush();

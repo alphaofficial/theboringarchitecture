@@ -2,7 +2,7 @@ import { PasswordReset } from '@/core/models/PasswordReset';
 import { Session } from '@/core/models/Session';
 import { User } from '@/core/models/User';
 import { ResetPassword } from '@/core/use-cases/ResetPassword';
-import { Hash } from '@/core/utils/Hash';
+import { Hash } from '@/adapters/outbound/crypto/Hash';
 import type { UserRepository } from '@/ports/user-repository';
 
 class InMemoryUserRepository implements Pick<UserRepository, 'findOne' | 'nativeDelete' | 'flush'> {
@@ -104,6 +104,7 @@ describe('ResetPassword', () => {
 
         const useCase = new ResetPassword({
             users,
+            hasher: Hash,
             passwordResetExpiryMinutes: 60,
             makeTokenHash: token => `hashed:${token}`,
             now: () => new Date('2026-05-10T09:30:00.000Z'),
@@ -129,6 +130,7 @@ describe('ResetPassword', () => {
 
         const useCase = new ResetPassword({
             users,
+            hasher: Hash,
             passwordResetExpiryMinutes: 60,
             makeTokenHash: token => `hashed:${token}`,
             now: () => new Date('2026-05-10T09:30:00.000Z'),
@@ -158,6 +160,7 @@ describe('ResetPassword', () => {
 
         const useCase = new ResetPassword({
             users,
+            hasher: Hash,
             passwordResetExpiryMinutes: 30,
             makeTokenHash: token => `hashed:${token}`,
             now: () => new Date('2026-05-10T09:30:00.000Z'),

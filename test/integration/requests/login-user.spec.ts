@@ -1,7 +1,7 @@
 import type { AppEvents } from '@/core/events/AppEvents';
 import { User } from '@/core/models/User';
 import { LoginUser } from '@/core/use-cases/LoginUser';
-import { Hash } from '@/core/utils/Hash';
+import { Hash } from '@/adapters/outbound/crypto/Hash';
 import type { UserRepository } from '@/ports/user-repository';
 
 class InMemoryUserRepository implements Pick<UserRepository, 'findOne'> {
@@ -34,6 +34,7 @@ describe('LoginUser', () => {
         const events: Array<{ event: keyof AppEvents; payload: AppEvents[keyof AppEvents] }> = [];
         const useCase = new LoginUser({
             users,
+            hasher: Hash,
             emit: (event, payload) => {
                 events.push({ event, payload });
             },
@@ -66,6 +67,7 @@ describe('LoginUser', () => {
         const events: Array<{ event: keyof AppEvents; payload: AppEvents[keyof AppEvents] }> = [];
         const useCase = new LoginUser({
             users,
+            hasher: Hash,
             emit: (event, payload) => {
                 events.push({ event, payload });
             },
@@ -85,6 +87,7 @@ describe('LoginUser', () => {
         const events: Array<{ event: keyof AppEvents; payload: AppEvents[keyof AppEvents] }> = [];
         const useCase = new LoginUser({
             users,
+            hasher: Hash,
             emit: (event, payload) => {
                 events.push({ event, payload });
             },
