@@ -88,7 +88,6 @@ On the first visit the server returns a full HTML document with the initial page
 
 ```
 src/
-├── adapters/         # Inertia.js Express adapter
 ├── controllers/      # Route controllers (BaseController + per-feature)
 ├── database/         # MikroORM config, migrations, mappings, seeders
 ├── jobs/             # Graphile Worker job handlers (one file per job name)
@@ -97,6 +96,7 @@ src/
 ├── mail/             # Mailer class, driver interface, log + SMTP driver implementations
 ├── middleware/       # auth, sessions, errorHandler, rateLimit, inertia
 ├── models/           # Domain classes (User, Session)
+├── primitives/       # Framework primitives such as the Inertia.js Express adapter
 ├── routes/           # Express router
 ├── utils/            # Shared utility helpers (tokens, hashing, etc.)
 ├── views/            # React pages + components (Vite-bundled)

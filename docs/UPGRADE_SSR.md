@@ -195,7 +195,7 @@ Drop the inline template rendering; delegate to the shared helper.
 
 ```ts
 import { type Request, type Response, type NextFunction } from 'express';
-import { InertiaExpressAdapter } from '../adapters/InertiaExpressAdapter';
+import { InertiaExpressAdapter } from '../primitives/InertiaExpressAdapter';
 import { renderHtml } from '../lib/renderHtml';
 import variables from '../config/variables';
 
