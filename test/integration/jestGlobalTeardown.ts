@@ -2,7 +2,7 @@
 import fs from "fs";
 import path from "path";
 import { MikroORM } from "@mikro-orm/core";
-import ormConfig from "@/adapters/outbound/persistence/orm.config";
+import ormConfig from "../../src/database/orm.config";
 
 const globalTeardown = async (): Promise<void> => {
 	console.info("\n", "Teardown started");

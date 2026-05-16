@@ -1,4 +1,4 @@
-import { Queue } from '@/adapters/outbound/queue/graphileWorker';
+import { Queue } from '@/lib/queue';
 
 describe('queue dispatch', () => {
     it('is a no-op when DATABASE_URL is not set', async () => {

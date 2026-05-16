@@ -26,7 +26,7 @@ src/
 ├── middleware/      # auth, inertia, rateLimit, errorHandler
 ├── models/          # Plain TS classes (no decorators)
 ├── routes/          # route.ts — single Express Router
-├── crypto/          # Hasher implementation (bcrypt)
+├── utils/           # Hash, etc.
 ├── views/
 │   ├── components/  # Shared React components
 │   ├── pages/       # Inertia page components
@@ -315,25 +315,28 @@ await em.removeAndFlush(post);
 
 ## 5. Authentication
 
-Sessions are DB-backed (`sessions` table) and signed with `SESSION_SECRET`. Passwords are hashed with bcrypt via the `Hasher` port.
-
-Use cases inject a `Hasher` implementation:
+Sessions are DB-backed (`sessions` table) and signed with `SESSION_SECRET`. Passwords are hashed with bcrypt via `Hash.make` / `Hash.check`.
 
 ```ts
-import { Hash } from '@/adapters/outbound/crypto/Hash';
-import type { Hasher } from '@/ports/hasher';
+import { Hash } from '../utils/Hash';
 
-export interface LoginUserDependencies {
-    users: Pick<UserRepository, 'findOne'>;
-    hasher: Hasher;
-    emit: LoginUserEmitter;
+// Register
+const password = await Hash.make(req.body.password);
+const user = new User(uuid(), name, email, password);
+await em.persistAndFlush(user);
+req.authenticate(user);
+
+// Login
+const user = await em.findOne(User, { email });
+if (!user || !(await Hash.check(req.body.password, user.password))) {
+  return instance.render(req, res, 'Auth/Login', { errors: { email: 'Invalid credentials' } });
 }
+req.authenticate(user);
 
-// In your use case
-const valid = await this.hasher.check(plainPassword, hashedPassword);
+// Logout
+await req.logout();
+res.redirect('/login');
 ```
-
-The `Hash` class (bcrypt implementation) is wired up in `src/index.ts` when instantiating use cases:
 
 ---
 

@@ -38,7 +38,7 @@ const globalBefore = async (config: any): Promise<void> => {
 	console.log("Starting database migrations...");
 
 	const ormConfig = (
-		await import("@/adapters/outbound/persistence/orm.config.ts")
+		await import("../../src/database/orm.config.ts")
 	).default;
 	const orm = await MikroORM.init({ ...ormConfig, dbName: "express_inertia_test.db" });
 	await orm.getMigrator().up();
