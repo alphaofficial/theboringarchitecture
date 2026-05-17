@@ -1,67 +1,71 @@
-import { MikroORM } from '@mikro-orm/core';
-import { cleanExpiredSessions } from '@/adapters/inbound/jobs/cleanExpiredSessions';
-import { registerScheduledTasks } from '@/adapters/inbound/jobs/scheduledTasks';
-import ormConfig from '@/adapters/outbound/persistence/orm.config';
-import { PinoLogger } from '@/adapters/shared/logger/pinoLogger';
-import { Scheduler } from '@/adapters/shared/scheduler';
-import { Session } from '@/core/models/Session';
-import { startScheduler } from '@/scheduler';
+import { Scheduler } from '@/primitives/scheduler';
+import type { ScheduledHandle, SchedulerEngine } from '@/primitives/ports/scheduler';
 
-describe('scheduler', () => {
-	afterEach(() => {
-		jest.restoreAllMocks();
-	});
+describe('scheduler primitive', () => {
+    afterEach(() => {
+        Scheduler.reset();
+    });
 
-	it('starts by delegating cron registration to the scheduled task registry', async () => {
-		const orm = { close: jest.fn().mockResolvedValue(undefined) } as any;
-		const initSpy = jest.spyOn(MikroORM, 'init').mockResolvedValue(orm);
-		const scheduleSpy = jest.spyOn(Scheduler, 'schedule').mockReturnValue({} as any);
-		const getRegisteredTasksSpy = jest.spyOn(Scheduler, 'getRegisteredTasks').mockReturnValue([
-			{ expression: '0 * * * *' },
-		]);
-		const infoSpy = jest.spyOn(PinoLogger, 'info').mockImplementation(() => undefined);
-		const processOnSpy = jest.spyOn(process, 'on').mockImplementation(() => process);
+    it('delegates scheduling to an injected engine', () => {
+        const scheduled: Array<{ expression: string; handler: () => void | Promise<void> }> = [];
+        const handle: ScheduledHandle = { start: jest.fn(), stop: jest.fn() };
+        const engine: SchedulerEngine = {
+            validate: jest.fn(() => true),
+            schedule: jest.fn((expression, handler) => {
+                scheduled.push({ expression, handler });
+                return handle;
+            }),
+        };
 
-		await expect(startScheduler()).resolves.toBe(orm);
+        Scheduler.setDriver(engine);
+        const result = Scheduler.schedule('* * * * *', jest.fn());
 
-		expect(initSpy).toHaveBeenCalledWith(ormConfig);
-		expect(scheduleSpy).toHaveBeenCalledWith('0 * * * *', expect.any(Function));
-		expect(getRegisteredTasksSpy).toHaveBeenCalledTimes(1);
-		expect(processOnSpy).toHaveBeenCalledWith('SIGTERM', expect.any(Function));
-		expect(processOnSpy).toHaveBeenCalledWith('SIGINT', expect.any(Function));
-		expect(infoSpy).toHaveBeenCalledWith(
-			expect.objectContaining({
-				scope: 'scheduler',
-				message: 'Scheduler started with 1 task(s)',
-				params: { tasks: ['0 * * * *'] },
-			}),
-		);
-	});
+        expect(result).toBe(handle);
+        expect(engine.validate).toHaveBeenCalledWith('* * * * *');
+        expect(engine.schedule).toHaveBeenCalledTimes(1);
+        expect(scheduled[0].expression).toBe('* * * * *');
+    });
 
-	it('cleans expired sessions through the extracted job handler', async () => {
-		jest.spyOn(Date, 'now').mockReturnValue(new Date('2026-05-14T12:00:00.000Z').getTime());
-		const nativeDelete = jest.fn().mockResolvedValue(2);
-		const orm = {
-			em: {
-				fork: jest.fn(() => ({ nativeDelete })),
-			},
-		} as any;
-		const infoSpy = jest.spyOn(PinoLogger, 'info').mockImplementation(() => undefined);
+    it('throws on invalid cron expressions through the active engine', () => {
+        Scheduler.setDriver({
+            validate: () => false,
+            schedule: jest.fn(),
+        });
 
-		await cleanExpiredSessions(orm);
+        expect(() => Scheduler.schedule('not cron', jest.fn())).toThrow('Invalid cron expression: "not cron"');
+    });
 
-		expect(orm.em.fork).toHaveBeenCalledTimes(1);
-		expect(nativeDelete).toHaveBeenCalledWith(Session, { last_activity: { $lte: 1778673600 } });
-		expect(infoSpy).toHaveBeenCalledWith({ scope: 'scheduler', message: 'Cleaned 2 expired session(s)' });
-	});
+    it('startAll and stopAll operate on registered handles', () => {
+        const handles: ScheduledHandle[] = [
+            { start: jest.fn(), stop: jest.fn() },
+            { start: jest.fn(), stop: jest.fn() },
+        ];
+        let index = 0;
+        Scheduler.setDriver({
+            validate: () => true,
+            schedule: () => handles[index++],
+        });
 
-	it('registers scheduled tasks through the explicit scheduler registry', () => {
-		const orm = {} as any;
-		const scheduleSpy = jest.spyOn(Scheduler, 'schedule').mockReturnValue({} as any);
+        Scheduler.schedule('* * * * *', jest.fn());
+        Scheduler.schedule('*/5 * * * *', jest.fn());
 
-		registerScheduledTasks(orm);
+        Scheduler.startAll();
+        Scheduler.stopAll();
 
-		expect(scheduleSpy).toHaveBeenCalledTimes(1);
-		expect(scheduleSpy).toHaveBeenCalledWith('0 * * * *', expect.any(Function));
-	});
+        expect(handles[0].start).toHaveBeenCalledTimes(1);
+        expect(handles[1].start).toHaveBeenCalledTimes(1);
+        expect(handles[0].stop).toHaveBeenCalledTimes(1);
+        expect(handles[1].stop).toHaveBeenCalledTimes(1);
+    });
+
+    it('returns registered task expression metadata without engine internals', () => {
+        Scheduler.setDriver({
+            validate: () => true,
+            schedule: () => ({ start: jest.fn(), stop: jest.fn() }),
+        });
+
+        Scheduler.schedule('* * * * *', jest.fn());
+
+        expect(Scheduler.getRegisteredTasks()).toEqual([{ expression: '* * * * *' }]);
+    });
 });

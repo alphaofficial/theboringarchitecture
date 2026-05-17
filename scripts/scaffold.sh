@@ -25,14 +25,16 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PAGES_DIR="$ROOT/src/adapters/inbound/http/views/pages"
-CTRL_DIR="$ROOT/src/adapters/inbound/http/controllers"
-ROUTES_FILE="$ROOT/src/adapters/inbound/http/routes/route.ts"
-MODELS_DIR="$ROOT/src/core/models"
-MAPPINGS_DIR="$ROOT/src/adapters/outbound/persistence/mappings"
-JOBS_DIR="$ROOT/src/adapters/inbound/jobs"
-MAIL_DIR="$ROOT/src/adapters/outbound/mail/templates"
-LISTENERS_DIR="$ROOT/src/adapters/shared/listeners"
+PAGES_DIR="$ROOT/src/views/pages"
+CTRL_DIR="$ROOT/src/controllers"
+ROUTES_FILE="$ROOT/src/router/route.ts"
+MODELS_DIR="$ROOT/src/models"
+MAPPINGS_DIR="$ROOT/src/database/mappings"
+JOBS_DIR="$ROOT/src/jobs/handlers"
+JOBS_REGISTRY="$ROOT/src/jobs/jobs.ts"
+MAIL_DIR="$ROOT/src/mail/templates"
+EVENT_HANDLERS_DIR="$ROOT/src/events/handlers"
+EVENTS_REGISTRY="$ROOT/src/events/events.ts"
 
 red()   { printf '\033[31m%s\033[0m\n' "$*" >&2; }
 green() { printf '\033[32m%s\033[0m\n' "$*"; }
@@ -57,16 +59,25 @@ kebab() {
 		| tr '[:upper:]' '[:lower:]'
 }
 
+lower_first() {
+	printf '%s' "$1" | awk '{print tolower(substr($0,1,1)) substr($0,2)}'
+}
+
+# Event name -> dotted event key (UserSubscribed -> user.subscribed)
+event_key() {
+	kebab "$1" | sed 's/-/./g'
+}
+
 # basename of a page path: Auth/Profile -> Profile
 basename_of() { printf '%s' "${1##*/}"; }
-camel_var() { printf '%s' "$1" | awk '{print tolower(substr($0,1,1)) substr($0,2)}'; }
 
-# Insert a route line before `return route;`
+# Insert a route line before `export default route;`
 insert_route_line() {
 	local line="$1"
 	grep -qF "$line" "$ROUTES_FILE" && { info "route already present, skipping"; return; }
+	# Insert a blank separator only if the previous line isn't already blank
 	awk -v ins="$line" '
-		/^[[:space:]]*return route;$/ && !done {
+		/^export default route;/ && !done {
 			print ins
 			print ""
 			done = 1
@@ -74,7 +85,7 @@ insert_route_line() {
 		{ print }
 	' "$ROUTES_FILE" > "$ROUTES_FILE.tmp"
 	mv "$ROUTES_FILE.tmp" "$ROUTES_FILE"
-	info "updated src/adapters/inbound/http/routes/route.ts"
+	info "updated src/router/route.ts"
 }
 
 ensure_import() {
@@ -94,51 +105,29 @@ ensure_import() {
 	mv "$ROUTES_FILE.tmp" "$ROUTES_FILE"
 }
 
-ensure_route_controller() {
-	local name="$1"
-	local class_name="${name}Controller"
-	local var_name
-	var_name="$(camel_var "$name")Controller"
-
-	# Inject controller instantiation inside createRoutes, after "const route = Router();"
-	# This avoids the need to update the RouteControllers interface or function parameters
-	if ! grep -qF "const ${var_name} = new ${class_name}();" "$ROUTES_FILE"; then
-		awk -v ins="    const ${var_name} = new ${class_name}();" '
-			/^[[:space:]]*const route = Router\(\);$/ && !done {
-				print
-				print ins
-				done = 1
-				next
-			}
-			{ print }
-		' "$ROUTES_FILE" > "$ROUTES_FILE.tmp"
-		mv "$ROUTES_FILE.tmp" "$ROUTES_FILE"
-	fi
-}
-
 # --- generators ------------------------------------------------------------
 
 make_controller() {
 	local name="$1"              # Posts  or  Billing
 	local file="$CTRL_DIR/${name}Controller.ts"
-	mkdir -p "$CTRL_DIR"
 	if [ -e "$file" ]; then
 		info "controller exists: ${name}Controller.ts"
 		return
 	fi
 	cat > "$file" <<TS
 import { Request, Response } from 'express';
-import { BaseController } from '@/adapters/inbound/http/controllers/BaseController';
+import { BaseController } from './BaseController';
 
-export class ${name}Controller {
-	index = async (req: Request, res: Response) => {
-		return new BaseController(req, res).render('${name}', {
+export class ${name}Controller extends BaseController {
+	static async index(req: Request, res: Response) {
+		const instance = new ${name}Controller();
+		return await instance.render(req, res, '${name}', {
 			title: '${name}',
 		});
-	};
+	}
 }
 TS
-	green "created src/adapters/inbound/http/controllers/${name}Controller.ts"
+	green "created src/controllers/${name}Controller.ts"
 }
 
 make_page() {
@@ -147,9 +136,7 @@ make_page() {
 	base="$(basename_of "$page_path")"
 	local dir="$PAGES_DIR"
 	case "$page_path" in
-		*/*)
-			dir="$PAGES_DIR/${page_path%/*}"
-			;;
+		*/*) dir="$PAGES_DIR/${page_path%/*}" ;;
 	esac
 	mkdir -p "$dir"
 	local file="$dir/${base}.tsx"
@@ -158,7 +145,7 @@ make_page() {
 		return
 	fi
 	cat > "$file" <<TSX
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 
 interface Props {
 	title: string;
@@ -167,93 +154,20 @@ interface Props {
 export default function ${base}({ title }: Props) {
 	return (
 		<>
-			<Head>
-				<title>{title}</title>
-				<meta
-					name="description"
-					content="A clean starting point for your next Express, Inertia, and React product."
-				/>
-			</Head>
-
-			<main className="min-h-screen overflow-x-hidden bg-white font-display text-slate-900 antialiased">
-				<header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur-lg">
-					<div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-						<Link href="/" className="flex items-center gap-x-2.5">
-							<span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500 text-sm font-black text-white">
-								{title.charAt(0).toUpperCase()}
-							</span>
-							<span className="text-lg font-bold tracking-tight text-slate-900">{title}</span>
-						</Link>
-						<nav className="hidden items-center gap-x-8 text-sm font-medium text-slate-700 md:flex">
-							<a href="#features" className="transition-colors hover:text-slate-900">Features</a>
-							<a href="#how" className="transition-colors hover:text-slate-900">How it works</a>
-						</nav>
-					</div>
-				</header>
-
-				<section>
-					<div className="mx-auto max-w-6xl px-5 pb-16 pt-20 text-center sm:px-6 sm:pb-20 sm:pt-28 lg:pb-24 lg:pt-36">
-						<h1 className="font-display text-[2.75rem] font-black leading-[1.08] tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
-						Build something <span className="text-rose-500">quietly excellent.</span>
-						</h1>
-						<p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-slate-700 sm:text-xl">
-							The framework is in place: Express routes, Inertia pages, React views, and server rendering. Shape this landing page around the product you are building.
-						</p>
-					</div>
-
-					<div className="mx-auto max-w-6xl px-5 pb-20 sm:px-6 sm:pb-24">
-						<div className="overflow-hidden rounded-xl bg-slate-950 shadow-2xl shadow-slate-900/20">
-							<div className="flex items-center gap-x-3 border-b border-slate-800 px-5 py-3">
-								<div className="flex gap-1.5" aria-hidden="true">
-									<span className="h-3 w-3 rounded-full bg-rose-500/70" />
-									<span className="h-3 w-3 rounded-full bg-amber-500/70" />
-									<span className="h-3 w-3 rounded-full bg-emerald-500/70" />
-								</div>
-								<span className="text-sm font-bold text-white">Run your workspace</span>
-							</div>
-							<div className="p-5">
-								<div className="overflow-x-auto rounded-lg bg-black p-4 font-mono text-sm">
-									<span className="select-none text-rose-400">$ </span>
-									<span className="text-slate-100">npm run dev</span>
-								</div>
-								<p className="mt-4 text-sm leading-6 text-slate-400">
-									Keep the layout, change the words, and turn this starting point into your own product story.
-								</p>
-							</div>
-						</div>
-					</div>
-				</section>
-
-				<section id="features" className="border-t border-slate-200 bg-slate-50 py-20 sm:py-24">
-					<div className="mx-auto max-w-6xl px-5 sm:px-6">
-						<div className="max-w-2xl">
-							<p className="text-sm font-bold uppercase tracking-widest text-rose-500">What is already here</p>
-							<h2 className="mt-3 font-display text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">A calm base for your product.</h2>
-						</div>
-						<div className="mt-12 grid gap-6 md:grid-cols-3">
-							{['Express routing', 'Inertia pages', 'React SSR'].map((feature) => (
-								<div key={feature} className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-									<h3 className="text-lg font-bold text-slate-950">{feature}</h3>
-									<p className="mt-3 text-sm leading-6 text-slate-600">Use this card as a placeholder for the product benefits your users should understand first.</p>
-								</div>
-							))}
-						</div>
-					</div>
-				</section>
-
-				<section id="how" className="py-20 sm:py-24">
-					<div className="mx-auto max-w-6xl px-5 text-center sm:px-6">
-						<p className="text-sm font-bold uppercase tracking-widest text-rose-500">Next step</p>
-						<h2 className="mt-3 font-display text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">Make this page yours.</h2>
-						<p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-700">Swap in your positioning, connect real routes, and keep the same responsive landing structure while your product takes shape.</p>
-					</div>
-				</section>
-			</main>
+			<Head title="${base}" />
+			<div className="min-h-screen bg-gray-50">
+				<main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+					<h1 className="text-3xl font-light">{title}</h1>
+					<p className="mt-4 text-gray-600">
+						Edit <code>src/views/pages/${page_path}.tsx</code> to get started.
+					</p>
+				</main>
+			</div>
 		</>
 	);
 }
 TSX
-	green "created src/adapters/inbound/http/views/pages/${page_path}.tsx"
+	green "created src/views/pages/${page_path}.tsx"
 }
 
 # Resolve a field type spec ("string", "text?", "int", "datetime?") to:
@@ -321,7 +235,6 @@ make_model() {
 	local name="$1"              # Post
 	local fields="${2:-}"        # "title:string,body:text"
 	local file="$MODELS_DIR/${name}.ts"
-	mkdir -p "$MODELS_DIR"
 	if [ -e "$file" ]; then
 		info "model exists: ${name}.ts"
 		return
@@ -336,7 +249,7 @@ make_model() {
 		printf '\tupdatedAt: Date = new Date();\n'
 		printf '}\n'
 	} > "$file"
-	green "created src/core/models/${name}.ts"
+	green "created src/models/${name}.ts"
 }
 
 make_mapping() {
@@ -347,7 +260,6 @@ make_mapping() {
 	local table
 	table="$(kebab "$name" | tr '-' '_')s"
 	local file="$MAPPINGS_DIR/${lower}.map.ts"
-	mkdir -p "$MAPPINGS_DIR"
 	if [ -e "$file" ]; then
 		info "mapping exists: ${lower}.map.ts"
 		return
@@ -356,7 +268,7 @@ make_mapping() {
 	prop_lines="$(emit_mapping_fields "$fields")"
 	{
 		printf 'import { EntitySchema } from "@mikro-orm/postgresql";\n'
-		printf 'import { %s } from "@/core/models/%s";\n\n' "$name" "$name"
+		printf 'import { %s } from "@/models/%s";\n\n' "$name" "$name"
 		printf 'export const %sMapper = new EntitySchema<%s>({\n' "$name" "$name"
 		printf '\tclass: %s,\n' "$name"
 		printf '\ttableName: "%s",\n' "$table"
@@ -368,7 +280,7 @@ make_mapping() {
 		printf '\t},\n'
 		printf '});\n'
 	} > "$file"
-	green "created src/adapters/outbound/persistence/mappings/${lower}.map.ts"
+	green "created src/database/mappings/${lower}.map.ts"
 }
 
 add_route() {
@@ -385,11 +297,8 @@ add_route() {
 	local ctrl="${target%.*}"
 	local action="${target#*.}"
 	[ "$ctrl" = "$target" ] && die "route target must be Controller.action (got: $target)"
-	local ctrl_var
-	ctrl_var="$(camel_var "$ctrl")Controller"
 
-	ensure_import "import { ${ctrl}Controller } from '@/adapters/inbound/http/controllers/${ctrl}Controller';"
-	ensure_route_controller "$ctrl"
+	ensure_import "import { ${ctrl}Controller } from '../controllers/${ctrl}Controller';"
 
 	local middleware=""
 	case "$guard" in
@@ -397,7 +306,7 @@ add_route() {
 		guest) middleware=", guest" ;;
 	esac
 
-	local line="    route.${method}('${url}'${middleware}, ${ctrl_var}.${action});"
+	local line="route.${method}('${url}'${middleware}, ${ctrl}Controller.${action});"
 	insert_route_line "$line"
 }
 
@@ -487,30 +396,73 @@ cmd_route() {
 make_job() {
 	local name="$1"              # SendWelcomeEmail
 	mkdir -p "$JOBS_DIR"
-	local camel
-	camel="$(printf '%s' "$name" | awk '{print tolower(substr($0,1,1)) substr($0,2)}')"
-	local file="$JOBS_DIR/${camel}.ts"
+	local camel fn file
+	camel="$(lower_first "$name")"
+	fn="${camel}Job"
+	file="$JOBS_DIR/${fn}.ts"
 	if [ -e "$file" ]; then
-		info "job exists: ${camel}.ts"
-		return
-	fi
-	cat > "$file" <<TS
-import { PinoLogger } from '@/adapters/shared/logger/pinoLogger';
-
-interface ${name}Payload extends Record<string, unknown> {
+		info "job exists: handlers/${fn}.ts"
+	else
+		cat > "$file" <<TS
+interface ${name}Payload {
 	// add your payload fields here
 }
 
-export async function ${camel}(payload: unknown): Promise<void> {
+export async function ${fn}(payload: unknown): Promise<void> {
 	const data = payload as ${name}Payload;
-	PinoLogger.info({
-		scope: 'job:${camel}',
-		message: 'TODO: implement ${name}',
-		params: data,
-	});
+	// TODO: implement job logic
+	void data;
 }
 TS
-	green "created src/adapters/inbound/jobs/${camel}.ts"
+		green "created src/jobs/handlers/${fn}.ts"
+	fi
+	register_job "$fn"
+}
+
+register_job() {
+	local fn="$1"
+	[ -f "$JOBS_REGISTRY" ] || cat > "$JOBS_REGISTRY" <<'TS'
+export const jobs = {
+};
+TS
+	local import_line="import { ${fn} } from './handlers/${fn}';"
+	grep -qF "$import_line" "$JOBS_REGISTRY" || {
+		awk -v ins="$import_line" '
+			/^import / { last = NR }
+			{ lines[NR] = $0 }
+			END {
+				if (last == 0) print ins
+				for (i = 1; i <= NR; i++) {
+					print lines[i]
+					if (i == last) print ins
+				}
+			}
+		' "$JOBS_REGISTRY" > "$JOBS_REGISTRY.tmp"
+		mv "$JOBS_REGISTRY.tmp" "$JOBS_REGISTRY"
+	}
+	grep -Eq "^[[:space:]]*${fn},?[[:space:]]*$" "$JOBS_REGISTRY" && return
+	awk -v entry="    ""${fn}," '
+		function flush_prev() {
+			if (have_prev) {
+				print prev
+				have_prev = 0
+			}
+		}
+		/^}/ && !done {
+			if (have_prev && prev ~ /^[[:space:]]*[A-Za-z_$][A-Za-z0-9_$]*[[:space:]]*$/) {
+				prev = prev ","
+			}
+			flush_prev()
+			print entry
+			done = 1
+			print
+			next
+		}
+		{ flush_prev(); prev = $0; have_prev = 1 }
+		END { flush_prev() }
+	' "$JOBS_REGISTRY" > "$JOBS_REGISTRY.tmp"
+	mv "$JOBS_REGISTRY.tmp" "$JOBS_REGISTRY"
+	info "updated src/jobs/jobs.ts"
 }
 
 make_mail() {
@@ -533,32 +485,78 @@ export function ${name}(data: ${name}Data): string {
 	\`;
 }
 TS
-	green "created src/adapters/outbound/mail/templates/${name}.ts"
+	green "created src/mail/templates/${name}.ts"
 }
 
-make_event_listener() {
+make_event_handler() {
 	local name="$1"              # UserSubscribed
-	mkdir -p "$LISTENERS_DIR"
-	local camel
-	camel="$(printf '%s' "$name" | awk '{print tolower(substr($0,1,1)) substr($0,2)}')"
-	local file="$LISTENERS_DIR/${camel}.ts"
+	mkdir -p "$EVENT_HANDLERS_DIR"
+	local fn key file
+	fn="on${name}"
+	key="$(event_key "$name")"
+	file="$EVENT_HANDLERS_DIR/${fn}.ts"
 	if [ -e "$file" ]; then
-		info "listener exists: ${camel}.ts"
-		return
-	fi
-	cat > "$file" <<TS
-import type { AppEvents } from '@/core/events/AppEvents';
-import { Emitter } from '@/adapters/shared/events';
+		info "event handler exists: ${fn}.ts"
+	else
+		cat > "$file" <<TS
+import type { AppEvents } from '@/events/events';
 
-const eventName: keyof AppEvents = 'user.registered';
-
-// TODO: replace eventName with the event you want to listen for
-Emitter.on(eventName, (payload) => {
-	// TODO: implement ${name} listener logic
+export function ${fn}(payload: AppEvents['${key}']): void {
+	// TODO: implement ${name} event handler logic
 	void payload;
-});
+}
 TS
-	green "created src/adapters/shared/listeners/${camel}.ts"
+		green "created src/events/handlers/${fn}.ts"
+	fi
+	register_event_handler "$key" "$fn"
+}
+
+register_event_handler() {
+	local key="$1"
+	local fn="$2"
+	[ -f "$EVENTS_REGISTRY" ] || cat > "$EVENTS_REGISTRY" <<'TS'
+import { Emitter } from '@/primitives/events';
+import type { EventMap } from '@/primitives/ports/events';
+
+export interface AppEvents extends EventMap {
+}
+
+export function registerAppEventHandlers(): void {
+}
+TS
+	local import_line="import { ${fn} } from '@/events/handlers/${fn}';"
+	grep -qF "$import_line" "$EVENTS_REGISTRY" || {
+		awk -v ins="$import_line" '
+			/^import / { last = NR }
+			{ lines[NR] = $0 }
+			END {
+				for (i = 1; i <= NR; i++) {
+					print lines[i]
+					if (i == last) print ins
+				}
+			}
+		' "$EVENTS_REGISTRY" > "$EVENTS_REGISTRY.tmp"
+		mv "$EVENTS_REGISTRY.tmp" "$EVENTS_REGISTRY"
+	}
+	grep -qF "'${key}':" "$EVENTS_REGISTRY" || {
+		awk -v entry="    '${key}': unknown;" '
+			/^}/ && in_iface && !done { print entry; done = 1 }
+			/^export interface AppEvents/ { in_iface = 1 }
+			in_iface && /^}/ { in_iface = 0 }
+			{ print }
+		' "$EVENTS_REGISTRY" > "$EVENTS_REGISTRY.tmp"
+		mv "$EVENTS_REGISTRY.tmp" "$EVENTS_REGISTRY"
+	}
+	local registration="    Emitter.on<AppEvents, '${key}'>('${key}', ${fn});"
+	grep -qF "$registration" "$EVENTS_REGISTRY" && return
+	awk -v entry="$registration" '
+		/^}/ && in_fn && !done { print entry; done = 1 }
+		/^export function registerAppEventHandlers/ { in_fn = 1 }
+		in_fn && /^}/ { in_fn = 0 }
+		{ print }
+	' "$EVENTS_REGISTRY" > "$EVENTS_REGISTRY.tmp"
+	mv "$EVENTS_REGISTRY.tmp" "$EVENTS_REGISTRY"
+	info "updated src/events/events.ts"
 }
 
 cmd_job() {
@@ -579,7 +577,7 @@ cmd_event() {
 	local name="${1:-}"
 	[ -z "$name" ] && die "usage: scaffold.sh event <Name>"
 	assert_pascal "$name"
-	make_event_listener "$name"
+	make_event_handler "$name"
 }
 
 # --- entrypoint ------------------------------------------------------------
