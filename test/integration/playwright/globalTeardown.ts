@@ -1,14 +1,10 @@
-import fs from "fs";
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { E2E_DB_PATH } from './env';
 
 export default async function globalTeardown() {
-	for (const file of [
-		"express_inertia_e2e.db",
-		"express_inertia_e2e.db-shm",
-		"express_inertia_e2e.db-wal",
-	]) {
-		if (fs.existsSync(file)) {
-			fs.unlinkSync(file);
-			console.log(`Removed ${file}`);
-		}
-	}
+	const dbPath = path.resolve(process.cwd(), E2E_DB_PATH);
+	await fs.rm(dbPath, { force: true });
+	await fs.rm(`${dbPath}-shm`, { force: true });
+	await fs.rm(`${dbPath}-wal`, { force: true });
 }

@@ -4,7 +4,7 @@ This is a one-time migration. After it's done, `npm run dev` and `npm run build`
 
 Prereqs:
 - Clean git working tree (so you can review or revert).
-- TBA app scaffolded from `install.sh`. If you've heavily customised `src/middleware/inertia.ts` or `src/controllers/BaseController.ts`, merge carefully.
+- TBA app scaffolded from `install.sh`. If you've heavily customised `src/middleware/inertia.ts` or the Inertia rendering helpers, merge carefully.
 
 ## 1. Create `vite.ssr.config.mjs`
 
@@ -73,7 +73,7 @@ export function render(page: Page): InertiaAppResponse {
 
 SSR is controlled by an env var so you can turn it off (e.g. for debugging a hydration mismatch) without reverting the upgrade. It defaults to `true`, so existing `.env` files don't need changes to get the new behavior.
 
-Add to `src/config/variables.ts` (inside the `baseSchema` zod object, next to `SCHEDULER_ENABLED`):
+Add to `src/config/variables.ts`:
 
 ```ts
 SSR_ENABLED: z
@@ -90,9 +90,9 @@ And to `env.example` so it's documented:
 SSR_ENABLED=true
 ```
 
-## 4. Create `src/lib/renderHtml.ts`
+## 4. Create `src/primitives/inertia.ts`
 
-Helper that turns the Inertia page object into a full HTML document. Used by the middleware and `BaseController`. Calls the SSR bundle when `SSR_ENABLED=true`; otherwise emits the original client-only `<div id="app" data-page="…">` shell.
+Helper functions that render Inertia responses. `renderHtml` turns the Inertia page object into a full HTML document, and `renderPage` is the controller-facing helper. Calls the SSR bundle when `SSR_ENABLED=true`; otherwise emits the original client-only `<div id="app" data-page="…">` shell.
 
 ```ts
 import * as fs from 'fs';
@@ -195,8 +195,8 @@ Drop the inline template rendering; delegate to the shared helper.
 
 ```ts
 import { type Request, type Response, type NextFunction } from 'express';
-import { InertiaExpressAdapter } from '../adapters/InertiaExpressAdapter';
-import { renderHtml } from '../lib/renderHtml';
+import { InertiaExpressAdapter } from '../primitives/inertia';
+import { renderHtml } from '../primitives/inertia';
 import variables from '../config/variables';
 
 declare module 'express-serve-static-core' {
@@ -205,18 +205,27 @@ declare module 'express-serve-static-core' {
 	}
 }
 
-export class InertiaExpressMiddleware {
-	static async apply(req: Request, res: Response, next: NextFunction) {
-		const inertia = new InertiaExpressAdapter({ version: '1' });
+export async function applyInertia(req: Request, res: Response, next: NextFunction) {
+	const inertia = new InertiaExpressAdapter({ version: '1' });
 
-		const user = await req.user();
-		const isAuthenticated = req.is_authenticated();
+	const user = await req.user();
+	const isAuthenticated = req.is_authenticated();
 
-		inertia.share({
-			applicationName: variables.APP_NAME,
-			isAuthenticated,
-			user: user ? { id: user.id, name: user.name, email: user.email } : null,
-		});
+	inertia.share({
+		applicationName: variables.APP_NAME,
+		isAuthenticated,
+		user: user ? { id: user.id, name: user.name, email: user.email } : null,
+	});
+```
+
+Replace that class wrapper with a plain exported middleware function:
+
+```ts
+export async function applyInertia(req: Request, res: Response, next: NextFunction) {
+  const inertia = new InertiaExpressAdapter({ version: '1' });
+  // ...
+}
+```
 
 		req.inertia = inertia;
 
@@ -235,37 +244,9 @@ export class InertiaExpressMiddleware {
 }
 ```
 
-## 8. Replace `src/controllers/BaseController.ts`
+## 8. Replace controller rendering with `renderPage`
 
-Same idea: no inline template code.
-
-```ts
-import { Request, Response } from 'express';
-import { PageName } from '../config/pages';
-import { renderHtml } from '../lib/renderHtml';
-
-export class BaseController {
-	protected req: Request;
-	protected res: Response;
-
-	constructor(req: Request, res: Response) {
-		this.req = req;
-		this.res = res;
-	}
-
-	public async render(componentName: PageName, componentProps: any = {}, documentMetadata: any = {}) {
-		const { req, res } = this;
-		const page = req.inertia.render(req, res, componentName, componentProps);
-
-		if (res.headersSent) {
-			return;
-		}
-
-		const html = await renderHtml(page, documentMetadata.title, documentMetadata.head);
-		return res.send(html);
-	}
-}
-```
+Controller functions should delegate page rendering to `renderPage` from `src/primitives/inertia.ts`.
 
 ## 9. Update `package.json` scripts
 

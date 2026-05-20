@@ -1,12 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
+import { E2E_APP_URL, E2E_DB_PATH, E2E_PORT } from "./test/integration/playwright/env";
 
 export default defineConfig({
 	testDir: "./test/integration/playwright",
 	globalSetup: "./test/integration/playwright/globalSetup.ts",
 	globalTeardown: "./test/integration/playwright/globalTeardown.ts",
-	workers: 1,
 	use: {
-		baseURL: "http://localhost:3003",
+		baseURL: E2E_APP_URL,
 		trace: "on-first-retry",
 	},
 	projects: [
@@ -15,4 +15,10 @@ export default defineConfig({
 			use: { ...devices["Desktop Chrome"] },
 		},
 	],
+	webServer: {
+		command: 'tsx test/integration/playwright/start-server.ts',
+		port: E2E_PORT,
+		reuseExistingServer: false,
+		timeout: 30_000,
+	},
 });
