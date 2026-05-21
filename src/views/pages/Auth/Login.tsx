@@ -1,6 +1,9 @@
 import React from 'react';
 import { useForm } from '@inertiajs/react';
 
+const ADMIN_EMAIL = 'admin@example.com';
+const ADMIN_PASSWORD = 'admin-password';
+
 interface LoginProps {
     status?: string;
     errors?: {
@@ -17,6 +20,14 @@ export default function Login({ status, errors }: LoginProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        post('/login');
+    };
+
+    const handleAdminLogin = () => {
+        setData({
+            email: ADMIN_EMAIL,
+            password: ADMIN_PASSWORD
+        });
         post('/login');
     };
 
@@ -94,6 +105,17 @@ export default function Login({ status, errors }: LoginProps) {
                                     className="flex w-full justify-center rounded-md bg-black px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black disabled:opacity-50"
                                 >
                                     {processing ? 'Signing in...' : 'Sign in'}
+                                </button>
+                            </div>
+
+                            <div>
+                                <button
+                                    type="button"
+                                    onClick={handleAdminLogin}
+                                    disabled={processing}
+                                    className="flex w-full justify-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold leading-6 text-gray-900 shadow-sm hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black disabled:opacity-50"
+                                >
+                                    Login as admin
                                 </button>
                             </div>
 

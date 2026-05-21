@@ -393,8 +393,12 @@ if [ "$DO_INSTALL" = "1" ]; then
     info "Running database migrations"
     npm run migration:run --silent
     ok "Migrations applied"
+
+    info "Seeding database"
+    npm run db:seed --silent
+    ok "Database seeded"
   else
-    warn "Skipping migrations — configure Postgres first, then run: npm run migration:run"
+    warn "Skipping migrations and seed — configure Postgres first, then run: npm run migration:run && npm run db:seed"
   fi
 fi
 
