@@ -1,12 +1,40 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node Version](https://img.shields.io/badge/node-22%2B-brightgreen.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)](https://www.typescriptlang.org/)
+[![Express 5](https://img.shields.io/badge/Express-5-lightgrey.svg)](https://expressjs.com/)
+[![Inertia.js](https://img.shields.io/badge/Inertia.js-2-9553ee.svg)](https://inertiajs.com/)
+[![React 19](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev/)
 
 # The Boring Architecture
 
-A batteries-included fullstack starter built on **Express 5**, **Inertia.js**, **React 19**, **MikroORM**, and **Tailwind CSS**. Server-rendered React without an API layer — pass props from Express controllers straight into React pages.
+A batteries-included fullstack starter built on **Express 5**, **Inertia.js**, **React 19**, **MikroORM**, and **Tailwind CSS**. Server-renders React without an API layer — pass props from Express controllers straight into React pages.
 
-📖 **[Developer Guide](./docs/DEVELOPER_GUIDE.md)** — how to add pages, controllers, models, migrations, auth, and more.
+This README is the single source of truth: install, architecture, scripts, environment, SSR, auth, queue, mailer, scheduler, events, cache, storage, deployment, and contributing.
+
+## Table of contents
+
+- [Prerequisites](#prerequisites)
+- [Quick start](#quick-start)
+- [Architecture](#architecture)
+- [Features](#whats-included)
+- [Project structure](#project-structure)
+- [Scripts](#scripts)
+- [Environment variables](#environment-variables)
+- [Authentication helpers](#authentication-helpers)
+- [Queue](#queue)
+- [Mailer](#mailer)
+- [Scheduler](#scheduler)
+- [Events](#events)
+- [Cache](#cache)
+- [Storage](#storage)
+- [Rendering](#rendering)
+- [Database](#database)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Production checklist](#production-checklist)
+- [Dependencies](#dependencies)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Prerequisites
 
@@ -466,7 +494,7 @@ The Docker image also configures `pm2-logrotate` to rotate logs at 5 MB, retain 
 
 ## Dependencies
 
-For a full breakdown of every dependency and why it's included, see the [Developer Guide](./docs/DEVELOPER_GUIDE.md).
+For a full breakdown of every dependency and why it's included, see [`package.json`](./package.json). The project ships with **Express 5**, **Inertia.js 2**, **React 19**, **MikroORM 6**, **Tailwind CSS**, **Graphile Worker** (opt-in queue), **node-cron**, **bcrypt**, **Helmet**, and **Pino** as runtime dependencies; **Vitest**, **supertest**, **Playwright**, **Vite**, and **tsx** are the dev tooling.
 
 ## Contributing
 
