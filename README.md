@@ -13,28 +13,46 @@ This README is the single source of truth: install, architecture, scripts, envir
 
 ## Table of contents
 
+- [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Quick start](#quick-start)
 - [Architecture](#architecture)
-- [Features](#whats-included)
 - [Project structure](#project-structure)
 - [Scripts](#scripts)
 - [Environment variables](#environment-variables)
+- [Rendering and SSR](#rendering-and-ssr)
+- [Database](#database)
 - [Authentication helpers](#authentication-helpers)
 - [Queue](#queue)
 - [Mailer](#mailer)
 - [Scheduler](#scheduler)
 - [Events](#events)
 - [Cache](#cache)
-- [Storage](#storage)
-- [Rendering](#rendering)
-- [Database](#database)
+- [File storage](#file-storage)
 - [Testing](#testing)
 - [Deployment](#deployment)
 - [Production checklist](#production-checklist)
 - [Dependencies](#dependencies)
 - [Contributing](#contributing)
 - [License](#license)
+
+## Features
+
+- **Inertia SSR adapter** — `res.render('Page', props)` from any controller
+- **Auth & sessions** — bcrypt, DB-backed sessions, `req.user()` / `req.is_authenticated()`, `auth`/`guest` route guards
+- **Complete auth flows** — forgot password, password reset, and email verification with the `verified` middleware
+- **MikroORM** — SQLite by default, Postgres-ready, migrations, EntitySchema mappings (no decorators)
+- **Production hardening** — Helmet, gzip compression, `/healthz` + `/readyz`, graceful shutdown, structured Pino logs, HTML-escaped page props
+- **Configurable rate limiting** — off by default, opt-in via env
+- **Queue** — Graphile Worker (`npm run work`), Postgres required; dispatch jobs with `Queue.dispatch('jobName', payload)`
+- **Mailer** — log + SMTP drivers; send mail with `Mailer.send(to, subject, html)`
+- **Task Scheduler** — node-cron; register recurring tasks with `Scheduler.on('0 * * * *', handler)` and start them in the app when enabled
+- **Event Bus** — publish in-process events with `Bus.on` / `Bus.publish`
+- **In-memory Cache** — `Cache.get / set / delete / flush` with optional TTL
+- **File Storage** — local driver out of the box; `Storage.put / get / delete / url`; add custom drivers if needed
+- **Tailwind CSS** + Vite client build
+- **Integration test suite** — Vitest + supertest against the real Express app and SQLite
+- **Playwright E2E test suite** — `npm run test:e2e`, runs against a real server with a browser
 
 ## Prerequisites
 
@@ -74,44 +92,6 @@ Browser request
 
 On the first visit the server returns a full HTML document with the initial page component and props embedded. Subsequent navigations are handled client-side by Inertia — the browser sends XHR requests and receives only the updated page component name and props as JSON, avoiding full page reloads.
 
-## What's included
-
-- **Inertia SSR adapter** — `res.render('Page', props)` from any controller
-- **Auth & sessions** — bcrypt, DB-backed sessions, `req.user()` / `req.is_authenticated()`, `auth`/`guest` route guards
-- **Complete auth flows** — forgot password, password reset, and email verification with the `verified` middleware
-- **MikroORM** — SQLite by default, Postgres-ready, migrations, EntitySchema mappings (no decorators)
-- **Production hardening** — Helmet, gzip compression, `/healthz` + `/readyz`, graceful shutdown, structured Pino logs, HTML-escaped page props
-- **Configurable rate limiting** — off by default, opt-in via env
-- **Queue** — Graphile Worker (`npm run work`), Postgres required; dispatch jobs with `Queue.dispatch('jobName', payload)`
-- **Mailer** — log + SMTP drivers; send mail with `Mailer.send(to, subject, html)`
-- **Task Scheduler** — node-cron; register recurring tasks with `Scheduler.on('0 * * * *', handler)` and start them in the app when enabled
-- **Event Bus** — publish in-process events with `Bus.on` / `Bus.publish`
-- **In-memory Cache** — `Cache.get / set / delete / flush` with optional TTL
-- **File Storage** — local driver out of the box; `Storage.put / get / delete / url`; add custom drivers if needed
-- **Tailwind CSS** + Vite client build
-- **Integration test suite** — Vitest + supertest against the real Express app and SQLite
-- **Playwright E2E test suite** — `npm run test:e2e`, runs against a real server with a browser
-
-## Scripts
-
-| Command                      | Description                                  |
-| ---------------------------- | -------------------------------------------- |
-| `npm run dev`                | Start Express server + Vite watch            |
-| `npm run build`              | Production build (client + server)           |
-| `npm start`                  | Run built server (`dist/index.js`)           |
-| `npm test`                   | Run integration + E2E tests                  |
-| `npm run test:integration`   | Run integration tests (Vitest + supertest)   |
-| `npm run test:typecheck`     | Typecheck integration + Playwright tests     |
-| `npm run test:e2e`           | Run Playwright E2E tests                     |
-| `npm run work`               | Start the Graphile Worker queue worker       |
-| `npm run migrate`            | Generate + apply migrations                  |
-| `npm run migration:run`      | Apply pending migrations                     |
-| `npm run migration:revert`   | Revert the last applied migration            |
-| `npm run migration:create`   | Create a blank migration                     |
-| `npm run migration:status`   | Show pending / applied migration status      |
-| `npm run db:seed`            | Run seeders                                  |
-| `npm run scaffold -- ...`    | Generate pages, controllers, routes          |
-
 ## Project structure
 
 ```
@@ -133,6 +113,26 @@ src/
 └── index.ts          # Process startup and shutdown
 ```
 
+## Scripts
+
+| Command                      | Description                                  |
+| ---------------------------- | -------------------------------------------- |
+| `npm run dev`                | Start Express server + Vite watch            |
+| `npm run build`              | Production build (client + server)           |
+| `npm start`                  | Run built server (`dist/index.js`)           |
+| `npm test`                   | Run integration + E2E tests                  |
+| `npm run test:integration`   | Run integration tests (Vitest + supertest)   |
+| `npm run test:typecheck`     | Typecheck integration + Playwright tests     |
+| `npm run test:e2e`           | Run Playwright E2E tests                     |
+| `npm run work`               | Start the Graphile Worker queue worker       |
+| `npm run migrate`            | Generate + apply migrations                  |
+| `npm run migration:run`      | Apply pending migrations                     |
+| `npm run migration:revert`   | Revert the last applied migration            |
+| `npm run migration:create`   | Create a blank migration                     |
+| `npm run migration:status`   | Show pending / applied migration status      |
+| `npm run db:seed`            | Run seeders                                  |
+| `npm run scaffold -- ...`    | Generate pages, controllers, routes          |
+
 ## Environment variables
 
 | Variable                    | Default                 | Notes                                                            |
@@ -148,7 +148,6 @@ src/
 | `APP_KEY`                       | _(dev only default)_    | **Required in production.** Used for HMAC token signing. Generate with `openssl rand -hex 32` |
 | `RATE_LIMIT_ENABLED`            | `false`                 | Enable per-IP limiter on `/login` and `/register`                                             |
 | `RATE_LIMIT_AUTH_MAX`           | `5`                     | Max requests per window on auth routes                                                        |
-| `RATE_LIMIT_AUTH_WINDOW_MS`     | `60000`                 | Window size in ms for auth rate limiter                                                       |
 | `RATE_LIMIT_FEATURE_MAX`        | `60`                    | Max requests per window on feature routes                                                     |
 | `RATE_LIMIT_FEATURE_WINDOW_MS`  | `60000`                 | Window size in ms for feature rate limiter                                                    |
 | `PASSWORD_RESET_EXPIRY`         | `60`                    | Password-reset token expiry in minutes                                                        |
@@ -161,6 +160,55 @@ src/
 | `STORAGE_PATH`                  | `storage`               | Root directory for the `local` storage driver                                                 |
 | `DATABASE_URL`                  | _(none)_                | PostgreSQL connection URL — required to enable the Queue (Graphile Worker)                    |
 | `SSR_ENABLED`                   | `true`                  | Server-side render every page. Set to `false` to ship a client-only shell.                    |
+
+## Rendering and SSR
+
+Every controller renders React with the same one-liner:
+
+```ts
+// Controller
+res.render('Home', {
+  message: 'Hello from Express',
+  user: await req.user(),
+});
+```
+
+```tsx
+// src/views/pages/Home.tsx
+export default function Home({ message, user }: Props) {
+  return <h1>{message}, {user?.name}</h1>;
+}
+```
+
+`src/config/pages.ts` is autogenerated from `src/views/pages/**/*.tsx` — drop a new `.tsx` file and the `PageName` union updates automatically (live in `npm run dev` via the chokidar watcher, or one-shot via the `predev`/`prebuild` hook).
+
+Skip the boilerplate with the scaffold script:
+
+```bash
+npm run scaffold -- page Posts                     # controller + page + GET /posts
+npm run scaffold -- page Auth/Profile /profile     # nested page at an explicit path
+npm run scaffold -- controller Billing             # controller only
+npm run scaffold -- route post /posts Posts.create --auth
+npm run scaffold -- model Post --fields "title:string,body:text,publishedAt:datetime?"
+npm run scaffold -- page Post --model --fields "title:string,body:text"
+```
+
+### Server-side rendering
+
+SSR is **on by default** (`SSR_ENABLED=true`). On every first visit, the Express response pipeline loads the SSR bundle, renders the React page server-side, and embeds the resulting HTML into `public/template.html` before the response is sent. The same bundle then re-hydrates on the client through Vite's normal client entry.
+
+- **Toggle.** Set `SSR_ENABLED=false` in `.env` to skip the server render and ship a client-only shell (the Inertia page envelope is still returned, so the client can take over).
+- **Build output.** `npm run build` produces the client bundle (`public/app.js`) and the SSR bundle (`dist/ssr.mjs`) in one pass; the server reads `dist/ssr.mjs` at request time. Both are emitted by the same Vite invocation — see `vite.config.mjs` (client) and `vite.ssr.config.mjs` (server).
+- **Hydration.** The SSR pass writes the rendered HTML plus a `data-page` JSON envelope so React 19 picks up the same props on the client without a re-fetch.
+- **Failure mode.** If the SSR bundle fails to load or render (e.g. a bad page import), the adapter logs `[SSR] render failed, falling back to client-only` and serves the client-only shell — the request still succeeds.
+
+For the underlying SSR module, see `src/views/ssr.tsx` (uses `renderToString` from `react-dom/server` and Inertia's `createInertiaApp`).
+
+## Database
+
+This project uses **MikroORM** with the **EntitySchema** pattern mapped to plain domain classes — no decorators. See `src/database/mappings/` and `src/models/`.
+
+Switch to Postgres by changing `src/database/orm.config.ts` to use `@mikro-orm/postgresql` and setting connection env vars.
 
 ## Authentication helpers
 
@@ -340,7 +388,7 @@ Cache.registerDriver('redis', new RedisCacheDriver());
 Cache.useDriver('redis');
 ```
 
-## Storage
+## File storage
 
 File storage is backed by the built-in `local` driver by default. Switch drivers in bootstrap code once you register your own implementation. The local driver writes files under the `STORAGE_PATH` directory and serves them at `/storage/<path>`.
 
@@ -385,42 +433,6 @@ Storage.registerDriver('cloudinary', new CloudinaryDriver());
 Storage.useDriver('cloudinary');
 ```
 
-## Rendering
-
-```ts
-// Controller
-res.render('Home', {
-  message: 'Hello from Express',
-  user: await req.user(),
-});
-```
-
-```tsx
-// src/views/pages/Home.tsx
-export default function Home({ message, user }: Props) {
-  return <h1>{message}, {user?.name}</h1>;
-}
-```
-
-`src/config/pages.ts` is autogenerated from `src/views/pages/**/*.tsx` — drop a new `.tsx` file and the `PageName` union updates automatically (live in `npm run dev` via the chokidar watcher, or one-shot via the `predev`/`prebuild` hook).
-
-Skip the boilerplate with the scaffold script:
-
-```bash
-npm run scaffold -- page Posts                     # controller + page + GET /posts
-npm run scaffold -- page Auth/Profile /profile     # nested page at an explicit path
-npm run scaffold -- controller Billing             # controller only
-npm run scaffold -- route post /posts Posts.create --auth
-npm run scaffold -- model Post --fields "title:string,body:text,publishedAt:datetime?"
-npm run scaffold -- page Post --model --fields "title:string,body:text"
-```
-
-## Database
-
-This project uses **MikroORM** with the **EntitySchema** pattern mapped to plain domain classes — no decorators. See `src/database/mappings/` and `src/models/`.
-
-Switch to Postgres by changing `src/database/orm.config.ts` to use `@mikro-orm/postgresql` and setting connection env vars.
-
 ## Testing
 
 ```bash
@@ -439,8 +451,8 @@ Current coverage under `test/integration/`:
 | `auth.spec.ts` | Auth registration/login behavior over real HTTP requests, including event/mail/queue side effects |
 | `worker.spec.ts` | Worker boot behavior for queue + scheduler runtime wiring |
 | `playwright/ui.spec.ts` | Browser-level UI flows against a real server |
-|---|---|
 | `scaffold.spec.ts` | `npm run scaffold` code generation for pages, controllers, routes, models, jobs, mail, events |
+| `docs.spec.ts` | README TOC, link integrity, and absence of retired doc references |
 
 ### E2E tests (Playwright)
 
