@@ -5,11 +5,11 @@ import { Mailer } from '@/primitives/mail';
 import { Queue } from '@/primitives/queue';
 import { Scheduler } from '@/primitives/scheduler';
 import { Storage } from '@/primitives/storage';
-import { Memory } from '@/runtime/drivers/cache/memory';
-import { InMemoryBus } from '@/runtime/drivers/bus/inMemory';
-import { Log } from '@/runtime/drivers/mail/log';
-import { Graphile } from '@/runtime/drivers/queue/graphile';
-import { LocalDisk } from '@/runtime/drivers/storage/localDisk';
+import { createMemoryCacheDriver } from '@/runtime/drivers/cache/memory';
+import { createInMemoryBusDriver } from '@/runtime/drivers/bus/inMemory';
+import { createLogMailDriver } from '@/runtime/drivers/mail/log';
+import { createGraphileQueueDriver } from '@/runtime/drivers/queue/graphile';
+import { createLocalDiskDriver } from '@/runtime/drivers/storage/localDisk';
 
 let bootstrapped = false;
 
@@ -21,11 +21,11 @@ export function bootstrapPrimitives(): void {
 		return;
 	}
 
-	Bus.configure(new InMemoryBus());
-	Cache.configure(new Memory());
-	Storage.configure(new LocalDisk(variables.STORAGE_PATH, variables.APP_URL));
-	Mailer.configure(new Log());
-	Queue.configure(new Graphile(variables.DATABASE_URL));
+	Bus.configure(createInMemoryBusDriver());
+	Cache.configure(createMemoryCacheDriver());
+	Storage.configure(createLocalDiskDriver(variables.STORAGE_PATH, variables.APP_URL));
+	Mailer.configure(createLogMailDriver());
+	Queue.configure(createGraphileQueueDriver(variables.DATABASE_URL));
 	Scheduler.configure();
 	bootstrapped = true;
 }

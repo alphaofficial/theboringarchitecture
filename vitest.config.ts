@@ -11,7 +11,6 @@ export default defineConfig({
 		environment: 'node',
 		include: ['test/integration/**/*.spec.ts'],
 		exclude: ['test/integration/playwright/**'],
-		setupFiles: ['test/integration/setup.ts'],
 		fileParallelism: false,
 		clearMocks: true,
 		restoreMocks: true,

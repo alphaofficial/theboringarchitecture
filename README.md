@@ -1,68 +1,49 @@
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Node Version](https://img.shields.io/badge/node-22%2B-brightgreen.svg)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)](https://www.typescriptlang.org/)
-
 # The Boring Architecture
 
-A batteries-included fullstack starter built on **Express 5**, **Inertia.js**, **React 19**, **MikroORM**, and **Tailwind CSS**. Server-rendered React without an API layer — pass props from Express controllers straight into React pages.
+A batteries-included fullstack starter built on **Express**, **InertiaJS**, **React**, **MikroORM**.
 
-📖 **[Developer Guide](./docs/DEVELOPER_GUIDE.md)** — how to add pages, controllers, models, migrations, auth, and more.
+## Table of contents
+- [Quick start for humans](#quick-start-for-humans)
+- [Quick start for agents](#quick-start-for-agents)
+- [Architecture](#architecture)
+- [Scripts](#scripts)
+- [Environment variables](#environment-variables)
+- [Database](#database)
+- [Authentication helpers](#authentication-helpers)
+- [Queue](#queue)
+- [Mailer](#mailer)
+- [Scheduler](#scheduler)
+- [Events](#events)
+- [Cache](#cache)
+- [File storage](#file-storage)
+- [Building features](#building-features)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Production checklist](#production-checklist)
+- [Releases and versioning](#releases-and-versioning)
+- [Contributing](#contributing)
+- [License](#license)
 
-## Prerequisites
-
-- **Node.js 22+** — download from [nodejs.org](https://nodejs.org/)
-- **npm** — ships with Node.js
-- **PostgreSQL** *(optional)* — required only for the background job queue ([Graphile Worker](https://worker.graphile.org/)). The queue gracefully no-ops when `DATABASE_URL` is not set, so PostgreSQL is not needed for general development.
-
-## Quick start
-
-Interactive scaffold (recommended):
-
+## Quick start for humans
 ```bash
 curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/install.sh | bash
 ```
 
-Non-interactive (defaults, fastest):
+## Quick start for agents
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/install.sh | bash -s -- --quick my-app
+curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/install.sh | bash -s -- --quick <your app name>
 ```
 
 Flags: `--quick`, `--branch <name>`, `--no-install`, `--no-git`.
 
 ## Architecture
 
-The Boring Architecture uses [Inertia.js](https://inertiajs.com/) to bridge Express and React — no separate API layer. Every request flows through a single pipeline:
+The Boring Architecture uses [InertiaJS](https://inertiajs.com/) to bridge Express and React. No separate API layer. Every request flows through a single pipeline:
 
-```
-Browser request
-  → Express router (src/router/)
-    → Middleware (session, auth, Inertia)
-      → Controller (src/controllers/)
-        → res.render('Page', props)
-          → React page (src/views/pages/)
-            → Full HTML response (first visit) or JSON props (subsequent navigation)
-```
+On the first visit the server returns a full HTML document with the initial page component and props embedded. Subsequent navigations are handled client-side by Inertia. 
+The browser sends XHR requests and receives only the updated page component name and props as JSON, avoiding full page reloads.
 
-On the first visit the server returns a full HTML document with the initial page component and props embedded. Subsequent navigations are handled client-side by Inertia — the browser sends XHR requests and receives only the updated page component name and props as JSON, avoiding full page reloads.
-
-## What's included
-
-- **Inertia SSR adapter** — `res.render('Page', props)` from any controller
-- **Auth & sessions** — bcrypt, DB-backed sessions, `req.user()` / `req.is_authenticated()`, `auth`/`guest` route guards
-- **Complete auth flows** — forgot password, password reset, and email verification with the `verified` middleware
-- **MikroORM** — SQLite by default, Postgres-ready, migrations, EntitySchema mappings (no decorators)
-- **Production hardening** — Helmet, gzip compression, `/healthz` + `/readyz`, graceful shutdown, structured Pino logs, HTML-escaped page props
-- **Configurable rate limiting** — off by default, opt-in via env
-- **Queue** — Graphile Worker (`npm run work`), Postgres required; dispatch jobs with `Queue.dispatch('jobName', payload)`
-- **Mailer** — log + SMTP drivers; send mail with `Mailer.send(to, subject, html)`
-- **Task Scheduler** — node-cron; register recurring tasks with `Scheduler.on('0 * * * *', handler)` and start them in the app when enabled
-- **Event Bus** — publish in-process events with `Bus.on` / `Bus.publish`
-- **In-memory Cache** — `Cache.get / set / delete / flush` with optional TTL
-- **File Storage** — local driver out of the box; `Storage.put / get / delete / url`; add custom drivers if needed
-- **Tailwind CSS** + Vite client build
-- **Integration test suite** — Vitest + supertest against the real Express app and SQLite
-- **Playwright E2E test suite** — `npm run test:e2e`, runs against a real server with a browser
 
 ## Scripts
 
@@ -84,27 +65,6 @@ On the first visit the server returns a full HTML document with the initial page
 | `npm run db:seed`            | Run seeders                                  |
 | `npm run scaffold -- ...`    | Generate pages, controllers, routes          |
 
-## Project structure
-
-```
-src/
-├── core/             # Non-controller application logic
-├── controllers/      # Route controllers
-├── database/         # MikroORM config, migrations, mappings, seeders
-├── events/           # Event surface and feature listeners
-├── jobs/             # Graphile Worker job handlers (one file per job name)
-├── logger/           # Pino logger instance and configuration
-├── mail/             # Mailer class, driver interface, log + SMTP driver implementations
-├── middleware/       # auth, sessions, errorHandler, rateLimit, inertia
-├── models/           # Domain classes (User, Session)
-├── primitives/       # Mail, storage, queue, cache, scheduler, bus, inertia
-├── router/           # Express app + router
-├── utils/            # Shared utility helpers (tokens, hashing, etc.)
-├── views/            # React pages + components (Vite-bundled)
-├── config/           # Env validation (Zod), autogenerated page registry
-└── index.ts          # Process startup and shutdown
-```
-
 ## Environment variables
 
 | Variable                    | Default                 | Notes                                                            |
@@ -120,7 +80,7 @@ src/
 | `APP_KEY`                       | _(dev only default)_    | **Required in production.** Used for HMAC token signing. Generate with `openssl rand -hex 32` |
 | `RATE_LIMIT_ENABLED`            | `false`                 | Enable per-IP limiter on `/login` and `/register`                                             |
 | `RATE_LIMIT_AUTH_MAX`           | `5`                     | Max requests per window on auth routes                                                        |
-| `RATE_LIMIT_AUTH_WINDOW_MS`     | `60000`                 | Window size in ms for auth rate limiter                                                       |
+| `RATE_LIMIT_AUTH_WINDOW_MS`     | `60000`                 | Window size in ms for the auth rate limiter                                                  |
 | `RATE_LIMIT_FEATURE_MAX`        | `60`                    | Max requests per window on feature routes                                                     |
 | `RATE_LIMIT_FEATURE_WINDOW_MS`  | `60000`                 | Window size in ms for feature rate limiter                                                    |
 | `PASSWORD_RESET_EXPIRY`         | `60`                    | Password-reset token expiry in minutes                                                        |
@@ -134,9 +94,83 @@ src/
 | `DATABASE_URL`                  | _(none)_                | PostgreSQL connection URL — required to enable the Queue (Graphile Worker)                    |
 | `SSR_ENABLED`                   | `true`                  | Server-side render every page. Set to `false` to ship a client-only shell.                    |
 
+## Rendering and SSR
+
+Request exposes a render method that enables server rendered pages in views
+
+```ts
+// Controller
+res.render('Home', {
+  message: 'Hello from Express',
+  user: await req.user(),
+});
+```
+
+```tsx
+// src/views/pages/Home.tsx
+export default function Home({ message, user }: Props) {
+  return <h1>{message}, {user?.name}</h1>;
+}
+```
+
+`src/config/pages.ts` is autogenerated from `src/views/pages/**/*.tsx` — drop a new `.tsx` file and the `PageName` union updates automatically (live in `npm run dev` via the chokidar watcher, or one-shot via the `predev`/`prebuild` hook).
+
+Skip the boilerplate with the scaffold script:
+
+```bash
+npm run scaffold -- page Posts                     # controller + page + GET /posts
+npm run scaffold -- page Auth/Profile /profile     # nested page at an explicit path
+npm run scaffold -- controller Billing             # controller only
+npm run scaffold -- route post /posts Posts.create --auth
+npm run scaffold -- model Post --fields "title:string,body:text,publishedAt:datetime?"
+npm run scaffold -- page Post --model --fields "title:string,body:text"
+```
+
+
+### How it works
+
+A controller calls `res.render('Home', props)`. The Inertia middleware (`src/middleware/inertia.ts`) has overridden `res.render` to:
+
+1. Call `InertiaExpressAdapter.render` (in `src/primitives/inertia.ts`) to build the Inertia page object (`{ component, props, url, version }`).
+2. If the request is an Inertia navigation (`X-Inertia: true` header, e.g. a client-side `router.visit`), the adapter responds with the page object as JSON. **SSR only runs for the initial document request** — partial updates never hit the SSR bundle.
+3. Otherwise, call `renderHtml`. If `SSR_ENABLED` is true, it dynamically imports the SSR bundle from `dist/ssr.mjs` (the bundle's `mtimeMs` is appended as a cache-buster, so a fresh build is picked up on the next request) and invokes `render(page)`, which returns `{ head, body }`.
+4. Read `public/template.html` and substitute the four placeholders: `{{TITLE}}` (page title or `APP_NAME`), `{{HEAD}}` (controller-supplied head snippets + SSR-emitted head tags), `{{APP}}` (the rendered body, or the client-only `<div id="app" data-page="…">` shell), and `{{CLIENT_ENTRY}}` (`/app.js`).
+
+The SSR module is `src/views/ssr.tsx`. It uses `import.meta.glob('./pages/**/*.tsx', { eager: true })` to resolve page components by name and `renderToString` from `react-dom/server` via Inertia's `createInertiaApp`. If a page name can't be resolved, the module throws `SSR: page not found: <name>` — the adapter catches this and falls back to the client-only shell.
+
+`renderPage(req, res, 'Error', props)` is the lower-level helper that the same pipeline runs. It is exported for middleware (e.g. `src/middleware/errorHandler.ts` renders the `Error` page with it). Controllers should keep using `res.render`.
+
+### Build pipeline
+
+- `predev` runs `pages:generate && build:ssr`, so the SSR bundle is on disk before the watchers start.
+- `dev` runs four concurrent watchers — `pages:watch` (regenerates `src/config/pages.ts` on page file change), `dev:server` (nodemon + tsx), `dev:client` (`vite build --watch`, emits `public/app.js` + `public/main.css` + `public/assets/*`), and `dev:ssr` (`vite build --watch` with `vite.ssr.config.mjs`, emits `dist/ssr.mjs`).
+- `build` runs the three builders in order: `build:client` → `build:ssr` → `build:server` (tsc + `tsc-alias` for the Node bundle). The Express process reads `dist/ssr.mjs` from disk at request time. See `vite.config.mjs` (client) and `vite.ssr.config.mjs` (server) for the two Vite configs.
+
+### Hydration
+
+The SSR pass writes the rendered HTML plus a `data-page` JSON envelope. The client entry (`src/views/main.tsx`) reads `data-page` and, if `el.hasChildNodes()`, calls `hydrateRoot` to attach event handlers to the existing DOM. If the server didn't render (e.g. SSR was disabled or the bundle failed to load), it falls back to `createRoot` and mounts fresh — a missed server render is still recoverable on the client, so React 19 picks up the same props without a re-fetch.
+
+### Failure mode
+
+If the SSR bundle fails to load or render (e.g. a bad page import, a missing/renamed page, a broken import chain in a `.tsx` file), the adapter logs `[SSR] render failed, falling back to client-only:` and serves the client-only shell. The request still succeeds — a broken SSR pass is never user-visible.
+
+### Troubleshooting
+
+- **Page paints blank for a second, then the client takes over.** Either the page is shipping from a cached client-only shell, or the SSR pass failed. Check the server logs for `[SSR] render failed…` and the error above it.
+- **`SSR: page not found: <Name>` in the logs.** The page name passed to `res.render` doesn't match any file under `src/views/pages/`. Check the `PageName` union in `src/config/pages.ts` (regenerated by `pages:generate`) and the casing — Inertia page names are case-sensitive.
+- **Stale content after editing a page.** Both `dev:client` and `dev:ssr` watchers should rebuild the bundles; check the watcher logs. After a fresh `predev` rebuild you may need a hard refresh in the browser so the new `dist/ssr.mjs` is re-imported (the `mtimeMs` cache-buster handles this automatically on the next server restart).
+- **Want to debug with the client-only shell.** Set `SSR_ENABLED=false`, restart the server, view source — you'll see `<div id="app" data-page="…">` and no server-rendered body.
+
+## Database
+
+This project uses **MikroORM** with the **EntitySchema** pattern mapped to plain domain models. 
+See `src/database/mappings/` and `src/models/`.
+
+Switch to Postgres by changing `src/database/orm.config.ts` to use `@mikro-orm/postgresql` and setting connection env vars.
+
 ## Authentication helpers
 
-Available on every `req`:
+Available on every `req` and can be extended
 
 ```ts
 req.is_authenticated(): boolean
@@ -228,9 +262,11 @@ Register a custom driver at boot time:
 ```ts
 import { Mailer, MailTransport, MailMessage } from './src/primitives/mail';
 
-class PostmarkTransport implements MailTransport {
-  async sendMail(message: MailMessage): Promise<void> {
-    // call Postmark API …
+const PostmarkTransport = (): MailTransport => {
+  return {
+    async sendMail(message: MailMessage): Promise<void> {
+      // call Postmark API …
+    }
   }
 }
 
@@ -301,18 +337,20 @@ Register a custom driver that implements the `CacheDriver` interface:
 ```ts
 import { Cache, CacheDriver } from './src/primitives/cache';
 
-class RedisCacheDriver implements CacheDriver {
+const RedisCacheDriver = (): CacheDriver => {
+  return {
     async get<T>(key: string): Promise<T | undefined> { /* ... */ }
     async set(key: string, value: unknown, ttlSeconds?: number): Promise<void> { /* ... */ }
     async delete(key: string): Promise<void> { /* ... */ }
     async flush(): Promise<void> { /* ... */ }
+  }
 }
 
 Cache.registerDriver('redis', new RedisCacheDriver());
 Cache.useDriver('redis');
 ```
 
-## Storage
+## File storage
 
 File storage is backed by the built-in `local` driver by default. Switch drivers in bootstrap code once you register your own implementation. The local driver writes files under the `STORAGE_PATH` directory and serves them at `/storage/<path>`.
 
@@ -357,70 +395,263 @@ Storage.registerDriver('cloudinary', new CloudinaryDriver());
 Storage.useDriver('cloudinary');
 ```
 
-## Rendering
+## Building features
 
-```ts
-// Controller
-res.render('Home', {
-  message: 'Hello from Express',
-  user: await req.user(),
-});
+Everything in The Boring Architecture is generated, registered, and routed in three places: a React page under `src/views/pages/`, a controller under `src/controllers/`, and a route under `src/router/route.ts`. Data models add a fourth — a plain TS class plus a MikroORM mapping.
+
+### Fast path — scaffold it
+
+The `npm run scaffold` command generates the page, controller, and route in one shot. Subcommands (see `scripts/scaffold.sh` for the full grammar):
+
+| Subcommand | What it generates |
+| --- | --- |
+| `page <Name>` | React page + controller + `GET /<kebab-name>` route |
+| `page <Name> [path]` | Same, with an explicit route path (e.g. `/articles`) |
+| `page <Sub/Name> [path]` | Same, with a nested component path (`Auth/Profile` → `src/views/pages/Auth/Profile.tsx`) |
+| `page <Name> --model --fields "..."` | Page + controller + route + model + EntitySchema mapping in one step |
+| `controller <Name>` | Controller file only |
+| `route <method> <path> <Controller.action> [--auth\|--guest]` | Route entry only |
+| `model <Name> --fields "..."` | Model class + `*.map.ts` EntitySchema file |
+| `job <Name>` | Worker handler stub in `src/jobs/` |
+| `mail <Name>` | Mail template stub |
+| `event <Name>` | Event listener stub in `src/events/` |
+
+Field types: `string`, `text`, `int`, `bool`, `date`, `datetime`, `decimal`, `uuid`, `json`. Append `?` for nullable (e.g. `publishedAt:datetime?`).
+
+Examples:
+
+```bash
+npm run scaffold -- page Posts
+npm run scaffold -- page Posts /articles
+npm run scaffold -- page Auth/Profile /profile
+npm run scaffold -- controller Billing
+npm run scaffold -- route get  /health       Public.health
+npm run scaffold -- route post /posts        Posts.create --auth
+npm run scaffold -- model  Post  --fields "title:string,body:text,publishedAt:datetime?"
+npm run scaffold -- page   Post  --model --fields "title:string,body:text"
 ```
 
+After scaffolding a model, run `npm run migrate` to apply it to the database. The sections below describe what the scaffold produces so you can do it by hand or tweak what was generated.
+
+### Adding a page
+
+A "page" is a React component rendered by a controller. Pages live under `src/views/pages/` and are nested with `/`:
+
 ```tsx
-// src/views/pages/Home.tsx
-export default function Home({ message, user }: Props) {
-  return <h1>{message}, {user?.name}</h1>;
+// src/views/pages/Posts.tsx
+import { Head, Link } from '@inertiajs/react';
+import Navigation from '../components/Navigation';
+
+interface Post { id: string; title: string; }
+interface Props { posts: Post[]; }
+
+export default function Posts({ posts }: Props) {
+  return (
+    <>
+      <Head title="Posts" />
+      <Navigation />
+      <main className="mx-auto max-w-4xl p-6">
+        <h1 className="text-3xl font-bold">Posts</h1>
+        <ul className="mt-6 space-y-3">
+          {posts.map((post) => (
+            <li key={post.id}>
+              <Link href={`/posts/${post.id}`} className="text-blue-600 hover:underline">
+                {post.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </main>
+    </>
+  );
 }
 ```
 
-`src/config/pages.ts` is autogenerated from `src/views/pages/**/*.tsx` — drop a new `.tsx` file and the `PageName` union updates automatically (live in `npm run dev` via the chokidar watcher, or one-shot via the `predev`/`prebuild` hook).
+`src/config/pages.ts` is regenerated automatically by `scripts/generate-pages.ts`, which walks `src/views/pages/**/*.tsx` and emits the `PageName` literal-union. Drop a new `Posts.tsx` and:
 
-Skip the boilerplate with the scaffold script:
+- `npm run dev` runs a chokidar watcher (`pages:watch`) that regenerates `pages.ts` on file add/remove within ~1s.
+- `npm run build` and `npm run dev` both run `pages:generate` as a `pre*` hook, so cold builds and CI are always in sync.
 
-```bash
-npm run scaffold -- page Posts                     # controller + page + GET /posts
-npm run scaffold -- page Auth/Profile /profile     # nested page at an explicit path
-npm run scaffold -- controller Billing             # controller only
-npm run scaffold -- route post /posts Posts.create --auth
-npm run scaffold -- model Post --fields "title:string,body:text,publishedAt:datetime?"
-npm run scaffold -- page Post --model --fields "title:string,body:text"
+You never edit `pages.ts` by hand. Subdirectories are preserved in the name — `src/views/pages/Auth/Login.tsx` becomes `'Auth/Login'`.
+
+Globally shared props are merged into every page automatically (see `src/middleware/inertia.ts`). Read them with `usePage`:
+
+```tsx
+import { usePage } from '@inertiajs/react';
+
+const { props } = usePage<{ applicationName: string; isAuthenticated: boolean; user: { id: string; name: string; email: string } | null }>();
 ```
 
-## Database
+Currently shared: `applicationName`, `isAuthenticated`, `user`.
 
-This project uses **MikroORM** with the **EntitySchema** pattern mapped to plain domain classes — no decorators. See `src/database/mappings/` and `src/models/`.
+### Adding a controller
 
-Switch to Postgres by changing `src/database/orm.config.ts` to use `@mikro-orm/postgresql` and setting connection env vars.
+Controllers are plain exported functions that match Express handler signatures.
+
+```ts
+// src/controllers/posts.ts
+import { Request, Response } from 'express';
+import { Post } from '../models/Post';
+
+export async function index(req: Request, res: Response) {
+  const db =  req.database
+  const posts = await  db.findAll(Post);
+
+  return res.render('Posts', { posts });
+}
+
+export async function show(req: Request, res: Response) {
+  const db =  req.database
+  const post = await db.findOne(Post, { id: req.params.id });
+
+  if (!post) {
+    return res.status(404).json({ error: 'Post not found' });
+  }
+
+  return res.render('Post', { post });
+}
+
+export async function create(req: Request, res: Response) {
+  const db =  req.database
+  const post = new Post(/* ... */);
+  await db.persistAndFlush(post);
+  return res.redirect(`/posts/${post.id}`);
+}
+```
+
+Conventions:
+
+- `req.database` is a forked MikroORM `EntityManager` for interacting with the db.
+- `req.user()`, `req.user_id()`, `req.is_authenticated()`, `req.authenticate(user)`, `req.logout()` are auth helpers — see [Authentication helpers](#authentication-helpers).
+- `res.render('PageName', props)` is the canonical way to render a page. The page name is type-checked against the autogenerated `PageName` union. The middleware (`src/middleware/inertia.ts`) wires `res.render` to the SSR pipeline; there is no separate `renderPage` call needed in controllers. (`renderPage` is exported from `src/primitives/inertia.ts` and is used by `src/middleware/errorHandler.ts` to render the `Error` page.)
+- For redirects, return `res.redirect('/...')`.
+- For JSON errors, return `res.status(404).json(...)`.
+
+### Wiring routes
+
+All routes live in `src/router/route.ts`.
+
+```ts
+// src/router/route.ts
+import * as Posts from '../controllers/posts';
+import { auth } from '../middleware/auth';
+
+route.get('/posts',       auth, Posts.index);
+route.get('/posts/:id',   auth, Posts.show);
+route.post('/posts',      auth, Posts.create);
+```
+
+Available guards are documented under [Authentication helpers](#authentication-helpers) → Route guards.
+
+### Adding a data model
+
+Models are plain Active Record style TypeScript classes. The ORM mapping lives in a separate file so the model stays decorator-free.
+
+**Step 1 — Define the class**
+
+```ts
+// src/models/Post.ts
+import { v4 as uuid } from 'uuid';
+
+export class Post {
+  id: string = uuid();
+  title!: string;
+  body!: string;
+  authorId!: string;
+  createdAt: Date = new Date();
+  updatedAt: Date = new Date();
+
+  constructor(title: string, body: string, authorId: string) {
+    this.title = title;
+    this.body = body;
+    this.authorId = authorId;
+  }
+}
+```
+
+**Step 2 — Add the EntitySchema mapping**
+
+```ts
+// src/database/mappings/post.map.ts
+import { EntitySchema } from '@mikro-orm/core';
+import { Post } from '../../models/Post';
+
+export const PostMapper = new EntitySchema<Post>({
+  class: Post,
+  tableName: 'posts',
+  properties: {
+    id: { type: 'string', primary: true },
+    title: { type: 'string' },
+    body: { type: 'text' },
+    authorId: { type: 'string', index: true },
+    createdAt: { type: 'Date', defaultRaw: 'CURRENT_TIMESTAMP' },
+    updatedAt: { type: 'Date', defaultRaw: 'CURRENT_TIMESTAMP', onUpdate: () => new Date() },
+  },
+});
+```
+
+The ORM auto-discovers any file matching `**/mappings/*.map.ts`.
+
+**Step 3 — Generate and run a migration**
+
+The common case is `npm run migrate`, which diffs your entities against the DB and applies the result:
+
+```bash
+npm run migrate   # = migration:create (diff) + migration:run (apply)
+```
+
+All available migration scripts:
+
+| Script                                 | Purpose                                                                                  |
+| -------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `npm run migrate`                      | Generate a migration from the entity/DB diff, then apply it. Use after editing entities. |
+| `npm run migration:create`             | Diff entities vs. DB and write a new migration file. Does not apply it.                  |
+| `npm run migration:run`                | Apply any pending migration files (`migration:up`). Use after pulling teammates' code.   |
+| `npm run migration:revert`             | Roll back the last applied migration (`migration:down`).                                 |
+| `npm run migration:status`             | Check whether any migrations are pending.                                                |
+| `npx mikro-orm migration:fresh`        | Drop the schema and re-run every migration from scratch. Destructive; dev only.          |
+| `npx mikro-orm migration:create --blank` | Create an empty migration for hand-written SQL (e.g. data backfills).                  |
+| `npm run db:seed`                      | Run the default seeder.                                                                  |
+
+> **Note:** MikroORM's CLI does not have a `migration:generate` command — "generate" is `migration:create` (it writes a migration file containing the entity/DB diff). `--blank` suppresses the diff.
+
+Typical dev loop: edit an entity → `npm run migrate` → commit the new migration file alongside the entity change. Teammates just run `npm run migration:run` after pulling.
+
+**Step 4 — Use that database to run queries**
+
+```ts
+const db = req.database;
+
+// Read
+const post = await db.findOne(Post, { id });
+const all  = await db.findAll(Post);
+
+// Write
+const post = new Post('Hello', 'Body', req.user_id()!);
+await db.persistAndFlush(post);
+
+// Update
+post.title = 'Updated';
+await db.flush();
+
+// Delete
+await db.removeAndFlush(post);
+```
+
+### End-to-end checklist for a new feature
+
+1. `npm run scaffold -- model Foo` (model + mapping).
+2. Edit the generated mapping to add your columns.
+3. `npm run migrate`.
+4. `npm run scaffold -- page Foo` (controller + page + route in one shot).
+5. `npm run build`.
 
 ## Testing
 
 ```bash
 npm test                  # integration + E2E
 npm run test:typecheck    # typecheck test files
-npm run test:integration  # Vitest integration/runtime tests
-npm run test:e2e          # Playwright browser tests
 ```
-
-### Integration tests
-
-Current coverage under `test/integration/`:
-
-| Suite | What it covers |
-|---|---|
-| `auth.spec.ts` | Auth registration/login behavior over real HTTP requests, including event/mail/queue side effects |
-| `worker.spec.ts` | Worker boot behavior for queue + scheduler runtime wiring |
-| `playwright/ui.spec.ts` | Browser-level UI flows against a real server |
-|---|---|
-| `scaffold.spec.ts` | `npm run scaffold` code generation for pages, controllers, routes, models, jobs, mail, events |
-
-### E2E tests (Playwright)
-
-Spin up a real browser against a built frontend. Suites under `test/integration/playwright/`:
-
-- `auth.spec.ts` — full UI flows: register → verify-email redirect, login/logout, invalid credentials, forgot-password page
-
-See `test/integration/` for all test source files.
 
 ## Deployment
 
@@ -464,9 +695,27 @@ The Docker image also configures `pm2-logrotate` to rotate logs at 5 MB, retain 
 - [ ] Optionally enable `RATE_LIMIT_ENABLED=true` if your edge doesn't already rate-limit
 - [ ] Point liveness probe at `/healthz`, readiness at `/readyz`
 
-## Dependencies
+## Releases and versioning
 
-For a full breakdown of every dependency and why it's included, see the [Developer Guide](./docs/DEVELOPER_GUIDE.md).
+The Boring Architecture uses **CalVer** in the form `YYYY.MM.DD` (e.g. `2026.04.07`). When more than one release ships on the same day, a numeric suffix is appended: `2026.04.07.1`, `2026.04.07.2`, …
+
+Releases are produced by [`.github/workflows/release.yml`](./.github/workflows/release.yml):
+
+- Manually triggered from the GitHub Actions tab (`workflow_dispatch`).
+- Creates an annotated git tag and a GitHub release with auto-generated notes.
+
+The installer always pulls the **latest released tag** by default. Override with:
+
+```bash
+curl -fsSL .../install.sh | bash -s -- --tag 2026.04.07
+curl -fsSL .../install.sh | bash -s -- --branch main
+```
+
+The cloned project records the version it was scaffolded from in `package.json` under the `tba` field:
+
+```json
+{ "tba": { "version": "2026.04.07", "kind": "tag" } }
+```
 
 ## Contributing
 
@@ -476,8 +725,6 @@ For a full breakdown of every dependency and why it's included, see the [Develop
 4. Run `npm test` to verify everything passes
 5. Commit your changes and push to your fork
 6. Open a pull request against `main`
-
-Please keep PRs focused — one feature or fix per pull request.
 
 ## License
 

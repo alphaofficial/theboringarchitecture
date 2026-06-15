@@ -12,47 +12,50 @@ interface StorageRuntime {
 	driver: StorageDriver;
 }
 
+/** Configure the storage driver. */
+const configure = (driver: StorageDriver): void => {
+	if (hasPrimitiveRuntime('storage')) {
+		return;
+	}
+
+	registerPrimitiveRuntime<StorageRuntime>('storage', {
+		driver,
+	});
+};
+
+/** Persist a file to storage. */
+const put = (filePath: string, data: Buffer | string): Promise<void> => {
+	return getPrimitiveRuntime<StorageRuntime>('storage').driver.put(filePath, data);
+};
+
+/** Read a file from storage. */
+const get = (filePath: string): Promise<Buffer> => {
+	return getPrimitiveRuntime<StorageRuntime>('storage').driver.get(filePath);
+};
+
+/** Delete a file from storage. */
+const deleteFile = (filePath: string): Promise<void> => {
+	return getPrimitiveRuntime<StorageRuntime>('storage').driver.delete(filePath);
+};
+
+/** Build a public URL for a stored file. */
+const url = (filePath: string): string => {
+	return getPrimitiveRuntime<StorageRuntime>('storage').driver.url(filePath);
+};
+
+/** Check whether a file exists in storage. */
+const exists = (filePath: string): Promise<boolean> => {
+	return getPrimitiveRuntime<StorageRuntime>('storage').driver.exists(filePath);
+};
+
 /**
  * Storage primitive for file persistence and URL generation.
  */
-export class Storage {
-	private static runtimeKey = 'storage';
-
-	static configure(driver: StorageDriver): void {
-		if (hasPrimitiveRuntime(Storage.runtimeKey)) {
-			return;
-		}
-
-		registerPrimitiveRuntime<StorageRuntime>(Storage.runtimeKey, {
-			driver,
-		});
-	}
-
-	private static runtime(): StorageRuntime {
-		return getPrimitiveRuntime<StorageRuntime>(Storage.runtimeKey);
-	}
-
-	private static driver(): StorageDriver {
-		return Storage.runtime().driver;
-	}
-
-	static put(filePath: string, data: Buffer | string): Promise<void> {
-		return Storage.driver().put(filePath, data);
-	}
-
-	static get(filePath: string): Promise<Buffer> {
-		return Storage.driver().get(filePath);
-	}
-
-	static delete(filePath: string): Promise<void> {
-		return Storage.driver().delete(filePath);
-	}
-
-	static url(filePath: string): string {
-		return Storage.driver().url(filePath);
-	}
-
-	static exists(filePath: string): Promise<boolean> {
-		return Storage.driver().exists(filePath);
-	}
-}
+export const Storage = Object.freeze({
+	configure,
+	put,
+	get,
+	delete: deleteFile,
+	url,
+	exists,
+});

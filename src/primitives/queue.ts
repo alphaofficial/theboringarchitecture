@@ -14,41 +14,47 @@ interface QueueRuntime {
 	handlers: Map<string, QueueHandler>;
 }
 
+/** Configure the queue driver. */
+const configure = (driver: QueueDriver): void => {
+	if (hasPrimitiveRuntime('queue')) {
+		return;
+	}
+
+	registerPrimitiveRuntime<QueueRuntime>('queue', {
+		driver,
+		handlers: new Map(),
+	});
+};
+
+/** Register a job handler. */
+const on = <T = unknown>(name: string, handler: QueueHandler<T>): void => {
+	getPrimitiveRuntime<QueueRuntime>('queue').handlers.set(name, handler as QueueHandler);
+};
+
+/** Load jobs and start the queue driver. */
+const start = (): void => {
+	loadRelativeDirectory('jobs');
+	const queueRuntime = getPrimitiveRuntime<QueueRuntime>('queue');
+	void queueRuntime.driver.start(queueRuntime.handlers);
+};
+
+/** Stop the queue driver. */
+const stop = async (): Promise<void> => {
+	await getPrimitiveRuntime<QueueRuntime>('queue').driver.stop();
+};
+
+/** Dispatch a job to the queue. */
+const dispatch = async (jobName: string, payload: unknown = {}): Promise<void> => {
+	await getPrimitiveRuntime<QueueRuntime>('queue').driver.dispatch(jobName, payload);
+};
+
 /**
  * Queue primitive for registering background consumers and dispatching jobs.
  */
-export class Queue {
-	private static runtimeKey = 'queue';
-
-	static configure(driver: QueueDriver): void {
-		if (hasPrimitiveRuntime(Queue.runtimeKey)) {
-			return;
-		}
-
-		registerPrimitiveRuntime<QueueRuntime>(Queue.runtimeKey, {
-			driver,
-			handlers: new Map(),
-		});
-	}
-
-	private static runtime(): QueueRuntime {
-		return getPrimitiveRuntime<QueueRuntime>(Queue.runtimeKey);
-	}
-
-	static on<T = unknown>(name: string, handler: QueueHandler<T>): void {
-		Queue.runtime().handlers.set(name, handler as QueueHandler);
-	}
-
-	static start(): void {
-		loadRelativeDirectory('jobs');
-		void Queue.runtime().driver.start(Queue.runtime().handlers);
-	}
-
-	static async stop(): Promise<void> {
-		await Queue.runtime().driver.stop();
-	}
-
-	static async dispatch(jobName: string, payload: unknown = {}): Promise<void> {
-		await Queue.runtime().driver.dispatch(jobName, payload);
-	}
-}
+export const Queue = Object.freeze({
+	configure,
+	on,
+	start,
+	stop,
+	dispatch,
+});

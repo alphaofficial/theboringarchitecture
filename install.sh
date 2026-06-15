@@ -237,7 +237,7 @@ const CARDS = [
 	{
 		title: 'Developer Guide',
 		description: 'Add controllers, pages, models, migrations, and auth.',
-		href: 'https://github.com/alphaofficial/theboringarchitecture/blob/main/docs/DEVELOPER_GUIDE.md',
+		href: 'https://github.com/alphaofficial/theboringarchitecture/blob/main/README.md#building-features',
 	},
 	{
 		title: 'GitHub',

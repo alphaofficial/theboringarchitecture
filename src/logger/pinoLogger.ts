@@ -66,10 +66,15 @@ const pinoInstance = pino(coreConfig);
 
 export interface LogOptions {
 	scope: string;
-	message: string;
-	params?: Record<string, unknown>;
-	tags?: readonly string[] | string;
+	[key: string]: unknown;
 }
+
+type LogLevel = "critical" | "fatal" | "error" | "warn" | "info" | "debug" | "trace";
+
+const log = (level: LogLevel, options: LogOptions): void => {
+	const logger = pinoInstance.logger as any;
+	logger[level](options);
+};
 
 /**
  * Shared application logger used by HTTP middleware and runtime code.
@@ -78,52 +83,30 @@ export const PinoLogger = {
 	instance: pinoInstance,
 
 	critical(options: LogOptions): void {
-		// @ts-expect-error Critical logging exists
-		pinoInstance.logger.critical(
-			{ ...options.params, tags: options.tags },
-			`[${options.scope}] ${options.message}`,
-		);
+		log("critical", options);
 	},
 
 	fatal(options: LogOptions): void {
-		pinoInstance.logger.fatal(
-			{ ...options.params, tags: options.tags },
-			`[${options.scope}] ${options.message}`,
-		);
+		log("fatal", options);
 	},
 
 	error(options: LogOptions): void {
-		pinoInstance.logger.error(
-			{ ...options.params, tags: options.tags },
-			`[${options.scope}] ${options.message}`,
-		);
+		log("error", options);
 	},
 
 	warn(options: LogOptions): void {
-		pinoInstance.logger.warn(
-			{ ...options.params, tags: options.tags },
-			`[${options.scope}] ${options.message}`,
-		);
+		log("warn", options);
 	},
 
 	info(options: LogOptions): void {
-		pinoInstance.logger.info(
-			{ ...options.params, tags: options.tags },
-			`[${options.scope}] ${options.message}`,
-		);
+		log("info", options);
 	},
 
 	debug(options: LogOptions): void {
-		pinoInstance.logger.debug(
-			{ ...options.params, tags: options.tags },
-			`[${options.scope}] ${options.message}`,
-		);
+		log("debug", options);
 	},
 
 	trace(options: LogOptions): void {
-		pinoInstance.logger.trace(
-			{ ...options.params, tags: options.tags },
-			`[${options.scope}] ${options.message}`,
-		);
+		log("trace", options);
 	},
 };

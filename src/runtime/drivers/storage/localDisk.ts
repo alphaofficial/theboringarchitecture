@@ -2,48 +2,47 @@ import fs from 'fs/promises';
 import path from 'path';
 import type { StorageDriver } from '@/primitives/storage';
 
-export class LocalDisk implements StorageDriver {
-	private basePath: string;
-	private baseUrl: string;
+export function createLocalDiskDriver(basePath: string, baseUrl: string): StorageDriver {
+	const base = path.resolve(basePath);
+	const publicBaseUrl = baseUrl.replace(/\/$/, '');
 
-	constructor(basePath: string, baseUrl: string) {
-		this.basePath = basePath;
-		this.baseUrl = baseUrl.replace(/\/$/, '');
-	}
+	const resolvePath = (filePath: string): string => {
+		const resolved = path.resolve(base, filePath);
+		const relative = path.relative(base, resolved);
 
-	private resolve(filePath: string): string {
-		const resolved = path.resolve(this.basePath, filePath);
-		const base = path.resolve(this.basePath);
-		if (!resolved.startsWith(base + path.sep) && resolved !== base) {
+		if (relative.startsWith('..') || path.isAbsolute(relative)) {
 			throw new Error(`Invalid file path: "${filePath}" escapes the storage directory`);
 		}
+
 		return resolved;
-	}
+	};
 
-	async put(filePath: string, data: Buffer | string): Promise<void> {
-		const fullPath = this.resolve(filePath);
-		await fs.mkdir(path.dirname(fullPath), { recursive: true });
-		await fs.writeFile(fullPath, data);
-	}
+	return {
+		async put(filePath: string, data: Buffer | string): Promise<void> {
+			const fullPath = resolvePath(filePath);
+			await fs.mkdir(path.dirname(fullPath), { recursive: true });
+			await fs.writeFile(fullPath, data);
+		},
 
-	async get(filePath: string): Promise<Buffer> {
-		return fs.readFile(this.resolve(filePath));
-	}
+		get(filePath: string): Promise<Buffer> {
+			return fs.readFile(resolvePath(filePath));
+		},
 
-	async delete(filePath: string): Promise<void> {
-		await fs.unlink(this.resolve(filePath));
-	}
+		async delete(filePath: string): Promise<void> {
+			await fs.unlink(resolvePath(filePath));
+		},
 
-	url(filePath: string): string {
-		return `${this.baseUrl}/storage/${filePath}`;
-	}
+		url(filePath: string): string {
+			return `${publicBaseUrl}/storage/${filePath}`;
+		},
 
-	async exists(filePath: string): Promise<boolean> {
-		try {
-			await fs.access(this.resolve(filePath));
-			return true;
-		} catch {
-			return false;
-		}
-	}
+		async exists(filePath: string): Promise<boolean> {
+			try {
+				await fs.access(resolvePath(filePath));
+				return true;
+			} catch {
+				return false;
+			}
+		},
+	};
 }
