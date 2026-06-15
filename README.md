@@ -29,9 +29,11 @@ This README is the single source of truth: install, architecture, scripts, envir
 - [Events](#events)
 - [Cache](#cache)
 - [File storage](#file-storage)
+- [Building features](#building-features)
 - [Testing](#testing)
 - [Deployment](#deployment)
 - [Production checklist](#production-checklist)
+- [Releases and versioning](#releases-and-versioning)
 - [Dependencies](#dependencies)
 - [Contributing](#contributing)
 - [License](#license)
@@ -148,6 +150,7 @@ src/
 | `APP_KEY`                       | _(dev only default)_    | **Required in production.** Used for HMAC token signing. Generate with `openssl rand -hex 32` |
 | `RATE_LIMIT_ENABLED`            | `false`                 | Enable per-IP limiter on `/login` and `/register`                                             |
 | `RATE_LIMIT_AUTH_MAX`           | `5`                     | Max requests per window on auth routes                                                        |
+| `RATE_LIMIT_AUTH_WINDOW_MS`     | `60000`                 | Window size in ms for the auth rate limiter                                                  |
 | `RATE_LIMIT_FEATURE_MAX`        | `60`                    | Max requests per window on feature routes                                                     |
 | `RATE_LIMIT_FEATURE_WINDOW_MS`  | `60000`                 | Window size in ms for feature rate limiter                                                    |
 | `PASSWORD_RESET_EXPIRY`         | `60`                    | Password-reset token expiry in minutes                                                        |
@@ -433,6 +436,258 @@ Storage.registerDriver('cloudinary', new CloudinaryDriver());
 Storage.useDriver('cloudinary');
 ```
 
+## Building features
+
+Everything in The Boring Architecture is generated, registered, and routed in three places: a React page under `src/views/pages/`, a controller under `src/controllers/`, and a route under `src/router/route.ts`. Data models add a fourth — a plain TS class plus a MikroORM mapping.
+
+### Fast path — scaffold it
+
+The `npm run scaffold` command generates the page, controller, and route in one shot. Subcommands (see `scripts/scaffold.sh` for the full grammar):
+
+| Subcommand | What it generates |
+| --- | --- |
+| `page <Name>` | React page + controller + `GET /<kebab-name>` route |
+| `page <Name> [path]` | Same, with an explicit route path (e.g. `/articles`) |
+| `page <Sub/Name> [path]` | Same, with a nested component path (`Auth/Profile` → `src/views/pages/Auth/Profile.tsx`) |
+| `page <Name> --model --fields "..."` | Page + controller + route + model + EntitySchema mapping in one step |
+| `controller <Name>` | Controller file only |
+| `route <method> <path> <Controller.action> [--auth\|--guest]` | Route entry only |
+| `model <Name> --fields "..."` | Model class + `*.map.ts` EntitySchema file |
+| `job <Name>` | Worker handler stub in `src/jobs/` |
+| `mail <Name>` | Mail template stub |
+| `event <Name>` | Event listener stub in `src/events/` |
+
+Field types: `string`, `text`, `int`, `bool`, `date`, `datetime`, `decimal`, `uuid`, `json`. Append `?` for nullable (e.g. `publishedAt:datetime?`).
+
+Examples:
+
+```bash
+npm run scaffold -- page Posts
+npm run scaffold -- page Posts /articles
+npm run scaffold -- page Auth/Profile /profile
+npm run scaffold -- controller Billing
+npm run scaffold -- route get  /health       Public.health
+npm run scaffold -- route post /posts        Posts.create --auth
+npm run scaffold -- model  Post  --fields "title:string,body:text,publishedAt:datetime?"
+npm run scaffold -- page   Post  --model --fields "title:string,body:text"
+```
+
+After scaffolding a model, run `npm run migrate` to apply it to the database. The sections below describe what the scaffold produces so you can do it by hand or tweak what was generated.
+
+### Adding a page
+
+A "page" is a React component rendered by a controller via Inertia. Pages live under `src/views/pages/` and are nested with `/`:
+
+```tsx
+// src/views/pages/Posts.tsx
+import { Head, Link } from '@inertiajs/react';
+import Navigation from '../components/Navigation';
+
+interface Post { id: string; title: string; }
+interface Props { posts: Post[]; }
+
+export default function Posts({ posts }: Props) {
+  return (
+    <>
+      <Head title="Posts" />
+      <Navigation />
+      <main className="mx-auto max-w-4xl p-6">
+        <h1 className="text-3xl font-bold">Posts</h1>
+        <ul className="mt-6 space-y-3">
+          {posts.map((post) => (
+            <li key={post.id}>
+              <Link href={`/posts/${post.id}`} className="text-blue-600 hover:underline">
+                {post.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </main>
+    </>
+  );
+}
+```
+
+`src/config/pages.ts` is regenerated automatically by `scripts/generate-pages.ts`, which walks `src/views/pages/**/*.tsx` and emits the `PageName` literal-union. Drop a new `Posts.tsx` and:
+
+- `npm run dev` runs a chokidar watcher (`pages:watch`) that regenerates `pages.ts` on file add/remove within ~1s.
+- `npm run build` and `npm run dev` both run `pages:generate` as a `pre*` hook, so cold builds and CI are always in sync.
+
+You never edit `pages.ts` by hand. Subdirectories are preserved in the name — `src/views/pages/Auth/Login.tsx` becomes `'Auth/Login'`.
+
+Globally shared props are merged into every page automatically (see `src/middleware/inertia.ts`). Read them with `usePage`:
+
+```tsx
+import { usePage } from '@inertiajs/react';
+
+const { props } = usePage<{ applicationName: string; isAuthenticated: boolean; user: { id: string; name: string; email: string } | null }>();
+```
+
+Currently shared: `applicationName`, `isAuthenticated`, `user`.
+
+### Adding a controller
+
+Controllers are plain exported functions that match Express handler signatures.
+
+```ts
+// src/controllers/posts.ts
+import { Request, Response } from 'express';
+import { Post } from '../models/Post';
+
+export async function index(req: Request, res: Response) {
+  const em = req.entityManager;
+  const posts = await em.findAll(Post);
+
+  return res.render('Posts', { posts });
+}
+
+export async function show(req: Request, res: Response) {
+  const em = req.entityManager;
+  const post = await em.findOne(Post, { id: req.params.id });
+
+  if (!post) {
+    return res.status(404).json({ error: 'Post not found' });
+  }
+
+  return res.render('Post', { post });
+}
+
+export async function create(req: Request, res: Response) {
+  const em = req.entityManager;
+  const post = new Post(/* ... */);
+  await em.persistAndFlush(post);
+  return res.redirect(`/posts/${post.id}`);
+}
+```
+
+Conventions:
+
+- `req.entityManager` is a forked MikroORM `EntityManager` (one per request).
+- `req.user()`, `req.user_id()`, `req.is_authenticated()`, `req.authenticate(user)`, `req.logout()` are auth helpers — see [Authentication helpers](#authentication-helpers).
+- `req.logger` is a Pino instance.
+- `res.render('PageName', props)` is the canonical way to send an Inertia response. The page name is type-checked against the autogenerated `PageName` union. The middleware (`src/middleware/inertia.ts`) wires `res.render` to the SSR pipeline; there is no separate `renderPage` call needed in controllers. (`renderPage` is exported from `src/primitives/inertia.ts` and is used by `src/middleware/errorHandler.ts` to render the `Error` page.)
+- For redirects, return `res.redirect('/...')`.
+- For JSON errors, return `res.status(404).json(...)`.
+
+### Wiring routes
+
+All routes live in `src/router/route.ts`. Auth guards are applied per-route.
+
+```ts
+// src/router/route.ts
+import * as Posts from '../controllers/posts';
+import { auth } from '../middleware/auth';
+
+route.get('/posts',       auth, Posts.index);
+route.get('/posts/:id',   auth, Posts.show);
+route.post('/posts',      auth, Posts.create);
+```
+
+Available guards are documented under [Authentication helpers](#authentication-helpers) → Route guards.
+
+### Adding a data model
+
+Models are plain TypeScript classes. The ORM mapping lives in a separate file so the model stays decorator-free.
+
+**Step 1 — Define the class**
+
+```ts
+// src/models/Post.ts
+import { v4 as uuid } from 'uuid';
+
+export class Post {
+  id: string = uuid();
+  title!: string;
+  body!: string;
+  authorId!: string;
+  createdAt: Date = new Date();
+  updatedAt: Date = new Date();
+
+  constructor(title: string, body: string, authorId: string) {
+    this.title = title;
+    this.body = body;
+    this.authorId = authorId;
+  }
+}
+```
+
+**Step 2 — Add the EntitySchema mapping**
+
+```ts
+// src/database/mappings/post.map.ts
+import { EntitySchema } from '@mikro-orm/core';
+import { Post } from '../../models/Post';
+
+export const PostMapper = new EntitySchema<Post>({
+  class: Post,
+  tableName: 'posts',
+  properties: {
+    id: { type: 'string', primary: true },
+    title: { type: 'string' },
+    body: { type: 'text' },
+    authorId: { type: 'string', index: true },
+    createdAt: { type: 'Date', defaultRaw: 'CURRENT_TIMESTAMP' },
+    updatedAt: { type: 'Date', defaultRaw: 'CURRENT_TIMESTAMP', onUpdate: () => new Date() },
+  },
+});
+```
+
+The ORM auto-discovers any file matching `**/mappings/*.map.ts`.
+
+**Step 3 — Generate and run a migration**
+
+The common case is `npm run migrate`, which diffs your entities against the DB and applies the result:
+
+```bash
+npm run migrate   # = migration:create (diff) + migration:run (apply)
+```
+
+All available migration scripts:
+
+| Script                                 | Purpose                                                                                  |
+| -------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `npm run migrate`                      | Generate a migration from the entity/DB diff, then apply it. Use after editing entities. |
+| `npm run migration:create`             | Diff entities vs. DB and write a new migration file. Does not apply it.                  |
+| `npm run migration:run`                | Apply any pending migration files (`migration:up`). Use after pulling teammates' code.   |
+| `npm run migration:revert`             | Roll back the last applied migration (`migration:down`).                                 |
+| `npm run migration:status`             | Check whether any migrations are pending.                                                |
+| `npx mikro-orm migration:fresh`        | Drop the schema and re-run every migration from scratch. Destructive; dev only.          |
+| `npx mikro-orm migration:create --blank` | Create an empty migration for hand-written SQL (e.g. data backfills).                  |
+| `npm run db:seed`                      | Run the default seeder.                                                                  |
+
+> **Note:** MikroORM's CLI does not have a `migration:generate` command — "generate" is `migration:create` (it writes a migration file containing the entity/DB diff). `--blank` suppresses the diff.
+
+Typical dev loop: edit an entity → `npm run migrate` → commit the new migration file alongside the entity change. Teammates just run `npm run migration:run` after pulling.
+
+**Step 4 — Use it from a controller**
+
+```ts
+const em = req.entityManager;
+
+// Read
+const post = await em.findOne(Post, { id });
+const all  = await em.findAll(Post);
+
+// Write
+const post = new Post('Hello', 'Body', req.user_id()!);
+await em.persistAndFlush(post);
+
+// Update
+post.title = 'Updated';
+await em.flush();
+
+// Delete
+await em.removeAndFlush(post);
+```
+
+### End-to-end checklist for a new feature
+
+1. `npm run scaffold -- model Foo` (model + mapping).
+2. Edit the generated mapping to add your columns.
+3. `npm run migrate`.
+4. `npm run scaffold -- page Foo` (controller + page + route in one shot).
+5. `npm run build`.
+
 ## Testing
 
 ```bash
@@ -503,6 +758,28 @@ The Docker image also configures `pm2-logrotate` to rotate logs at 5 MB, retain 
 - [ ] Run `npm run build && npm run migration:run` on deploy
 - [ ] Optionally enable `RATE_LIMIT_ENABLED=true` if your edge doesn't already rate-limit
 - [ ] Point liveness probe at `/healthz`, readiness at `/readyz`
+
+## Releases and versioning
+
+The Boring Architecture uses **CalVer** in the form `YYYY.MM.DD` (e.g. `2026.04.07`). When more than one release ships on the same day, a numeric suffix is appended: `2026.04.07.1`, `2026.04.07.2`, …
+
+Releases are produced by [`.github/workflows/release.yml`](./.github/workflows/release.yml):
+
+- Manually triggered from the GitHub Actions tab (`workflow_dispatch`).
+- Creates an annotated git tag and a GitHub release with auto-generated notes.
+
+The installer always pulls the **latest released tag** by default. Override with:
+
+```bash
+curl -fsSL .../install.sh | bash -s -- --tag 2026.04.07
+curl -fsSL .../install.sh | bash -s -- --branch main      # bleeding edge
+```
+
+The cloned project records the version it was scaffolded from in `package.json` under the `tba` field:
+
+```json
+{ "tba": { "version": "2026.04.07", "kind": "tag" } }
+```
 
 ## Dependencies
 
