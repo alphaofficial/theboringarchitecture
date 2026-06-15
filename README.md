@@ -198,14 +198,41 @@ npm run scaffold -- page Post --model --fields "title:string,body:text"
 
 ### Server-side rendering
 
-SSR is **on by default** (`SSR_ENABLED=true`). On every first visit, the Express response pipeline loads the SSR bundle, renders the React page server-side, and embeds the resulting HTML into `public/template.html` before the response is sent. The same bundle then re-hydrates on the client through Vite's normal client entry.
+SSR is **on by default** (`SSR_ENABLED=true` — see [Environment variables](#environment-variables)). On every first visit, the Express response pipeline loads the SSR bundle, renders the React page server-side, and embeds the resulting HTML into `public/template.html` before the response is sent. The same bundle then re-hydrates on the client through Vite's normal client entry.
 
-- **Toggle.** Set `SSR_ENABLED=false` in `.env` to skip the server render and ship a client-only shell (the Inertia page envelope is still returned, so the client can take over).
-- **Build output.** `npm run build` produces the client bundle (`public/app.js`) and the SSR bundle (`dist/ssr.mjs`) in one pass; the server reads `dist/ssr.mjs` at request time. Both are emitted by the same Vite invocation — see `vite.config.mjs` (client) and `vite.ssr.config.mjs` (server).
-- **Hydration.** The SSR pass writes the rendered HTML plus a `data-page` JSON envelope so React 19 picks up the same props on the client without a re-fetch.
-- **Failure mode.** If the SSR bundle fails to load or render (e.g. a bad page import), the adapter logs `[SSR] render failed, falling back to client-only` and serves the client-only shell — the request still succeeds.
+### How it works
 
-For the underlying SSR module, see `src/views/ssr.tsx` (uses `renderToString` from `react-dom/server` and Inertia's `createInertiaApp`).
+A controller calls `res.render('Home', props)`. The Inertia middleware (`src/middleware/inertia.ts`) has overridden `res.render` to:
+
+1. Call `InertiaExpressAdapter.render` (in `src/primitives/inertia.ts`) to build the Inertia page object (`{ component, props, url, version }`).
+2. If the request is an Inertia navigation (`X-Inertia: true` header, e.g. a client-side `router.visit`), the adapter responds with the page object as JSON. **SSR only runs for the initial document request** — partial updates never hit the SSR bundle.
+3. Otherwise, call `renderHtml`. If `SSR_ENABLED` is true, it dynamically imports the SSR bundle from `dist/ssr.mjs` (the bundle's `mtimeMs` is appended as a cache-buster, so a fresh build is picked up on the next request) and invokes `render(page)`, which returns `{ head, body }`.
+4. Read `public/template.html` and substitute the four placeholders: `{{TITLE}}` (page title or `APP_NAME`), `{{HEAD}}` (controller-supplied head snippets + SSR-emitted head tags), `{{APP}}` (the rendered body, or the client-only `<div id="app" data-page="…">` shell), and `{{CLIENT_ENTRY}}` (`/app.js`).
+
+The SSR module is `src/views/ssr.tsx`. It uses `import.meta.glob('./pages/**/*.tsx', { eager: true })` to resolve page components by name and `renderToString` from `react-dom/server` via Inertia's `createInertiaApp`. If a page name can't be resolved, the module throws `SSR: page not found: <name>` — the adapter catches this and falls back to the client-only shell.
+
+`renderPage(req, res, 'Error', props)` is the lower-level helper that the same pipeline runs. It is exported for middleware (e.g. `src/middleware/errorHandler.ts` renders the `Error` page with it). Controllers should keep using `res.render`.
+
+### Build pipeline
+
+- `predev` runs `pages:generate && build:ssr`, so the SSR bundle is on disk before the watchers start.
+- `dev` runs four concurrent watchers — `pages:watch` (regenerates `src/config/pages.ts` on page file change), `dev:server` (nodemon + tsx), `dev:client` (`vite build --watch`, emits `public/app.js` + `public/main.css` + `public/assets/*`), and `dev:ssr` (`vite build --watch` with `vite.ssr.config.mjs`, emits `dist/ssr.mjs`).
+- `build` runs the three builders in order: `build:client` → `build:ssr` → `build:server` (tsc + `tsc-alias` for the Node bundle). The Express process reads `dist/ssr.mjs` from disk at request time. See `vite.config.mjs` (client) and `vite.ssr.config.mjs` (server) for the two Vite configs.
+
+### Hydration
+
+The SSR pass writes the rendered HTML plus a `data-page` JSON envelope. The client entry (`src/views/main.tsx`) reads `data-page` and, if `el.hasChildNodes()`, calls `hydrateRoot` to attach event handlers to the existing DOM. If the server didn't render (e.g. SSR was disabled or the bundle failed to load), it falls back to `createRoot` and mounts fresh — a missed server render is still recoverable on the client, so React 19 picks up the same props without a re-fetch.
+
+### Failure mode
+
+If the SSR bundle fails to load or render (e.g. a bad page import, a missing/renamed page, a broken import chain in a `.tsx` file), the adapter logs `[SSR] render failed, falling back to client-only:` and serves the client-only shell. The request still succeeds — a broken SSR pass is never user-visible.
+
+### Troubleshooting
+
+- **Page paints blank for a second, then the client takes over.** Either the page is shipping from a cached client-only shell, or the SSR pass failed. Check the server logs for `[SSR] render failed…` and the error above it.
+- **`SSR: page not found: <Name>` in the logs.** The page name passed to `res.render` doesn't match any file under `src/views/pages/`. Check the `PageName` union in `src/config/pages.ts` (regenerated by `pages:generate`) and the casing — Inertia page names are case-sensitive.
+- **Stale content after editing a page.** Both `dev:client` and `dev:ssr` watchers should rebuild the bundles; check the watcher logs. After a fresh `predev` rebuild you may need a hard refresh in the browser so the new `dist/ssr.mjs` is re-imported (the `mtimeMs` cache-buster handles this automatically on the next server restart).
+- **Want to debug with the client-only shell.** Set `SSR_ENABLED=false`, restart the server, view source — you'll see `<div id="app" data-page="…">` and no server-rendered body.
 
 ## Database
 
