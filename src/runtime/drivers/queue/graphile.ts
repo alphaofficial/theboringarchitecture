@@ -3,77 +3,77 @@ import type { Runner, Task } from 'graphile-worker';
 import { PinoLogger } from '@/logger/pinoLogger';
 import type { QueueDriver, QueueHandler } from '@/primitives/queue';
 
-export class Graphile implements QueueDriver {
-	private runner: Runner | null = null;
-	private runnerPromise: Promise<Runner> | null = null;
+export function createGraphileQueueDriver(connectionString?: string): QueueDriver {
+	let runner: Runner | null = null;
+	let runnerPromise: Promise<Runner> | null = null;
 
-	constructor(private readonly connectionString?: string) {}
+	return {
+		start(handlers: ReadonlyMap<string, QueueHandler>): void {
+			if (runner || runnerPromise) {
+				return;
+			}
 
-	start(handlers: ReadonlyMap<string, QueueHandler>): void {
-		if (this.runner || this.runnerPromise) {
-			return;
-		}
-
-		if (!this.connectionString) {
-			PinoLogger.warn({
-				scope: 'queue',
-				message: 'DATABASE_URL not set — queue worker is disabled',
-			});
-			return;
-		}
-
-		PinoLogger.info({ scope: 'queue', message: 'Starting queue...' });
-
-		const taskList = Object.fromEntries(handlers) as Record<string, Task>;
-		this.runnerPromise = run({
-			connectionString: this.connectionString,
-			taskList,
-			parsedCronItems: [],
-			crontabFile: undefined,
-		});
-
-		void this.runnerPromise
-			.then(runner => {
-				this.runner = runner;
-				this.runnerPromise = null;
-				PinoLogger.info({ scope: 'queue', message: 'Queue started.' });
-			})
-			.catch(err => {
-				this.runnerPromise = null;
-				PinoLogger.error({
+			if (!connectionString) {
+				PinoLogger.warn({
 					scope: 'queue',
-					message: 'Queue failed to start',
-					params: { error: err },
+					message: 'DATABASE_URL not set — queue worker is disabled',
 				});
-				process.exit(1);
+				return;
+			}
+
+			PinoLogger.info({ scope: 'queue', message: 'Starting queue...' });
+
+			const taskList = Object.fromEntries(handlers) as Record<string, Task>;
+			runnerPromise = run({
+				connectionString,
+				taskList,
+				parsedCronItems: [],
+				crontabFile: undefined,
 			});
-	}
 
-	async stop(): Promise<void> {
-		if (this.runnerPromise) {
-			await this.runnerPromise.catch(() => undefined);
-		}
+			void runnerPromise
+				.then(startedRunner => {
+					runner = startedRunner;
+					runnerPromise = null;
+					PinoLogger.info({ scope: 'queue', message: 'Queue started.' });
+				})
+				.catch(err => {
+					runnerPromise = null;
+					PinoLogger.error({
+						scope: 'queue',
+						message: 'Queue failed to start',
+						params: { error: err },
+					});
+					process.exit(1);
+				});
+		},
 
-		if (!this.runner) {
-			return;
-		}
+		async stop(): Promise<void> {
+			if (runnerPromise) {
+				await runnerPromise.catch(() => undefined);
+			}
 
-		PinoLogger.info({ scope: 'queue', message: 'Stopping queue...' });
-		await this.runner.stop();
-		this.runner = null;
-		PinoLogger.info({ scope: 'queue', message: 'Queue stopped.' });
-	}
+			if (!runner) {
+				return;
+			}
 
-	async dispatch(jobName: string, payload: unknown = {}): Promise<void> {
-		if (!this.connectionString) {
-			PinoLogger.warn({
-				scope: 'queue',
-				message: 'DATABASE_URL not set — job dispatch is a no-op',
-				params: { jobName },
-			});
-			return;
-		}
+			PinoLogger.info({ scope: 'queue', message: 'Stopping queue...' });
+			await runner.stop();
+			runner = null;
+			PinoLogger.info({ scope: 'queue', message: 'Queue stopped.' });
+		},
 
-		await quickAddJob({ connectionString: this.connectionString }, jobName, payload);
-	}
+		async dispatch(jobName: string, payload: unknown = {}): Promise<void> {
+			if (!connectionString) {
+				PinoLogger.warn({
+					scope: 'queue',
+					message: 'DATABASE_URL not set — job dispatch is a no-op',
+					params: { jobName },
+				});
+				return;
+			}
+
+			await quickAddJob({ connectionString }, jobName, payload);
+		},
+	};
 }

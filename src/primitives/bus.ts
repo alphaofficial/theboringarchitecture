@@ -14,43 +14,46 @@ export interface BusDriver {
 	start?(): void | Promise<void>;
 }
 
+/** Configure the bus driver. */
+const configure = (driver: BusDriver): void => {
+	if (hasPrimitiveRuntime('bus')) {
+		return;
+	}
+
+	registerPrimitiveRuntime<BusRuntime>('bus', {
+		driver,
+		started: false,
+	});
+};
+
+/** Load event listeners and start the bus driver once. */
+const start = (): void => {
+	const busRuntime = getPrimitiveRuntime<BusRuntime>('bus');
+	if (busRuntime.started) {
+		return;
+	}
+
+	loadRelativeDirectory('events');
+	busRuntime.started = true;
+	void busRuntime.driver.start?.();
+};
+
+/** Publish an event to registered listeners. */
+const publish = (event: string, payload?: unknown): boolean => {
+	return getPrimitiveRuntime<BusRuntime>('bus').driver.publish(event, payload);
+};
+
+/** Register a listener for an event. */
+const on = (event: string, listener: BusListener): void => {
+	getPrimitiveRuntime<BusRuntime>('bus').driver.on(event, listener);
+};
+
 /**
  * Process-local event bus for modular-monolith communication.
  */
-export class Bus {
-	private static runtimeKey = 'bus';
-
-	static configure(driver: BusDriver): void {
-		if (hasPrimitiveRuntime(Bus.runtimeKey)) {
-			return;
-		}
-
-		registerPrimitiveRuntime<BusRuntime>(Bus.runtimeKey, {
-			driver,
-			started: false,
-		});
-	}
-
-	private static runtime(): BusRuntime {
-		return getPrimitiveRuntime<BusRuntime>(Bus.runtimeKey);
-	}
-
-	static start(): void {
-		const runtime = Bus.runtime();
-		if (runtime.started) {
-			return;
-		}
-
-		loadRelativeDirectory('events');
-		runtime.started = true;
-		void runtime.driver.start?.();
-	}
-
-	static publish(event: string, payload?: unknown): boolean {
-		return Bus.runtime().driver.publish(event, payload);
-	}
-
-	static on(event: string, listener: BusListener): void {
-		Bus.runtime().driver.on(event, listener);
-	}
-}
+export const Bus = Object.freeze({
+	configure,
+	start,
+	publish,
+	on,
+});

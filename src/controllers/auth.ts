@@ -20,7 +20,7 @@ export async function showRegister(req: Request, res: Response) {
  * Attempt to authenticate the current request and start a session on success.
  */
 export async function login(req: Request, res: Response) {
-	const result = await auth.attemptLogin(req.entityManager, req.body);
+	const result = await auth.attemptLogin(req.database, req.body);
 	if (!result.ok) {
 		return res.render('Auth/Login', { errors: result.errors });
 	}
@@ -32,7 +32,7 @@ export async function login(req: Request, res: Response) {
  * Attempt to register a new user and authenticate them into the current session.
  */
 export async function register(req: Request, res: Response) {
-	const result = await auth.attemptRegister(req.entityManager, req.body);
+	const result = await auth.attemptRegister(req.database, req.body);
 	if (!result.ok) {
 		return res.render('Auth/Register', { errors: result.errors });
 	}
@@ -73,7 +73,7 @@ export async function showForgotPassword(req: Request, res: Response) {
  * Attempt to create and email a password reset link.
  */
 export async function forgotPassword(req: Request, res: Response) {
-	const result = await auth.attemptForgotPassword(req.entityManager, req.body);
+	const result = await auth.attemptForgotPassword(req.database, req.body);
 	if (!result.ok) {
 		return res.render('Auth/ForgotPassword', { errors: result.errors });
 	}
@@ -97,7 +97,7 @@ export async function showResetPassword(req: Request, res: Response) {
  * Attempt to replace the user's password using a reset token.
  */
 export async function resetPassword(req: Request, res: Response) {
-	const result = await auth.attemptResetPassword(req.entityManager, req.body);
+	const result = await auth.attemptResetPassword(req.database, req.body);
 	if (!result.ok) {
 		return res.render('Auth/ResetPassword', result);
 	}
@@ -118,7 +118,7 @@ export async function showVerifyEmail(req: Request, res: Response) {
  */
 export async function verifyEmail(req: Request, res: Response) {
 	const token = typeof req.params.token === 'string' ? req.params.token : '';
-	const result = await auth.attemptVerifyEmail(req.entityManager, token);
+	const result = await auth.attemptVerifyEmail(req.database, token);
 
 	if (!result.ok) {
 		const user = result.error === 'expired' ? await req.user() : null;

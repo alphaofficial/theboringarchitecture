@@ -11,43 +11,44 @@ interface CacheRuntime {
 	driver: CacheDriver;
 }
 
+/** Configure the cache driver. */
+const configure = (driver: CacheDriver): void => {
+	if (hasPrimitiveRuntime('cache')) {
+		return;
+	}
+
+	registerPrimitiveRuntime<CacheRuntime>('cache', {
+		driver,
+	});
+};
+
+/** Read a value from cache. */
+const get = <T = unknown>(key: string): Promise<T | undefined> => {
+	return getPrimitiveRuntime<CacheRuntime>('cache').driver.get<T>(key);
+};
+
+/** Write a value to cache. */
+const set = (key: string, value: unknown, ttlSeconds?: number): Promise<void> => {
+	return getPrimitiveRuntime<CacheRuntime>('cache').driver.set(key, value, ttlSeconds);
+};
+
+/** Delete a value from cache. */
+const deleteKey = (key: string): Promise<void> => {
+	return getPrimitiveRuntime<CacheRuntime>('cache').driver.delete(key);
+};
+
+/** Remove all values from cache. */
+const flush = (): Promise<void> => {
+	return getPrimitiveRuntime<CacheRuntime>('cache').driver.flush();
+};
+
 /**
  * Cache primitive for reading and writing transient values.
  */
-export class Cache {
-	private static runtimeKey = 'cache';
-
-	static configure(driver: CacheDriver): void {
-		if (hasPrimitiveRuntime(Cache.runtimeKey)) {
-			return;
-		}
-
-		registerPrimitiveRuntime<CacheRuntime>(Cache.runtimeKey, {
-			driver,
-		});
-	}
-
-	private static runtime(): CacheRuntime {
-		return getPrimitiveRuntime<CacheRuntime>(Cache.runtimeKey);
-	}
-
-	private static driver(): CacheDriver {
-		return Cache.runtime().driver;
-	}
-
-	static get<T = unknown>(key: string): Promise<T | undefined> {
-		return Cache.driver().get<T>(key);
-	}
-
-	static set(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
-		return Cache.driver().set(key, value, ttlSeconds);
-	}
-
-	static delete(key: string): Promise<void> {
-		return Cache.driver().delete(key);
-	}
-
-	static flush(): Promise<void> {
-		return Cache.driver().flush();
-	}
-}
+export const Cache = Object.freeze({
+	configure,
+	get,
+	set,
+	delete: deleteKey,
+	flush,
+});

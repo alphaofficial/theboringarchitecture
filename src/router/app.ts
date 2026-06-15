@@ -47,7 +47,7 @@ export async function createApp() {
 
 	app.use((req, _, next) => {
 		req.orm = orm;
-		req.entityManager = orm.em.fork();
+		req.database = orm.em.fork();
 		req.logger = PinoLogger;
 		next();
 	});

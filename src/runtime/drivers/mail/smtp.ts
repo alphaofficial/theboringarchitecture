@@ -2,16 +2,16 @@ import nodemailer from 'nodemailer';
 import variables from '@/config/variables';
 import type { MailMessage, MailTransport } from '@/primitives/mail';
 
-export class Smtp implements MailTransport {
-	private transporter: nodemailer.Transporter | null = null;
+export function createSmtpMailDriver(): MailTransport {
+	let transporter: nodemailer.Transporter | null = null;
 
-	private getTransporter(): nodemailer.Transporter {
-		if (!this.transporter) {
+	const getTransporter = (): nodemailer.Transporter => {
+		if (!transporter) {
 			if (!process.env.MAIL_HOST) {
 				throw new Error('SMTP driver requires MAIL_HOST to be configured');
 			}
 
-			this.transporter = nodemailer.createTransport({
+			transporter = nodemailer.createTransport({
 				host: process.env.MAIL_HOST,
 				port: Number(process.env.MAIL_PORT ?? 587),
 				auth: {
@@ -21,15 +21,17 @@ export class Smtp implements MailTransport {
 			});
 		}
 
-		return this.transporter;
-	}
+		return transporter;
+	};
 
-	async sendMail(message: MailMessage): Promise<void> {
-		await this.getTransporter().sendMail({
-			from: variables.MAIL_FROM,
-			to: message.to,
-			subject: message.subject,
-			html: message.html,
-		});
-	}
+	return {
+		async sendMail(message: MailMessage): Promise<void> {
+			await getTransporter().sendMail({
+				from: variables.MAIL_FROM,
+				to: message.to,
+				subject: message.subject,
+				html: message.html,
+			});
+		},
+	};
 }

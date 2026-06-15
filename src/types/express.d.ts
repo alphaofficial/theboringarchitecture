@@ -5,7 +5,7 @@ import { PinoLogger } from '@/logger/pinoLogger';
 declare module 'express-serve-static-core' {
 	interface Request {
 		orm: MikroORM;
-		entityManager: MikroORM['em'];
+		database: MikroORM['em'];
 		logger: typeof PinoLogger;
 		user(): Promise<User | null>;
 		user_id(): User['id'] | null;
