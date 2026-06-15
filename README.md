@@ -1,26 +1,13 @@
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Node Version](https://img.shields.io/badge/node-22%2B-brightgreen.svg)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)](https://www.typescriptlang.org/)
-[![Express 5](https://img.shields.io/badge/Express-5-lightgrey.svg)](https://expressjs.com/)
-[![Inertia.js](https://img.shields.io/badge/Inertia.js-2-9553ee.svg)](https://inertiajs.com/)
-[![React 19](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev/)
-
 # The Boring Architecture
 
-A batteries-included fullstack starter built on **Express 5**, **Inertia.js**, **React 19**, **MikroORM**, and **Tailwind CSS**. Server-renders React without an API layer — pass props from Express controllers straight into React pages.
-
-This README is the single source of truth: install, architecture, scripts, environment, SSR, auth, queue, mailer, scheduler, events, cache, storage, deployment, and contributing.
+A batteries-included fullstack starter built on **Express**, **InertiaJS**, **React**, **MikroORM**.
 
 ## Table of contents
-
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Quick start](#quick-start)
+- [Quick start for humans](#quick-start-for-humans)
+- [Quick start for agents](#quick-start-for-agents)
 - [Architecture](#architecture)
-- [Project structure](#project-structure)
 - [Scripts](#scripts)
 - [Environment variables](#environment-variables)
-- [Rendering and SSR](#rendering-and-ssr)
 - [Database](#database)
 - [Authentication helpers](#authentication-helpers)
 - [Queue](#queue)
@@ -34,86 +21,29 @@ This README is the single source of truth: install, architecture, scripts, envir
 - [Deployment](#deployment)
 - [Production checklist](#production-checklist)
 - [Releases and versioning](#releases-and-versioning)
-- [Dependencies](#dependencies)
 - [Contributing](#contributing)
 - [License](#license)
 
-## Features
-
-- **Inertia SSR adapter** — `res.render('Page', props)` from any controller
-- **Auth & sessions** — bcrypt, DB-backed sessions, `req.user()` / `req.is_authenticated()`, `auth`/`guest` route guards
-- **Complete auth flows** — forgot password, password reset, and email verification with the `verified` middleware
-- **MikroORM** — SQLite by default, Postgres-ready, migrations, EntitySchema mappings (no decorators)
-- **Production hardening** — Helmet, gzip compression, `/healthz` + `/readyz`, graceful shutdown, structured Pino logs, HTML-escaped page props
-- **Configurable rate limiting** — off by default, opt-in via env
-- **Queue** — Graphile Worker (`npm run work`), Postgres required; dispatch jobs with `Queue.dispatch('jobName', payload)`
-- **Mailer** — log + SMTP drivers; send mail with `Mailer.send(to, subject, html)`
-- **Task Scheduler** — node-cron; register recurring tasks with `Scheduler.on('0 * * * *', handler)` and start them in the app when enabled
-- **Event Bus** — publish in-process events with `Bus.on` / `Bus.publish`
-- **In-memory Cache** — `Cache.get / set / delete / flush` with optional TTL
-- **File Storage** — local driver out of the box; `Storage.put / get / delete / url`; add custom drivers if needed
-- **Tailwind CSS** + Vite client build
-- **Integration test suite** — Vitest + supertest against the real Express app and SQLite
-- **Playwright E2E test suite** — `npm run test:e2e`, runs against a real server with a browser
-
-## Prerequisites
-
-- **Node.js 22+** — download from [nodejs.org](https://nodejs.org/)
-- **npm** — ships with Node.js
-- **PostgreSQL** *(optional)* — required only for the background job queue ([Graphile Worker](https://worker.graphile.org/)). The queue gracefully no-ops when `DATABASE_URL` is not set, so PostgreSQL is not needed for general development.
-
-## Quick start
-
-Interactive scaffold (recommended):
-
+## Quick start for humans
 ```bash
 curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/install.sh | bash
 ```
 
-Non-interactive (defaults, fastest):
+## Quick start for agents
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/install.sh | bash -s -- --quick my-app
+curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/install.sh | bash -s -- --quick <your app name>
 ```
 
 Flags: `--quick`, `--branch <name>`, `--no-install`, `--no-git`.
 
 ## Architecture
 
-The Boring Architecture uses [Inertia.js](https://inertiajs.com/) to bridge Express and React — no separate API layer. Every request flows through a single pipeline:
+The Boring Architecture uses [InertiaJS](https://inertiajs.com/) to bridge Express and React. No separate API layer. Every request flows through a single pipeline:
 
-```
-Browser request
-  → Express router (src/router/)
-    → Middleware (session, auth, Inertia)
-      → Controller (src/controllers/)
-        → res.render('Page', props)
-          → React page (src/views/pages/)
-            → Full HTML response (first visit) or JSON props (subsequent navigation)
-```
+On the first visit the server returns a full HTML document with the initial page component and props embedded. Subsequent navigations are handled client-side by Inertia. 
+The browser sends XHR requests and receives only the updated page component name and props as JSON, avoiding full page reloads.
 
-On the first visit the server returns a full HTML document with the initial page component and props embedded. Subsequent navigations are handled client-side by Inertia — the browser sends XHR requests and receives only the updated page component name and props as JSON, avoiding full page reloads.
-
-## Project structure
-
-```
-src/
-├── core/             # Non-controller application logic
-├── controllers/      # Route controllers
-├── database/         # MikroORM config, migrations, mappings, seeders
-├── events/           # Event surface and feature listeners
-├── jobs/             # Graphile Worker job handlers (one file per job name)
-├── logger/           # Pino logger instance and configuration
-├── mail/             # Mailer class, driver interface, log + SMTP driver implementations
-├── middleware/       # auth, sessions, errorHandler, rateLimit, inertia
-├── models/           # Domain classes (User, Session)
-├── primitives/       # Mail, storage, queue, cache, scheduler, bus, inertia
-├── router/           # Express app + router
-├── utils/            # Shared utility helpers (tokens, hashing, etc.)
-├── views/            # React pages + components (Vite-bundled)
-├── config/           # Env validation (Zod), autogenerated page registry
-└── index.ts          # Process startup and shutdown
-```
 
 ## Scripts
 
@@ -166,7 +96,7 @@ src/
 
 ## Rendering and SSR
 
-Every controller renders React with the same one-liner:
+Request exposes a render method that enables server rendered pages in views
 
 ```ts
 // Controller
@@ -196,9 +126,6 @@ npm run scaffold -- model Post --fields "title:string,body:text,publishedAt:date
 npm run scaffold -- page Post --model --fields "title:string,body:text"
 ```
 
-### Server-side rendering
-
-SSR is **on by default** (`SSR_ENABLED=true` — see [Environment variables](#environment-variables)). On every first visit, the Express response pipeline loads the SSR bundle, renders the React page server-side, and embeds the resulting HTML into `public/template.html` before the response is sent. The same bundle then re-hydrates on the client through Vite's normal client entry.
 
 ### How it works
 
@@ -236,13 +163,14 @@ If the SSR bundle fails to load or render (e.g. a bad page import, a missing/ren
 
 ## Database
 
-This project uses **MikroORM** with the **EntitySchema** pattern mapped to plain domain classes — no decorators. See `src/database/mappings/` and `src/models/`.
+This project uses **MikroORM** with the **EntitySchema** pattern mapped to plain domain models. 
+See `src/database/mappings/` and `src/models/`.
 
 Switch to Postgres by changing `src/database/orm.config.ts` to use `@mikro-orm/postgresql` and setting connection env vars.
 
 ## Authentication helpers
 
-Available on every `req`:
+Available on every `req` and can be extended
 
 ```ts
 req.is_authenticated(): boolean
@@ -334,9 +262,11 @@ Register a custom driver at boot time:
 ```ts
 import { Mailer, MailTransport, MailMessage } from './src/primitives/mail';
 
-class PostmarkTransport implements MailTransport {
-  async sendMail(message: MailMessage): Promise<void> {
-    // call Postmark API …
+const PostmarkTransport = (): MailTransport => {
+  return {
+    async sendMail(message: MailMessage): Promise<void> {
+      // call Postmark API …
+    }
   }
 }
 
@@ -407,11 +337,13 @@ Register a custom driver that implements the `CacheDriver` interface:
 ```ts
 import { Cache, CacheDriver } from './src/primitives/cache';
 
-class RedisCacheDriver implements CacheDriver {
+const RedisCacheDriver = (): CacheDriver => {
+  return {
     async get<T>(key: string): Promise<T | undefined> { /* ... */ }
     async set(key: string, value: unknown, ttlSeconds?: number): Promise<void> { /* ... */ }
     async delete(key: string): Promise<void> { /* ... */ }
     async flush(): Promise<void> { /* ... */ }
+  }
 }
 
 Cache.registerDriver('redis', new RedisCacheDriver());
@@ -503,7 +435,7 @@ After scaffolding a model, run `npm run migrate` to apply it to the database. Th
 
 ### Adding a page
 
-A "page" is a React component rendered by a controller via Inertia. Pages live under `src/views/pages/` and are nested with `/`:
+A "page" is a React component rendered by a controller. Pages live under `src/views/pages/` and are nested with `/`:
 
 ```tsx
 // src/views/pages/Posts.tsx
@@ -562,15 +494,15 @@ import { Request, Response } from 'express';
 import { Post } from '../models/Post';
 
 export async function index(req: Request, res: Response) {
-  const em = req.entityManager;
-  const posts = await em.findAll(Post);
+  const db =  req.database
+  const posts = await  db.findAll(Post);
 
   return res.render('Posts', { posts });
 }
 
 export async function show(req: Request, res: Response) {
-  const em = req.entityManager;
-  const post = await em.findOne(Post, { id: req.params.id });
+  const db =  req.database
+  const post = await db.findOne(Post, { id: req.params.id });
 
   if (!post) {
     return res.status(404).json({ error: 'Post not found' });
@@ -580,25 +512,24 @@ export async function show(req: Request, res: Response) {
 }
 
 export async function create(req: Request, res: Response) {
-  const em = req.entityManager;
+  const db =  req.database
   const post = new Post(/* ... */);
-  await em.persistAndFlush(post);
+  await db.persistAndFlush(post);
   return res.redirect(`/posts/${post.id}`);
 }
 ```
 
 Conventions:
 
-- `req.entityManager` is a forked MikroORM `EntityManager` (one per request).
+- `req.database` is a forked MikroORM `EntityManager` for interacting with the db.
 - `req.user()`, `req.user_id()`, `req.is_authenticated()`, `req.authenticate(user)`, `req.logout()` are auth helpers — see [Authentication helpers](#authentication-helpers).
-- `req.logger` is a Pino instance.
-- `res.render('PageName', props)` is the canonical way to send an Inertia response. The page name is type-checked against the autogenerated `PageName` union. The middleware (`src/middleware/inertia.ts`) wires `res.render` to the SSR pipeline; there is no separate `renderPage` call needed in controllers. (`renderPage` is exported from `src/primitives/inertia.ts` and is used by `src/middleware/errorHandler.ts` to render the `Error` page.)
+- `res.render('PageName', props)` is the canonical way to render a page. The page name is type-checked against the autogenerated `PageName` union. The middleware (`src/middleware/inertia.ts`) wires `res.render` to the SSR pipeline; there is no separate `renderPage` call needed in controllers. (`renderPage` is exported from `src/primitives/inertia.ts` and is used by `src/middleware/errorHandler.ts` to render the `Error` page.)
 - For redirects, return `res.redirect('/...')`.
 - For JSON errors, return `res.status(404).json(...)`.
 
 ### Wiring routes
 
-All routes live in `src/router/route.ts`. Auth guards are applied per-route.
+All routes live in `src/router/route.ts`.
 
 ```ts
 // src/router/route.ts
@@ -614,7 +545,7 @@ Available guards are documented under [Authentication helpers](#authentication-h
 
 ### Adding a data model
 
-Models are plain TypeScript classes. The ORM mapping lives in a separate file so the model stays decorator-free.
+Models are plain Active Record style TypeScript classes. The ORM mapping lives in a separate file so the model stays decorator-free.
 
 **Step 1 — Define the class**
 
@@ -686,25 +617,25 @@ All available migration scripts:
 
 Typical dev loop: edit an entity → `npm run migrate` → commit the new migration file alongside the entity change. Teammates just run `npm run migration:run` after pulling.
 
-**Step 4 — Use it from a controller**
+**Step 4 — Use that database to run queries**
 
 ```ts
-const em = req.entityManager;
+const db = req.database;
 
 // Read
-const post = await em.findOne(Post, { id });
-const all  = await em.findAll(Post);
+const post = await db.findOne(Post, { id });
+const all  = await db.findAll(Post);
 
 // Write
 const post = new Post('Hello', 'Body', req.user_id()!);
-await em.persistAndFlush(post);
+await db.persistAndFlush(post);
 
 // Update
 post.title = 'Updated';
-await em.flush();
+await db.flush();
 
 // Delete
-await em.removeAndFlush(post);
+await db.removeAndFlush(post);
 ```
 
 ### End-to-end checklist for a new feature
@@ -720,29 +651,7 @@ await em.removeAndFlush(post);
 ```bash
 npm test                  # integration + E2E
 npm run test:typecheck    # typecheck test files
-npm run test:integration  # Vitest integration/runtime tests
-npm run test:e2e          # Playwright browser tests
 ```
-
-### Integration tests
-
-Current coverage under `test/integration/`:
-
-| Suite | What it covers |
-|---|---|
-| `auth.spec.ts` | Auth registration/login behavior over real HTTP requests, including event/mail/queue side effects |
-| `worker.spec.ts` | Worker boot behavior for queue + scheduler runtime wiring |
-| `playwright/ui.spec.ts` | Browser-level UI flows against a real server |
-| `scaffold.spec.ts` | `npm run scaffold` code generation for pages, controllers, routes, models, jobs, mail, events |
-| `docs.spec.ts` | README TOC, link integrity, and absence of retired doc references |
-
-### E2E tests (Playwright)
-
-Spin up a real browser against a built frontend. Suites under `test/integration/playwright/`:
-
-- `auth.spec.ts` — full UI flows: register → verify-email redirect, login/logout, invalid credentials, forgot-password page
-
-See `test/integration/` for all test source files.
 
 ## Deployment
 
@@ -799,7 +708,7 @@ The installer always pulls the **latest released tag** by default. Override with
 
 ```bash
 curl -fsSL .../install.sh | bash -s -- --tag 2026.04.07
-curl -fsSL .../install.sh | bash -s -- --branch main      # bleeding edge
+curl -fsSL .../install.sh | bash -s -- --branch main
 ```
 
 The cloned project records the version it was scaffolded from in `package.json` under the `tba` field:
@@ -807,10 +716,6 @@ The cloned project records the version it was scaffolded from in `package.json` 
 ```json
 { "tba": { "version": "2026.04.07", "kind": "tag" } }
 ```
-
-## Dependencies
-
-For a full breakdown of every dependency and why it's included, see [`package.json`](./package.json). The project ships with **Express 5**, **Inertia.js 2**, **React 19**, **MikroORM 6**, **Tailwind CSS**, **Graphile Worker** (opt-in queue), **node-cron**, **bcrypt**, **Helmet**, and **Pino** as runtime dependencies; **Vitest**, **supertest**, **Playwright**, **Vite**, and **tsx** are the dev tooling.
 
 ## Contributing
 
@@ -820,8 +725,6 @@ For a full breakdown of every dependency and why it's included, see [`package.js
 4. Run `npm test` to verify everything passes
 5. Commit your changes and push to your fork
 6. Open a pull request against `main`
-
-Please keep PRs focused — one feature or fix per pull request.
 
 ## License
 
