@@ -113,10 +113,15 @@ describe('README documentation', () => {
 			}
 		});
 
-		it('no markdown file links to a retired doc', () => {
-			const allMd = [README_PATH, ...listMarkdownFiles(DOCS_DIR)];
+		it('no repository file links to a retired doc', () => {
+			const allFiles = [
+				README_PATH,
+				...listMarkdownFiles(DOCS_DIR),
+				join(ROOT, 'install.sh'),
+			];
 			const offenders: string[] = [];
-			for (const file of allMd) {
+			for (const file of allFiles) {
+				if (!exists(file)) continue;
 				const text = readText(file);
 				for (const p of retiredPaths) {
 					if (text.includes(p)) {
