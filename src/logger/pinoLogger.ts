@@ -66,6 +66,7 @@ const pinoInstance = pino(coreConfig);
 
 export interface LogOptions {
 	scope: string;
+	message: string;
 	[key: string]: unknown;
 }
 
@@ -78,6 +79,7 @@ const log = (level: LogLevel, options: LogOptions): void => {
 
 /**
  * Shared application logger used by HTTP middleware and runtime code.
+ * `scope` is the name of the function emitting the log.
  */
 export const PinoLogger = {
 	instance: pinoInstance,

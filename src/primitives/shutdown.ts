@@ -19,7 +19,7 @@ export async function shutdown(
 	}
 
 	shuttingDown = true;
-	PinoLogger.info({ scope: 'shutdown', message: `Received ${signal}, shutting down...` });
+	PinoLogger.info({ scope: 'shutdown', message: 'Received signal, shutting down', signal });
 
 	const timeout = setTimeout(() => process.exit(1), timeoutMs);
 	timeout.unref();
@@ -35,7 +35,7 @@ export async function shutdown(
 		PinoLogger.error({
 			scope: 'shutdown',
 			message: 'Shutdown failed',
-			params: { message: err?.message },
+			err,
 		});
 		process.exit(1);
 	}

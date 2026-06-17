@@ -8,7 +8,7 @@ import { Storage } from '@/primitives/storage';
 import { createMemoryCacheDriver } from '@/runtime/drivers/cache/memory';
 import { createInMemoryBusDriver } from '@/runtime/drivers/bus/inMemory';
 import { createLogMailDriver } from '@/runtime/drivers/mail/log';
-import { createGraphileQueueDriver } from '@/runtime/drivers/queue/graphile';
+import { createInMemoryQueueDriver } from '@/runtime/drivers/queue/inMemory';
 import { createLocalDiskDriver } from '@/runtime/drivers/storage/localDisk';
 
 let bootstrapped = false;
@@ -25,7 +25,7 @@ export function bootstrapPrimitives(): void {
 	Cache.configure(createMemoryCacheDriver());
 	Storage.configure(createLocalDiskDriver(variables.STORAGE_PATH, variables.APP_URL));
 	Mailer.configure(createLogMailDriver());
-	Queue.configure(createGraphileQueueDriver(variables.DATABASE_URL));
+	Queue.configure(createInMemoryQueueDriver());
 	Scheduler.configure();
 	bootstrapped = true;
 }

@@ -25,16 +25,13 @@ export const notFoundHandler: RequestHandler = async (req, res, next) => {
 export const globalErrorHandler: ErrorRequestHandler = (err, req: Request, res: Response, _next: NextFunction) => {
 	const status = (err && (err.status || err.statusCode)) || 500;
 	const isProd = variables.NODE_ENV === 'production';
-
 	PinoLogger.error({
-		scope: 'HTTP',
-		message: `Unhandled error on ${req.method} ${req.originalUrl}`,
-		params: {
-			message: err?.message,
-			stack: err?.stack,
-		},
+		scope: 'globalErrorHandler',
+		message: 'Unhandled error',
+		method: req.method,
+		url: req.originalUrl,
+		err,
 	});
-
 	if (res.headersSent) return;
 
 	const payload = {

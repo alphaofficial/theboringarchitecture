@@ -11,7 +11,7 @@ async function bootstrap() {
   Bus.start();
 
   const server = app.listen(port, () => {
-    PinoLogger.info({ scope: 'App', message: `Server running at http://localhost:${port}` });
+    PinoLogger.info({ scope: 'bootstrap', message: 'Server running', url: `http://localhost:${port}`, port });
   });
 
   const disposables = [{
@@ -36,7 +36,9 @@ async function bootstrap() {
   process.on('SIGINT', () => void shutdown('SIGINT', disposables));
 }
 
-bootstrap().catch(err => {
-  PinoLogger.error({ scope: 'App', message: 'Failed to start server', params: { error: err } });
+const onBootstrapError = (err: unknown): void => {
+  PinoLogger.error({ scope: 'onBootstrapError', message: 'Failed to start server', err });
   process.exit(1);
-});
+};
+
+bootstrap().catch(onBootstrapError);

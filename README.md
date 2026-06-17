@@ -56,7 +56,7 @@ The browser sends XHR requests and receives only the updated page component name
 | `npm run test:integration`   | Run integration tests (Vitest + supertest)   |
 | `npm run test:typecheck`     | Typecheck integration + Playwright tests     |
 | `npm run test:e2e`           | Run Playwright E2E tests                     |
-| `npm run work`               | Start the Graphile Worker queue worker       |
+| `npm run work`               | Start a dedicated worker process (queue + scheduler) |
 | `npm run migrate`            | Generate + apply migrations                  |
 | `npm run migration:run`      | Apply pending migrations                     |
 | `npm run migration:revert`   | Revert the last applied migration            |
@@ -91,7 +91,7 @@ The browser sends XHR requests and receives only the updated page component name
 | `MAIL_USER`                     | _(none)_                | SMTP username                                                                                 |
 | `MAIL_PASS`                     | _(none)_                | SMTP password                                                                                 |
 | `STORAGE_PATH`                  | `storage`               | Root directory for the `local` storage driver                                                 |
-| `DATABASE_URL`                  | _(none)_                | PostgreSQL connection URL — required to enable the Queue (Graphile Worker)                    |
+
 | `SSR_ENABLED`                   | `true`                  | Server-side render every page. Set to `false` to ship a client-only shell.                    |
 
 ## Rendering and SSR
@@ -213,7 +213,7 @@ route.get('/login',     guest,    auth.showLogin);  // guests only
 
 ## Queue
 
-Background jobs are powered by **[Graphile Worker](https://worker.graphile.org/)** and require a **PostgreSQL** database (`DATABASE_URL`).
+Background jobs are powered by **[better-queue](https://github.com/diamondio/better-queue)** with its built-in in-memory store. Jobs are retried with backoff and run concurrently. Note: jobs are not persisted across process restarts.
 
 ```ts
 import { Queue } from './src/primitives/queue';
@@ -232,13 +232,13 @@ export async function sendWelcomeEmail(payload: unknown): Promise<void> {
 }
 ```
 
-Register jobs and start the worker in `src/worker.ts`, then run:
+The default configuration runs up to 4 jobs concurrently, retries failed jobs 3 times with a 2s delay. Tune these by editing `src/runtime/drivers/queue/inMemory.ts`.
+
+For a dedicated worker process:
 
 ```bash
 npm run work
 ```
-
-> **Note:** If `DATABASE_URL` is not set, `Queue.dispatch` is a safe no-op (logs a warning) so the rest of the app continues to work with SQLite.
 
 ## Mailer
 
