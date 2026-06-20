@@ -31,17 +31,15 @@ const on = (expression: string, handler: () => void | Promise<void>): CronTask =
 		throw new Error(`Invalid cron expression: "${expression}"`);
 	}
 
-	const task = cron.schedule(expression, async () => {
+	const runTask = async (): Promise<void> => {
 		try {
 			await handler();
 		} catch (err) {
-			PinoLogger.error({
-				scope: 'scheduler',
-				message: `Task failed (${expression})`,
-				params: { error: err },
-			});
+			PinoLogger.error({ scope: 'runTask', message: 'Cron task failed', expression, err });
 		}
-	});
+	};
+
+	const task = cron.schedule(expression, runTask);
 
 	getPrimitiveRuntime<SchedulerRuntime>('scheduler').tasks.push({ expression, handler, task });
 	return task;
@@ -70,21 +68,21 @@ const getRegisteredTasks = (): ReadonlyArray<{ expression: string }> => {
 /** Load scheduled tasks and start them. */
 const start = (): void => {
 	loadRelativeDirectory('scheduler');
-	PinoLogger.info({ scope: 'scheduler', message: 'Starting scheduler...' });
+	PinoLogger.info({ scope: 'start', message: 'Starting scheduler...' });
 	startAll();
 	const registered = getRegisteredTasks();
 	PinoLogger.info({
-		scope: 'scheduler',
-		message: `Scheduler started with ${registered.length} task(s)`,
-		params: { tasks: registered.map(task => task.expression) },
+		scope: 'start',
+		message: 'Scheduler started', count: registered.length,
+		tasks: registered.map(task => task.expression),
 	});
 };
 
 /** Stop all registered tasks. */
 const stop = (): void => {
-	PinoLogger.info({ scope: 'scheduler', message: 'Stopping scheduler...' });
+	PinoLogger.info({ scope: 'stop', message: 'Stopping scheduler...' });
 	stopAll();
-	PinoLogger.info({ scope: 'scheduler', message: 'Scheduler stopped.' });
+	PinoLogger.info({ scope: 'stop', message: 'Scheduler stopped.' });
 };
 
 /**

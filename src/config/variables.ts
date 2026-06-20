@@ -75,7 +75,6 @@ const variables = {
 	MAIL_PORT: env.int('MAIL_PORT', 587),
 	MAIL_USER: env('MAIL_USER'),
 	MAIL_PASS: env('MAIL_PASS'),
-	DATABASE_URL: env('DATABASE_URL'),
 	SSR_ENABLED: env.bool('SSR_ENABLED', true),
 };
 

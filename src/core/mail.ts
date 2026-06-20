@@ -19,8 +19,9 @@ export async function sendWelcomeEmail(payload: SendWelcomeEmailPayload): Promis
 	);
 
 	PinoLogger.info({
-		scope: 'mail',
-		message: `Sending welcome email to ${payload.to}`,
-		params: { to: payload.to, name: payload.name },
+		scope: 'sendWelcomeEmail',
+		message: 'Sending welcome email',
+		to: payload.to,
+		name: payload.name,
 	});
 }

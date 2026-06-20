@@ -15,8 +15,8 @@ export async function cleanExpiredSessions(): Promise<void> {
 
 		if (deleted > 0) {
 			PinoLogger.info({
-				scope: 'scheduler',
-				message: `Cleaned ${deleted} expired session(s)`,
+				scope: 'cleanExpiredSessions',
+				message: 'Cleaned expired sessions', deleted,
 			});
 		}
 	} finally {
