@@ -6,16 +6,10 @@ A batteries-included fullstack starter built on **Express**, **InertiaJS**, **Re
 - [Quick start for humans](#quick-start-for-humans)
 - [Quick start for agents](#quick-start-for-agents)
 - [Architecture](#architecture)
-- [Scripts](#scripts)
-- [Environment variables](#environment-variables)
 - [Database](#database)
 - [Authentication helpers](#authentication-helpers)
-- [Queue](#queue)
-- [Mailer](#mailer)
-- [Scheduler](#scheduler)
-- [Events](#events)
-- [Cache](#cache)
-- [File storage](#file-storage)
+- [Primitives](#primitives)
+- [Adding or replacing drivers](#adding-or-replacing-drivers)
 - [Building features](#building-features)
 - [Testing](#testing)
 - [Deployment](#deployment)
@@ -45,55 +39,6 @@ On the first visit the server returns a full HTML document with the initial page
 The browser sends XHR requests and receives only the updated page component name and props as JSON, avoiding full page reloads.
 
 
-## Scripts
-
-| Command                      | Description                                  |
-| ---------------------------- | -------------------------------------------- |
-| `npm run dev`                | Start Express server + Vite watch            |
-| `npm run build`              | Production build (client + server)           |
-| `npm start`                  | Run built server (`dist/index.js`)           |
-| `npm test`                   | Run integration + E2E tests                  |
-| `npm run test:integration`   | Run integration tests (Vitest + supertest)   |
-| `npm run test:typecheck`     | Typecheck integration + Playwright tests     |
-| `npm run test:e2e`           | Run Playwright E2E tests                     |
-| `npm run work`               | Start a dedicated worker process (queue + scheduler) |
-| `npm run migrate`            | Generate + apply migrations                  |
-| `npm run migration:run`      | Apply pending migrations                     |
-| `npm run migration:revert`   | Revert the last applied migration            |
-| `npm run migration:create`   | Create a blank migration                     |
-| `npm run migration:status`   | Show pending / applied migration status      |
-| `npm run db:seed`            | Run seeders                                  |
-| `npm run scaffold -- ...`    | Generate pages, controllers, routes          |
-
-## Environment variables
-
-| Variable                    | Default                 | Notes                                                            |
-| --------------------------- | ----------------------- | ---------------------------------------------------------------- |
-| `NODE_ENV`                  | `development`           | `development` \| `production` \| `test`                          |
-| `PORT`                      | `3000`                  |                                                                  |
-| `APP_URL`                   | `http://localhost:3000` | Public URL of the app                                            |
-| `TRUST_PROXY`               | `loopback`              | Set to your LB CIDR (or `true`) when behind a reverse proxy      |
-| `SESSION_SECRET`            | _(dev only default)_    | **Required in production.** Generate with `openssl rand -hex 32` |
-| `SESSION_MAX_AGE`           | `86400000`              | Session lifetime in ms (24h default)                             |
-| `APP_NAME`                  | `The Boring Architecture` | Display name shown in the UI and `<title>`                     |
-| `DB_PATH`                   | `theboringarchitecture.db` | SQLite file path                                               |
-| `APP_KEY`                       | _(dev only default)_    | **Required in production.** Used for HMAC token signing. Generate with `openssl rand -hex 32` |
-| `RATE_LIMIT_ENABLED`            | `false`                 | Enable per-IP limiter on `/login` and `/register`                                             |
-| `RATE_LIMIT_AUTH_MAX`           | `5`                     | Max requests per window on auth routes                                                        |
-| `RATE_LIMIT_AUTH_WINDOW_MS`     | `60000`                 | Window size in ms for the auth rate limiter                                                  |
-| `RATE_LIMIT_FEATURE_MAX`        | `60`                    | Max requests per window on feature routes                                                     |
-| `RATE_LIMIT_FEATURE_WINDOW_MS`  | `60000`                 | Window size in ms for feature rate limiter                                                    |
-| `PASSWORD_RESET_EXPIRY`         | `60`                    | Password-reset token expiry in minutes                                                        |
-| `EMAIL_VERIFICATION_EXPIRY`     | `60`                    | Email-verification token expiry in minutes                                                    |
-| `MAIL_FROM`                     | `noreply@example.com`   | Sender address used in all outgoing emails                                                    |
-| `MAIL_HOST`                     | _(none)_                | SMTP hostname — used if you wire the `smtp` driver in bootstrap                               |
-| `MAIL_PORT`                     | `587`                   | SMTP port                                                                                     |
-| `MAIL_USER`                     | _(none)_                | SMTP username                                                                                 |
-| `MAIL_PASS`                     | _(none)_                | SMTP password                                                                                 |
-| `STORAGE_PATH`                  | `storage`               | Root directory for the `local` storage driver                                                 |
-
-| `SSR_ENABLED`                   | `true`                  | Server-side render every page. Set to `false` to ship a client-only shell.                    |
-
 ## Rendering and SSR
 
 Request exposes a render method that enables server rendered pages in views
@@ -114,18 +59,6 @@ export default function Home({ message, user }: Props) {
 ```
 
 `src/config/pages.ts` is autogenerated from `src/views/pages/**/*.tsx` — drop a new `.tsx` file and the `PageName` union updates automatically (live in `npm run dev` via the chokidar watcher, or one-shot via the `predev`/`prebuild` hook).
-
-Skip the boilerplate with the scaffold script:
-
-```bash
-npm run scaffold -- page Posts                     # controller + page + GET /posts
-npm run scaffold -- page Auth/Profile /profile     # nested page at an explicit path
-npm run scaffold -- controller Billing             # controller only
-npm run scaffold -- route post /posts Posts.create --auth
-npm run scaffold -- model Post --fields "title:string,body:text,publishedAt:datetime?"
-npm run scaffold -- page Post --model --fields "title:string,body:text"
-```
-
 
 ### How it works
 
@@ -163,10 +96,21 @@ If the SSR bundle fails to load or render (e.g. a bad page import, a missing/ren
 
 ## Database
 
-This project uses **MikroORM** with the **EntitySchema** pattern mapped to plain domain models. 
+This project uses **MikroORM** with the **EntitySchema** pattern mapped to plain domain models.
 See `src/database/mappings/` and `src/models/`.
 
-Switch to Postgres by changing `src/database/orm.config.ts` to use `@mikro-orm/postgresql` and setting connection env vars.
+The template ships with SQLite. MikroORM supports MySQL, Postgres, MariaDB, and SQLite — change the driver in `src/database/orm.config.ts` and update connection env vars.
+
+MikroORM uses the Unit of Work pattern. Changes are tracked in a scope and flushed together in a single transaction:
+
+```ts
+const db = req.database;
+
+const post1 = new Post('Title 1', 'Body 1');
+const post2 = new Post('Title 2', 'Body 2');
+
+await db.persistAndFlush([post1, post2]); // Both inserted in one transaction
+```
 
 ## Authentication helpers
 
@@ -211,18 +155,60 @@ route.get('/login',     guest,    auth.showLogin);  // guests only
 | `/verify-email/:token` | GET | `auth` | Verify the token and mark email as verified |
 | `/email/resend-verification` | POST | `auth` | Re-send the verification email |
 
-## Queue
+## Primitives
 
-Background jobs are powered by **[better-queue](https://github.com/diamondio/better-queue)** with its built-in in-memory store. Jobs are retried with backoff and run concurrently. Note: jobs are not persisted across process restarts.
+All primitives follow the same `configure`/`start`/`stop` lifecycle and support swappable drivers.
+
+| Primitive   | Default Driver | Description                                                    |
+| ----------- | -------------- | -------------------------------------------------------------- |
+| `Bus`       | `inMemory`     | In-process event bus for publishing and subscribing to domain events |
+| `Cache`     | `memory`       | Key/value store for caching data with optional TTL             |
+| `Mailer`    | `log`          | Sends transactional emails                                    |
+| `Queue`     | `inMemory`     | Runs background jobs with retry and concurrency support         |
+| `Scheduler` | (cron-based)   | Registers and runs recurring tasks on a schedule                |
+| `Storage`   | `local`        | Stores and retrieves files                                     |
+
+### Bus
+
+An in-process event bus for publishing and subscribing to domain events. Listeners are registered in `src/events/` and events are published from core business logic.
 
 ```ts
-import { Queue } from './src/primitives/queue';
+// In src/events/auth.ts — register a listener
+import { Bus } from './src/primitives/bus';
 
-// Dispatch a job from anywhere in the application
-await Queue.dispatch('send-welcome-email', { to: 'user@example.com', name: 'Alice' });
+Bus.on('auth.registered', ({ email }) => {
+  console.log(`New user: ${email}`);
+});
+
+// In src/core/auth.ts — publish an event
+Bus.publish('auth.registered', { email: 'user@example.com' });
 ```
 
-Jobs live in `src/jobs/`. Each file exports an `async` function that receives the typed payload:
+Events are synchronous and in-process — listeners run immediately in the same Node.js event loop tick. For async/background work, dispatch a Queue job from within the listener.
+
+### Cache
+
+```ts
+import { Cache } from './src/primitives/cache';
+
+await Cache.set('user:42', { name: 'Alice' });
+await Cache.set('session:token', 'abc123', 300); // TTL in seconds
+const user = await Cache.get<{ name: string }>('user:42');
+await Cache.delete('user:42');
+await Cache.flush();
+```
+
+### Mailer
+
+```ts
+import { Mailer } from './src/primitives/mail';
+
+await Mailer.send('user@example.com', 'Welcome!', '<p>Thanks for signing up.</p>');
+```
+
+### Queue
+
+Runs background jobs with retry and concurrency support. Job handlers live in `src/jobs/`:
 
 ```ts
 // src/jobs/sendWelcomeEmail.ts
@@ -232,51 +218,17 @@ export async function sendWelcomeEmail(payload: unknown): Promise<void> {
 }
 ```
 
-The default configuration runs up to 4 jobs concurrently, retries failed jobs 3 times with a 2s delay. Tune these by editing `src/runtime/drivers/queue/inMemory.ts`.
-
-For a dedicated worker process:
-
-```bash
-npm run work
-```
-
-## Mailer
-
-Send transactional email via `Mailer.send`:
+Dispatch from anywhere:
 
 ```ts
-import { Mailer } from './src/primitives/mail';
+import { Queue } from './src/primitives/queue';
 
-await Mailer.send('user@example.com', 'Welcome!', '<p>Thanks for signing up.</p>');
+await Queue.dispatch('send-welcome-email', { to: 'user@example.com', name: 'Alice' });
 ```
 
-The built-in bootstrap selects the `log` driver by default. If you want a different driver, change your bootstrap code:
+### Scheduler
 
-| Driver | Description                                              |
-| ------ | -------------------------------------------------------- |
-| `log`  | Writes mail to the application log (default, no config) |
-| `smtp` | Sends via SMTP — requires `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS` |
-
-Register a custom driver at boot time:
-
-```ts
-import { Mailer, MailTransport, MailMessage } from './src/primitives/mail';
-
-const PostmarkTransport = (): MailTransport => {
-  return {
-    async sendMail(message: MailMessage): Promise<void> {
-      // call Postmark API …
-    }
-  }
-}
-
-Mailer.registerDriver('postmark', new PostmarkTransport());
-Mailer.useDriver('postmark');
-```
-
-## Scheduler
-
-Register recurring tasks with a cron expression via `Scheduler.on`:
+Register recurring tasks with a cron expression:
 
 ```ts
 import { Scheduler } from './src/primitives/scheduler';
@@ -287,151 +239,70 @@ Scheduler.on('0 * * * *', async () => {
 });
 ```
 
-Scheduled tasks are started by the background worker process via `npm run work`.
-
-## Events
-
-An in-process event bus for modular-monolith communication. Feature listeners live under `src/events/`.
-
-```ts
-import { Bus } from './src/primitives/bus';
-
-Bus.on('auth.registered', ({ email }) => {
-  console.log(`New user: ${email}`);
-});
-
-Bus.on('order.placed' as any, ({ orderId, total }: any) => {
-  console.log(`Order ${orderId} placed for $${total}`);
-});
-
-Bus.publish('order.placed' as any, { orderId: 'abc-123', total: 49.99 });
-```
-
-> **Note:** Events are synchronous and in-process — listeners run immediately in the same Node.js event loop tick. For async/background work, dispatch a Queue job from within the listener.
-
-## Cache
-
-A simple key/value cache backed by an in-process `memory` driver by default. Switch drivers in bootstrap code.
-
-```ts
-import { Cache } from './src/primitives/cache';
-
-// Store a value (no expiry)
-await Cache.set('user:42', { name: 'Alice' });
-
-// Store with a TTL (seconds)
-await Cache.set('session:token', 'abc123', 300); // expires in 5 minutes
-
-// Retrieve a value (returns undefined if missing or expired)
-const user = await Cache.get<{ name: string }>('user:42');
-
-// Delete a single key
-await Cache.delete('user:42');
-
-// Clear the entire cache
-await Cache.flush();
-```
-
-Register a custom driver that implements the `CacheDriver` interface:
-
-```ts
-import { Cache, CacheDriver } from './src/primitives/cache';
-
-const RedisCacheDriver = (): CacheDriver => {
-  return {
-    async get<T>(key: string): Promise<T | undefined> { /* ... */ }
-    async set(key: string, value: unknown, ttlSeconds?: number): Promise<void> { /* ... */ }
-    async delete(key: string): Promise<void> { /* ... */ }
-    async flush(): Promise<void> { /* ... */ }
-  }
-}
-
-Cache.registerDriver('redis', new RedisCacheDriver());
-Cache.useDriver('redis');
-```
-
-## File storage
-
-File storage is backed by the built-in `local` driver by default. Switch drivers in bootstrap code once you register your own implementation. The local driver writes files under the `STORAGE_PATH` directory and serves them at `/storage/<path>`.
+### Storage
 
 ```ts
 import { Storage } from './src/primitives/storage';
 
-// Write a file
 await Storage.put('uploads/avatar.png', imageBuffer);
-
-// Read a file back
 const data: Buffer = await Storage.get('uploads/avatar.png');
-
-// Delete a file
 await Storage.delete('uploads/avatar.png');
-
-// Get the public URL for a file
 const publicUrl: string = Storage.url('uploads/avatar.png');
-// → http://localhost:3000/storage/uploads/avatar.png
-
-// Check whether a file exists
 const exists: boolean = await Storage.exists('uploads/avatar.png');
 ```
 
-| Driver  | Description                                       | Notes                                      |
-| ------- | ------------------------------------------------- | ------------------------------------------ |
-| `local` | Writes to disk under `STORAGE_PATH` (default `storage/`) | Wired by default in bootstrap         |
+## Adding or replacing drivers
 
-Register a custom driver that implements the `StorageDriver` interface:
+Each primitive has a `configure` method that takes a driver instance. Edit `src/runtime/bootstrapPrimitives.ts` to swap drivers.
+
+**Pattern:**
 
 ```ts
-import { Storage, StorageDriver } from './src/primitives/storage';
+import { <Primitive> } from './src/primitives/<primitive>';
+import { create<My>Driver } from './src/runtime/drivers/<primitive>/myDriver';
 
-class CloudinaryDriver implements StorageDriver {
-    async put(filePath: string, data: Buffer | string): Promise<void> { /* ... */ }
-    async get(filePath: string): Promise<Buffer> { /* ... */ }
-    async delete(filePath: string): Promise<void> { /* ... */ }
-    url(filePath: string): string { return `https://cdn.example.com/${filePath}`; }
-    async exists(filePath: string): Promise<boolean> { /* ... */ }
-}
+// In bootstrapPrimitives(), replace the default driver:
+<Primitive>.configure(create<My>Driver());
+```
 
-Storage.registerDriver('cloudinary', new CloudinaryDriver());
-Storage.useDriver('cloudinary');
+**Example — Redis cache:**
+
+```ts
+import { Cache } from './src/primitives/cache';
+import { createRedisCacheDriver } from './src/runtime/drivers/cache/redis';
+
+Cache.configure(createRedisCacheDriver());
+```
+
+**Example — Postmark mail:**
+
+```ts
+import { Mailer } from './src/primitives/mail';
+import { createPostmarkDriver } from './src/runtime/drivers/mail/postmark';
+
+Mailer.configure(createPostmarkDriver());
+```
+
+**Example — S3 storage:**
+
+```ts
+import { Storage } from './src/primitives/storage';
+import { createS3Driver } from './src/runtime/drivers/storage/s3';
+
+Storage.configure(createS3Driver());
 ```
 
 ## Building features
 
-Everything in The Boring Architecture is generated, registered, and routed in three places: a React page under `src/views/pages/`, a controller under `src/controllers/`, and a route under `src/router/route.ts`. Data models add a fourth — a plain TS class plus a MikroORM mapping.
+Features in The Boring Architecture are built around a few patterns:
 
-### Fast path — scaffold it
-
-The `npm run scaffold` command generates the page, controller, and route in one shot. Subcommands (see `scripts/scaffold.sh` for the full grammar):
-
-| Subcommand | What it generates |
-| --- | --- |
-| `page <Name>` | React page + controller + `GET /<kebab-name>` route |
-| `page <Name> [path]` | Same, with an explicit route path (e.g. `/articles`) |
-| `page <Sub/Name> [path]` | Same, with a nested component path (`Auth/Profile` → `src/views/pages/Auth/Profile.tsx`) |
-| `page <Name> --model --fields "..."` | Page + controller + route + model + EntitySchema mapping in one step |
-| `controller <Name>` | Controller file only |
-| `route <method> <path> <Controller.action> [--auth\|--guest]` | Route entry only |
-| `model <Name> --fields "..."` | Model class + `*.map.ts` EntitySchema file |
-| `job <Name>` | Worker handler stub in `src/jobs/` |
-| `mail <Name>` | Mail template stub |
-| `event <Name>` | Event listener stub in `src/events/` |
-
-Field types: `string`, `text`, `int`, `bool`, `date`, `datetime`, `decimal`, `uuid`, `json`. Append `?` for nullable (e.g. `publishedAt:datetime?`).
-
-Examples:
-
-```bash
-npm run scaffold -- page Posts
-npm run scaffold -- page Posts /articles
-npm run scaffold -- page Auth/Profile /profile
-npm run scaffold -- controller Billing
-npm run scaffold -- route get  /health       Public.health
-npm run scaffold -- route post /posts        Posts.create --auth
-npm run scaffold -- model  Post  --fields "title:string,body:text,publishedAt:datetime?"
-npm run scaffold -- page   Post  --model --fields "title:string,body:text"
-```
-
-After scaffolding a model, run `npm run migrate` to apply it to the database. The sections below describe what the scaffold produces so you can do it by hand or tweak what was generated.
+- **Pages** — React components under `src/views/pages/` rendered by controllers
+- **Controllers** — Request handlers under `src/controllers/`
+- **Routes** — Route definitions in `src/router/route.ts`
+- **Models** — Plain TS classes under `src/models/` with MikroORM mappings under `src/database/mappings/`
+- **Jobs** — Background handlers under `src/jobs/`
+- **Events** — Listeners under `src/events/`
+- **Scheduler** — Recurring task registrations in `src/scheduler/`
 
 ### Adding a page
 
@@ -523,7 +394,7 @@ Conventions:
 
 - `req.database` is a forked MikroORM `EntityManager` for interacting with the db.
 - `req.user()`, `req.user_id()`, `req.is_authenticated()`, `req.authenticate(user)`, `req.logout()` are auth helpers — see [Authentication helpers](#authentication-helpers).
-- `res.render('PageName', props)` is the canonical way to render a page. The page name is type-checked against the autogenerated `PageName` union. The middleware (`src/middleware/inertia.ts`) wires `res.render` to the SSR pipeline; there is no separate `renderPage` call needed in controllers. (`renderPage` is exported from `src/primitives/inertia.ts` and is used by `src/middleware/errorHandler.ts` to render the `Error` page.)
+- `res.render('PageName', props)` is the canonical way to render a page. The page name is type-checked against the autogenerated `PageName` union.
 - For redirects, return `res.redirect('/...')`.
 - For JSON errors, return `res.status(404).json(...)`.
 
@@ -557,14 +428,21 @@ export class Post {
   id: string = uuid();
   title!: string;
   body!: string;
-  authorId!: string;
+  publishedAt?: Date;
   createdAt: Date = new Date();
   updatedAt: Date = new Date();
 
-  constructor(title: string, body: string, authorId: string) {
+  constructor(title: string, body: string) {
     this.title = title;
     this.body = body;
-    this.authorId = authorId;
+  }
+
+  publish(): void {
+    this.publishedAt = new Date();
+  }
+
+  isPublished(): boolean {
+    return this.publishedAt !== undefined;
   }
 }
 ```
@@ -613,44 +491,12 @@ All available migration scripts:
 | `npx mikro-orm migration:create --blank` | Create an empty migration for hand-written SQL (e.g. data backfills).                  |
 | `npm run db:seed`                      | Run the default seeder.                                                                  |
 
-> **Note:** MikroORM's CLI does not have a `migration:generate` command — "generate" is `migration:create` (it writes a migration file containing the entity/DB diff). `--blank` suppresses the diff.
-
-Typical dev loop: edit an entity → `npm run migrate` → commit the new migration file alongside the entity change. Teammates just run `npm run migration:run` after pulling.
-
-**Step 4 — Use that database to run queries**
-
-```ts
-const db = req.database;
-
-// Read
-const post = await db.findOne(Post, { id });
-const all  = await db.findAll(Post);
-
-// Write
-const post = new Post('Hello', 'Body', req.user_id()!);
-await db.persistAndFlush(post);
-
-// Update
-post.title = 'Updated';
-await db.flush();
-
-// Delete
-await db.removeAndFlush(post);
-```
-
-### End-to-end checklist for a new feature
-
-1. `npm run scaffold -- model Foo` (model + mapping).
-2. Edit the generated mapping to add your columns.
-3. `npm run migrate`.
-4. `npm run scaffold -- page Foo` (controller + page + route in one shot).
-5. `npm run build`.
+Typical dev loop: edit an entity → `npm run migrate` → commit the new migration file alongside the entity change. Run `npm run migration:run` after pulling.
 
 ## Testing
 
 ```bash
 npm test                  # integration + E2E
-npm run test:typecheck    # typecheck test files
 ```
 
 ## Deployment
@@ -694,28 +540,6 @@ The Docker image also configures `pm2-logrotate` to rotate logs at 5 MB, retain 
 - [ ] Run `npm run build && npm run migration:run` on deploy
 - [ ] Optionally enable `RATE_LIMIT_ENABLED=true` if your edge doesn't already rate-limit
 - [ ] Point liveness probe at `/healthz`, readiness at `/readyz`
-
-## Releases and versioning
-
-The Boring Architecture uses **CalVer** in the form `YYYY.MM.DD` (e.g. `2026.04.07`). When more than one release ships on the same day, a numeric suffix is appended: `2026.04.07.1`, `2026.04.07.2`, …
-
-Releases are produced by [`.github/workflows/release.yml`](./.github/workflows/release.yml):
-
-- Manually triggered from the GitHub Actions tab (`workflow_dispatch`).
-- Creates an annotated git tag and a GitHub release with auto-generated notes.
-
-The installer always pulls the **latest released tag** by default. Override with:
-
-```bash
-curl -fsSL .../install.sh | bash -s -- --tag 2026.04.07
-curl -fsSL .../install.sh | bash -s -- --branch main
-```
-
-The cloned project records the version it was scaffolded from in `package.json` under the `tba` field:
-
-```json
-{ "tba": { "version": "2026.04.07", "kind": "tag" } }
-```
 
 ## Contributing
 
