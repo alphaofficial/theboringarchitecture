@@ -2,10 +2,11 @@ import { AppContext } from '@/runtime/context';
 import { loadRelativeDirectory } from '@/runtime/loadRelativeDirectory';
 import { getPrimitiveRuntime, hasPrimitiveRuntime, registerPrimitiveRuntime } from '@/runtime/primitiveRegistry';
 
-export type QueueHandler<T = unknown> = (payload: T) => Promise<void>;
+export type QueueHandler<T = unknown> = (ctx: AppContext, payload: T) => Promise<void>;
+export type QueueDriverHandler<T = unknown> = (payload: T) => Promise<void>;
 
 export interface QueueDriver {
-	start(handlers: ReadonlyMap<string, QueueHandler>): void | Promise<void>;
+	start(handlers: ReadonlyMap<string, QueueDriverHandler>): void | Promise<void>;
 	stop(): Promise<void>;
 	dispatch(jobName: string, payload?: unknown): Promise<void>;
 }
@@ -13,7 +14,7 @@ export interface QueueDriver {
 interface QueueRuntime {
 	driver: QueueDriver;
 	ctx: AppContext;
-	handlers: Map<string, QueueHandler>;
+	handlers: Map<string, QueueDriverHandler>;
 }
 
 /** Configure the queue driver. */
@@ -30,7 +31,7 @@ const configure = (driver: QueueDriver, ctx: AppContext): void => {
 };
 
 /** Register a job handler. */
-const on = <T = unknown>(name: string, handler: (ctx: AppContext, payload: T) => Promise<void>): void => {
+const on = <T = unknown>(name: string, handler: QueueHandler<T>): void => {
 	const runtime = getPrimitiveRuntime<QueueRuntime>('queue');
 
 	runtime.handlers.set(name, async payload => {

@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { EntityManager } from '@mikro-orm/core';
 import { PinoLogger } from '@/logger/pinoLogger';
 import { QueueJob } from '@/models/QueueJob';
-import type { QueueDriver, QueueHandler } from '@/primitives/queue';
+import type { QueueDriver, QueueDriverHandler } from '@/primitives/queue';
 
 interface SqliteQueueDriverOptions {
 	pollIntervalMs?: number;
@@ -13,7 +13,7 @@ interface SqliteQueueDriverOptions {
 }
 
 interface SqliteQueueState {
-	handlers: ReadonlyMap<string, QueueHandler> | null;
+	handlers: ReadonlyMap<string, QueueDriverHandler> | null;
 	polling: boolean;
 	stopped: boolean;
 	timer: NodeJS.Timeout | null;
@@ -114,7 +114,7 @@ const markFailed = async (
 
 const processJob = async (
 	db: EntityManager,
-	handlers: ReadonlyMap<string, QueueHandler>,
+	handlers: ReadonlyMap<string, QueueDriverHandler>,
 	job: QueueJobRow,
 	options: Required<Omit<SqliteQueueDriverOptions, 'workerId'>> & { workerId: string },
 ): Promise<void> => {

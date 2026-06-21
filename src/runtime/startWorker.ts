@@ -13,7 +13,7 @@ export async function startWorker() {
 
 	const orm = await MikroORM.init(ormConfig);
 
-	bootstrapPrimitives(orm);
+	bootstrapPrimitives(orm, ["queue", "scheduler"]);
 	Queue.start();
 	Scheduler.start();
 	started = true;

@@ -1,68 +1,66 @@
-import * as cron from 'node-cron';
-import type { ScheduledTask as CronTask } from 'node-cron';
 import { PinoLogger } from '@/logger/pinoLogger';
+import { AppContext } from '@/runtime/context';
 import { loadRelativeDirectory } from '@/runtime/loadRelativeDirectory';
 import { getPrimitiveRuntime, hasPrimitiveRuntime, registerPrimitiveRuntime } from '@/runtime/primitiveRegistry';
 
 export interface ScheduledTask {
 	expression: string;
 	handler: () => void | Promise<void>;
-	task: CronTask;
+	start(): void | Promise<void>;
+	stop(): void | Promise<void>;
+}
+
+export interface SchedulerDriver {
+	schedule(expression: string, handler: () => void | Promise<void>): ScheduledTask;
+	startAll(): void;
+	stopAll(): void;
+	getRegisteredTasks(): ReadonlyArray<{ expression: string }>;
 }
 
 interface SchedulerRuntime {
-	tasks: ScheduledTask[];
+	driver: SchedulerDriver;
+	ctx: AppContext;
 }
 
 /** Configure the scheduler runtime. */
-const configure = (): void => {
+const configure = (driver: SchedulerDriver, ctx: AppContext): void => {
 	if (hasPrimitiveRuntime('scheduler')) {
 		return;
 	}
 
 	registerPrimitiveRuntime<SchedulerRuntime>('scheduler', {
-		tasks: [],
+		driver,
+		ctx,
 	});
 };
 
 /** Register a cron task. */
-const on = (expression: string, handler: () => void | Promise<void>): CronTask => {
-	if (!cron.validate(expression)) {
-		throw new Error(`Invalid cron expression: "${expression}"`);
-	}
+const on = (expression: string, handler: (ctx: AppContext) => void | Promise<void>): ScheduledTask => {
+	const runtime = getPrimitiveRuntime<SchedulerRuntime>('scheduler');
 
-	const runTask = async (): Promise<void> => {
-		try {
-			await handler();
-		} catch (err) {
-			PinoLogger.error({ scope: 'runTask', message: 'Cron task failed', expression, err });
-		}
-	};
-
-	const task = cron.schedule(expression, runTask);
-
-	getPrimitiveRuntime<SchedulerRuntime>('scheduler').tasks.push({ expression, handler, task });
-	return task;
+	return runtime.driver.schedule(expression, async () => {
+		await handler(runtime.ctx);
+	});
 };
 
 /** Register a cron task. */
-const schedule = (expression: string, handler: () => void | Promise<void>): CronTask => {
+const schedule = (expression: string, handler: (ctx: AppContext) => void | Promise<void>): ScheduledTask => {
 	return on(expression, handler);
 };
 
 /** Start all registered tasks. */
 const startAll = (): void => {
-	getPrimitiveRuntime<SchedulerRuntime>('scheduler').tasks.forEach(entry => entry.task.start());
+	getPrimitiveRuntime<SchedulerRuntime>('scheduler').driver.startAll();
 };
 
 /** Stop all registered tasks without logging lifecycle messages. */
 const stopAll = (): void => {
-	getPrimitiveRuntime<SchedulerRuntime>('scheduler').tasks.forEach(entry => entry.task.stop());
+	getPrimitiveRuntime<SchedulerRuntime>('scheduler').driver.stopAll();
 };
 
 /** List registered task expressions. */
 const getRegisteredTasks = (): ReadonlyArray<{ expression: string }> => {
-	return getPrimitiveRuntime<SchedulerRuntime>('scheduler').tasks.map(task => ({ expression: task.expression }));
+	return getPrimitiveRuntime<SchedulerRuntime>('scheduler').driver.getRegisteredTasks();
 };
 
 /** Load scheduled tasks and start them. */
