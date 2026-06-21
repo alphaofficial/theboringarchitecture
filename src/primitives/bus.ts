@@ -47,7 +47,7 @@ const publish = (event: string, payload?: unknown): boolean => {
 };
 
 /** Register a listener for an event. */
-const subscribe = <T = unknown>(event: string, listener: (ctx: AppContext, payload: T) => void): void => {
+const on = <T = unknown>(event: string, listener: (ctx: AppContext, payload: T) => void): void => {
 	const runtime = getPrimitiveRuntime<BusRuntime>('bus');
 
 	runtime.driver.on(event, payload => {
@@ -62,5 +62,5 @@ export const Bus = Object.freeze({
 	configure,
 	start,
 	publish,
-	subscribe,
+	on,
 });

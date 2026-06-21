@@ -6,4 +6,4 @@ type AuthRegisteredPayload = {
 	email: string;
 };
 
-Bus.subscribe<AuthRegisteredPayload>('auth.registered', (ctx, payload) => onAuthRegistered(ctx, payload));
+Bus.on<AuthRegisteredPayload>('auth.registered', (ctx, payload) => onAuthRegistered(ctx, payload));
