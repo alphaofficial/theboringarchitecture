@@ -20,11 +20,12 @@ export async function showRegister(req: Request, res: Response) {
  * Attempt to authenticate the current request and start a session on success.
  */
 export async function login(req: Request, res: Response) {
-	const result = await auth.attemptLogin(req.database, req.body);
-	if (!result.ok) {
-		return res.render('Auth/Login', { errors: result.errors });
+	const { data, errors } = await auth.attemptLogin(req.database, req.body);
+	if (errors) {
+		return res.render('Auth/Login', { errors });
 	}
-	await req.authenticate(result.user);
+
+	await req.authenticate(data.user);
 	return res.redirect('/home');
 }
 
@@ -32,12 +33,12 @@ export async function login(req: Request, res: Response) {
  * Attempt to register a new user and authenticate them into the current session.
  */
 export async function register(req: Request, res: Response) {
-	const result = await auth.attemptRegister(req.database, req.body);
-	if (!result.ok) {
-		return res.render('Auth/Register', { errors: result.errors });
+	const { data, errors } = await auth.attemptRegister(req.database, req.body);
+	if (errors) {
+		return res.render('Auth/Register', { errors });
 	}
 
-	await req.authenticate(result.user);
+	await req.authenticate(data.user);
 	return res.redirect('/verify-email');
 }
 
@@ -73,13 +74,13 @@ export async function showForgotPassword(req: Request, res: Response) {
  * Attempt to create and email a password reset link.
  */
 export async function forgotPassword(req: Request, res: Response) {
-	const result = await auth.attemptForgotPassword(req.database, req.body);
-	if (!result.ok) {
-		return res.render('Auth/ForgotPassword', { errors: result.errors });
+	const { data, errors } = await auth.attemptForgotPassword(req.database, req.body);
+	if (errors) {
+		return res.render('Auth/ForgotPassword', { errors });
 	}
 
 	return res.render('Auth/ForgotPassword', {
-		status: 'We have emailed your password reset link!',
+		status: data.status,
 	});
 }
 
@@ -97,9 +98,14 @@ export async function showResetPassword(req: Request, res: Response) {
  * Attempt to replace the user's password using a reset token.
  */
 export async function resetPassword(req: Request, res: Response) {
-	const result = await auth.attemptResetPassword(req.database, req.body);
-	if (!result.ok) {
-		return res.render('Auth/ResetPassword', result);
+	const { errors } = await auth.attemptResetPassword(req.database, req.body);
+	if (errors) {
+		const body = req.body as Record<string, unknown>;
+		return res.render('Auth/ResetPassword', {
+			token: typeof body?.token === 'string' ? body.token : '',
+			email: typeof body?.email === 'string' ? body.email : '',
+			errors,
+		});
 	}
 
 	return res.redirect('/login?reset=1');
@@ -118,18 +124,14 @@ export async function showVerifyEmail(req: Request, res: Response) {
  */
 export async function verifyEmail(req: Request, res: Response) {
 	const token = typeof req.params.token === 'string' ? req.params.token : '';
-	const result = await auth.attemptVerifyEmail(req.database, token);
+	const { errors } = await auth.attemptVerifyEmail(req.database, token);
 
-	if (!result.ok) {
-		const user = result.error === 'expired' ? await req.user() : null;
-		const message =
-			result.error === 'expired'
-				? 'This verification link has expired. Please request a new one.'
-				: 'This verification link is invalid.';
+	if (errors) {
+		const user = await req.user();
 
 		return res.render('Auth/VerifyEmail', {
 			email: user?.email,
-			errors: { email: [message] },
+			errors,
 		});
 	}
 
@@ -146,10 +148,10 @@ export async function resendVerification(req: Request, res: Response) {
 		return res.redirect('/login');
 	}
 
-	const result = await auth.resendVerification(user);
+	const { data } = await auth.resendVerification(user);
 
 	return res.render('Auth/VerifyEmail', {
 		email: user.email,
-		status: result.status,
+		status: data.status,
 	});
 }
