@@ -1,3 +1,4 @@
+import { AppContext } from '@/runtime/context';
 import { loadRelativeDirectory } from '@/runtime/loadRelativeDirectory';
 import { getPrimitiveRuntime, hasPrimitiveRuntime, registerPrimitiveRuntime } from '@/runtime/primitiveRegistry';
 
@@ -11,31 +12,37 @@ export interface QueueDriver {
 
 interface QueueRuntime {
 	driver: QueueDriver;
+	ctx: AppContext;
 	handlers: Map<string, QueueHandler>;
 }
 
 /** Configure the queue driver. */
-const configure = (driver: QueueDriver): void => {
+const configure = (driver: QueueDriver, ctx: AppContext): void => {
 	if (hasPrimitiveRuntime('queue')) {
 		return;
 	}
 
 	registerPrimitiveRuntime<QueueRuntime>('queue', {
 		driver,
+		ctx,
 		handlers: new Map(),
 	});
 };
 
 /** Register a job handler. */
-const on = <T = unknown>(name: string, handler: QueueHandler<T>): void => {
-	getPrimitiveRuntime<QueueRuntime>('queue').handlers.set(name, handler as QueueHandler);
+const on = <T = unknown>(name: string, handler: (ctx: AppContext, payload: T) => Promise<void>): void => {
+	const runtime = getPrimitiveRuntime<QueueRuntime>('queue');
+
+	runtime.handlers.set(name, async payload => {
+		await handler(runtime.ctx, payload as T);
+	});
 };
 
 /** Load jobs and start the queue driver. */
 const start = (): void => {
 	loadRelativeDirectory('jobs');
-	const queueRuntime = getPrimitiveRuntime<QueueRuntime>('queue');
-	void queueRuntime.driver.start(queueRuntime.handlers);
+	const runtime = getPrimitiveRuntime<QueueRuntime>('queue');
+	void runtime.driver.start(runtime.handlers);
 };
 
 /** Stop the queue driver. */

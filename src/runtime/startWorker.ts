@@ -1,15 +1,19 @@
 import { Queue } from '@/primitives/queue';
 import { Scheduler } from '@/primitives/scheduler';
+import ormConfig from '@/database/orm.config';
+import { MikroORM } from '@mikro-orm/core';
 import { bootstrapPrimitives } from '@/runtime/bootstrapPrimitives';
 
 let started = false;
 
-export function startWorker() {
+export async function startWorker() {
 	if (started) {
 		return [Scheduler, Queue] as const;
 	}
 
-	bootstrapPrimitives();
+	const orm = await MikroORM.init(ormConfig);
+
+	bootstrapPrimitives(orm);
 	Queue.start();
 	Scheduler.start();
 	started = true;

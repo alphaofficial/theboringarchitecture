@@ -8,6 +8,7 @@ import { hash } from '@/utilities/hash';
 import { Mailer } from '@/primitives/mail';
 import { Bus } from '@/primitives/bus';
 import { Queue } from '@/primitives/queue';
+import { AppContext } from '@/runtime/context';
 
 export type AuthErrors = Record<string, string[]>;
 
@@ -420,3 +421,10 @@ export async function resendVerification(user: Pick<User, 'id' | 'email' | 'emai
 	await sendVerificationEmail(user, '<p>Please verify your email address.</p>');
 	return { ok: true as const, status: 'A new verification link has been sent to your email address.' };
 }
+
+
+/** Event handler for AuthRegistered */
+export function onAuthRegistered<T>(ctx: AppContext, payload: T) {
+	// Handle auth registered event
+	ctx.logger.info({ scope: 'onAuthRegistered', message: 'User registered', payload });
+};

@@ -18,9 +18,11 @@ import { bootstrapPrimitives } from '@/runtime/bootstrapPrimitives';
  */
 export async function createApp() {
 	const orm = await MikroORM.init(ormConfig);
-	bootstrapPrimitives();
 	const sessionStore = new SessionStore(orm);
 	const app = express();
+	app.use((_, __, next) => RequestContext.create(orm.em.fork(), next));
+	bootstrapPrimitives(orm);
+
 
 	app.set('trust proxy', variables.TRUST_PROXY);
 
@@ -52,7 +54,6 @@ export async function createApp() {
 		next();
 	});
 
-	app.use((_, __, next) => RequestContext.create(orm.em.fork(), next));
 
 	app.use((req, _, next) => {
 		if (req.sessionID) {
