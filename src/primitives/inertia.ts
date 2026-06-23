@@ -33,11 +33,12 @@ function escapeHtml(value: string): string {
 
 type SsrPayload = { head: string[]; body: string };
 type SsrModule = { render: (page: unknown) => Promise<SsrPayload | void> };
+const importSsrModule = new Function('specifier', 'return import(specifier)') as (specifier: string) => Promise<SsrModule>;
 
 async function loadSsrModule(): Promise<SsrModule> {
 	const mtime = fs.statSync(ssrBundlePath).mtimeMs;
 	const url = `${pathToFileURL(ssrBundlePath).href}?v=${mtime}`;
-	return (await import(url)) as SsrModule;
+	return importSsrModule(url);
 }
 
 async function renderOnSsr(page: unknown): Promise<SsrPayload | null> {
@@ -115,7 +116,7 @@ export class InertiaExpressAdapter {
 }
 
 export async function renderHtml(page: unknown, title?: string, head?: string): Promise<string> {
-	const ssr = variables.SSR_ENABLED ? await renderOnSsr(page) : null;
+	const ssr = variables.DISABLE_SSR ? null : await renderOnSsr(page);
 
 	const template = fs.readFileSync(templatePath, 'utf-8');
 	const app = ssr

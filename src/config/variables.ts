@@ -75,7 +75,7 @@ const variables = {
 	MAIL_PORT: env.int('MAIL_PORT', 587),
 	MAIL_USER: env('MAIL_USER'),
 	MAIL_PASS: env('MAIL_PASS'),
-	SSR_ENABLED: env.bool('SSR_ENABLED', true),
+	DISABLE_SSR: env.bool('DISABLE_SSR', false),
 };
 
 if (!variables.SESSION_SECRET) {

@@ -1,8 +1,8 @@
 // Codegen for src/config/pages.ts
 //
 // Walks src/views/pages/**/*.tsx and writes a literal-union type of
-// every page name. Run on `predev` and `prebuild` and watched while
-// `npm run dev` is running so adding a page never requires editing
+// every page name. Run on `prestart:dev` and `prebuild` and watched while
+// `npm run start:dev` is running so adding a page never requires editing
 // pages.ts by hand.
 //
 // Names preserve subdirectories: src/views/pages/Auth/Login.tsx -> "Auth/Login".

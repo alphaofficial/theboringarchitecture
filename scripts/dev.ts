@@ -1,11 +1,12 @@
 import { spawn, ChildProcess } from 'node:child_process'
 
 /**
- * Custom dev runner: spawns pages:watch, dev:server, and dev:client,
+ * Custom dev runner: spawns pages:watch, start:dev:server,
+ * start:dev:client, and start:dev:ssr,
  * parses their output, strips noise, and prints uniform pretty logs.
  */
 
-type Tag = 'pages' | 'server' | 'client'
+type Tag = 'pages' | 'server' | 'client' | 'ssr'
 
 const COLORS = {
   reset: '\x1b[0m',
@@ -24,6 +25,7 @@ const TAG_COLOR: Record<Tag, string> = {
   pages: COLORS.magenta,
   server: COLORS.cyan,
   client: COLORS.green,
+  ssr: COLORS.blue,
 }
 
 // Lines matching these patterns are dropped entirely.
@@ -78,7 +80,7 @@ function timestamp(): string {
   return `${hh}:${mm}:${ss}`
 }
 
-const lastColor: Record<Tag, string> = { pages: COLORS.reset, server: COLORS.reset, client: COLORS.reset }
+const lastColor: Record<Tag, string> = { pages: COLORS.reset, server: COLORS.reset, client: COLORS.reset, ssr: COLORS.reset }
 
 // eslint-disable-next-line no-control-regex
 const ANSI_RE = /\x1b\[[0-9;]*m/g
@@ -137,6 +139,7 @@ const procs: Proc[] = [
   { tag: 'pages', cmd: 'npx', args: ['chokidar', 'src/views/pages/**/*.tsx', '-c', 'npm run pages:generate --silent', '--initial', '--silent'] },
   { tag: 'server', cmd: 'npx', args: ['nodemon', '--quiet', '--exec', 'tsx src/index.ts'] },
   { tag: 'client', cmd: 'npx', args: ['vite', 'build', '--watch'] },
+  { tag: 'ssr', cmd: 'npx', args: ['vite', 'build', '--config', 'vite.ssr.config.mjs', '--watch'] },
 ]
 
 const children: ChildProcess[] = []

@@ -64,7 +64,7 @@ const log = (level: LogLevel, options: LogOptions): void => {
  * Shared application logger used by HTTP middleware and runtime code.
  * `scope` is the name of the function emitting the log.
  * In dev, pipe stdout through `pino-pretty` for readable output:
- *   `npm run dev:server`
+ *   `npm run start:dev:server`
  */
 export const PinoLogger = {
 	instance: httpLogger,
