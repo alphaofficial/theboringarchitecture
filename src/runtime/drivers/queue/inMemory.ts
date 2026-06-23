@@ -1,7 +1,7 @@
 import BetterQueue from 'better-queue';
 import type { ProcessFunctionCb, QueueOptions } from 'better-queue';
 import { PinoLogger } from '@/logger/pinoLogger';
-import type { QueueDriver, QueueHandler } from '@/primitives/queue';
+import type { QueueDriver, QueueDriverHandler } from '@/primitives/queue';
 
 interface QueueTask {
 	jobName: string;
@@ -9,12 +9,12 @@ interface QueueTask {
 }
 
 interface InMemoryQueueState {
-	handlers: ReadonlyMap<string, QueueHandler> | null;
+	handlers: ReadonlyMap<string, QueueDriverHandler> | null;
 	queue: BetterQueue<QueueTask, unknown> | null;
 }
 
 /** Start the queue, registering handlers. Uses better-queue's built-in in-memory store. */
-const start = (state: InMemoryQueueState, handlers: ReadonlyMap<string, QueueHandler>): void => {
+const start = (state: InMemoryQueueState, handlers: ReadonlyMap<string, QueueDriverHandler>): void => {
 	if (state.queue) {
 		return;
 	}

@@ -8,8 +8,10 @@ import { hash } from '@/utilities/hash';
 import { Mailer } from '@/primitives/mail';
 import { Bus } from '@/primitives/bus';
 import { Queue } from '@/primitives/queue';
+import { AppContext } from '@/runtime/context';
 
 export type AuthErrors = Record<string, string[]>;
+type AuthResult<T> = { data: T; errors: null } | { data: null; errors: AuthErrors };
 
 interface VerificationPayload {
 	id: string;
@@ -116,30 +118,20 @@ function readResetPassword(body: unknown) {
 	return { token, email, password, errors };
 }
 
-function readResetPasswordPage(body: unknown) {
-	const data = body as Record<string, unknown>;
-
-	return {
-		token: typeof data?.token === 'string' ? data.token : '',
-		email: typeof data?.email === 'string' ? data.email : '',
-	};
-}
-
 function readVerificationToken(token: string):
-	| { ok: true; payload: VerificationPayload }
-	| { ok: false; error: 'invalid' | 'expired' } {
+	AuthResult<{ payload: VerificationPayload }> {
 	const payload = verifyVerificationToken(token);
 
 	if (!payload) {
-		return { ok: false, error: 'invalid' };
+		return { data: null, errors: { email: ['This verification link is invalid.'] } };
 	}
 
 	const expiryMs = variables.EMAIL_VERIFICATION_EXPIRY * 60 * 1000;
 	if (Date.now() - payload.iat > expiryMs) {
-		return { ok: false, error: 'expired' };
+		return { data: null, errors: { email: ['This verification link has expired. Please request a new one.'] } };
 	}
 
-	return { ok: true, payload };
+	return { data: { payload }, errors: null };
 }
 
 export function makeVerificationToken(userId: string, email: string): string {
@@ -215,10 +207,10 @@ export async function registerUser(
 	name: string,
 	email: string,
 	password: string,
-): Promise<{ alreadyExists: true } | { alreadyExists: false; user: User }> {
+): Promise<AuthResult<{ user: User }>> {
 	const existingUser = await database.findOne(User, { email });
 	if (existingUser) {
-		return { alreadyExists: true };
+		return { data: null, errors: { email: ['Email already taken'] } };
 	}
 
 	const hashedPassword = await hash.make(password);
@@ -226,16 +218,16 @@ export async function registerUser(
 
 	await database.persistAndFlush(user);
 	Bus.publish('auth.registered', { id: user.id, email: user.email });
-	return { alreadyExists: false, user };
+	return { data: { user }, errors: null };
 }
 
 /**
  * Create and email a password reset link for a user if they exist.
  */
-export async function requestPasswordReset(database: EntityManager, email: string): Promise<boolean> {
+export async function requestPasswordReset(database: EntityManager, email: string): Promise<void> {
 	const user = await database.findOne(User, { email });
 	if (!user) {
-		return false;
+		return;
 	}
 
 	const rawToken = crypto.randomBytes(32).toString('hex');
@@ -254,7 +246,6 @@ export async function requestPasswordReset(database: EntityManager, email: strin
     `;
 
 	await Mailer.send(email, 'Password Reset Request', html);
-	return true;
 }
 
 /**
@@ -265,23 +256,23 @@ export async function resetUserPassword(
 	token: string,
 	email: string,
 	password: string,
-): Promise<{ ok: true } | { ok: false; message: string }> {
+): Promise<AuthResult<Record<string, never>>> {
 	const tokenHash = crypto.createHmac('sha256', variables.APP_KEY).update(token).digest('hex');
 	const reset = await database.findOne(PasswordReset, { email, tokenHash });
 
 	if (!reset) {
-		return { ok: false, message: 'This password reset link is invalid.' };
+		return { data: null, errors: { token: ['This password reset link is invalid.'] } };
 	}
 
 	const expiryMs = variables.PASSWORD_RESET_EXPIRY * 60 * 1000;
 	if (Date.now() - reset.createdAt.getTime() > expiryMs) {
 		await database.nativeDelete(PasswordReset, { email });
-		return { ok: false, message: 'This password reset link has expired. Please request a new one.' };
+		return { data: null, errors: { token: ['This password reset link has expired. Please request a new one.'] } };
 	}
 
 	const user = await database.findOne(User, { email });
 	if (!user) {
-		return { ok: false, message: 'This password reset link is invalid.' };
+		return { data: null, errors: { token: ['This password reset link is invalid.'] } };
 	}
 
 	user.password = await hash.make(password);
@@ -289,7 +280,7 @@ export async function resetUserPassword(
 	await database.nativeDelete(Session, { user_id: user.id });
 	await database.flush();
 
-	return { ok: true };
+	return { data: {}, errors: null };
 }
 
 /**
@@ -298,10 +289,10 @@ export async function resetUserPassword(
 export async function verifyUserEmail(
 	database: EntityManager,
 	payload: VerificationPayload,
-): Promise<{ ok: false } | { ok: true; user: User }> {
+): Promise<AuthResult<{ user: User }>> {
 	const user = await database.findOne(User, { id: payload.id, email: payload.email });
 	if (!user) {
-		return { ok: false };
+		return { data: null, errors: { email: ['This verification link is invalid.'] } };
 	}
 
 	if (!user.emailVerifiedAt) {
@@ -310,7 +301,7 @@ export async function verifyUserEmail(
 		Bus.publish('auth.verified', { id: user.id, email: user.email });
 	}
 
-	return { ok: true, user };
+	return { data: { user }, errors: null };
 }
 
 /**
@@ -320,15 +311,15 @@ export async function attemptLogin(database: EntityManager, body: unknown) {
 	const { email, password, errors } = readLogin(body);
 
 	if (hasErrors(errors)) {
-		return { ok: false as const, errors };
+		return { data: null, errors };
 	}
 
 	const user = await loginUser(database, email, password);
 	if (!user) {
-		return { ok: false as const, errors: { email: ['Invalid credentials'] } };
+		return { data: null, errors: { email: ['Invalid credentials'] } };
 	}
 
-	return { ok: true as const, user };
+	return { data: { user }, errors: null };
 }
 
 /**
@@ -338,20 +329,20 @@ export async function attemptRegister(database: EntityManager, body: unknown) {
 	const { name, email, password, errors } = readRegister(body);
 
 	if (hasErrors(errors)) {
-		return { ok: false as const, errors };
+		return { data: null, errors };
 	}
 
 	const result = await registerUser(database, name, email, password);
-	if (result.alreadyExists) {
-		return { ok: false as const, errors: { email: ['Email already taken'] } };
+	if (result.errors) {
+		return result;
 	}
 
-	await sendVerificationEmail(result.user, `<p>Welcome to ${variables.APP_NAME}!</p>`);
+	await sendVerificationEmail(result.data.user, `<p>Welcome to ${variables.APP_NAME}!</p>`);
 	await Queue.dispatch('sendWelcomeEmail', {
-		to: result.user.email,
-		name: result.user.name,
+		to: result.data.user.email,
+		name: result.data.user.name,
 	});
-	return { ok: true as const, user: result.user };
+	return result;
 }
 
 /**
@@ -361,34 +352,24 @@ export async function attemptForgotPassword(database: EntityManager, body: unkno
 	const { email, errors } = readForgotPassword(body);
 
 	if (hasErrors(errors)) {
-		return { ok: false as const, errors };
+		return { data: null, errors };
 	}
 
 	await requestPasswordReset(database, email);
-	return { ok: true as const };
+	return { data: { status: 'We have emailed your password reset link!' }, errors: null };
 }
 
 /**
  * Parse reset-password input and attempt to replace the user's password.
  */
 export async function attemptResetPassword(database: EntityManager, body: unknown) {
-	const page = readResetPasswordPage(body);
 	const { token, email, password, errors } = readResetPassword(body);
 
 	if (hasErrors(errors)) {
-		return { ok: false as const, ...page, errors };
+		return { data: null, errors };
 	}
 
-	const result = await resetUserPassword(database, token, email, password);
-	if (!result.ok) {
-		return {
-			ok: false as const,
-			...page,
-			errors: { token: [result.message] },
-		};
-	}
-
-	return { ok: true as const };
+	return resetUserPassword(database, token, email, password);
 }
 
 /**
@@ -397,16 +378,11 @@ export async function attemptResetPassword(database: EntityManager, body: unknow
 export async function attemptVerifyEmail(database: EntityManager, token: string) {
 	const verification = readVerificationToken(token);
 
-	if (!verification.ok) {
-		return { ok: false as const, error: verification.error };
+	if (verification.errors) {
+		return verification;
 	}
 
-	const result = await verifyUserEmail(database, verification.payload);
-	if (!result.ok) {
-		return { ok: false as const, error: 'invalid' as const };
-	}
-
-	return { ok: true as const };
+	return verifyUserEmail(database, verification.data.payload);
 }
 
 /**
@@ -414,9 +390,16 @@ export async function attemptVerifyEmail(database: EntityManager, token: string)
  */
 export async function resendVerification(user: Pick<User, 'id' | 'email' | 'emailVerifiedAt'>) {
 	if (user.emailVerifiedAt) {
-		return { ok: false as const, status: 'Your email is already verified.' };
+		return { data: { status: 'Your email is already verified.' }, errors: null };
 	}
 
 	await sendVerificationEmail(user, '<p>Please verify your email address.</p>');
-	return { ok: true as const, status: 'A new verification link has been sent to your email address.' };
+	return { data: { status: 'A new verification link has been sent to your email address.' }, errors: null };
 }
+
+
+/** Event handler for AuthRegistered */
+export function onAuthRegistered<T>(ctx: AppContext, payload: T) {
+	// Handle auth registered event
+	ctx.logger.info({ scope: 'onAuthRegistered', message: 'User registered', payload });
+};

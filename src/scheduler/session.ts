@@ -1,4 +1,4 @@
 import { cleanExpiredSessions } from '@/core/session';
-import { Scheduler } from '@/primitives/scheduler';
+import { CronExpression, Scheduler } from '@/primitives/scheduler';
 
-Scheduler.on('0 * * * *', cleanExpiredSessions);
+Scheduler.on(CronExpression.EVERY_HOUR, cleanExpiredSessions, { distributed: true});

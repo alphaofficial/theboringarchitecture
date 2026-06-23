@@ -1,3 +1,4 @@
+import { AppContext } from '@/runtime/context';
 import { loadRelativeDirectory } from '@/runtime/loadRelativeDirectory';
 import { getPrimitiveRuntime, hasPrimitiveRuntime, registerPrimitiveRuntime } from '@/runtime/primitiveRegistry';
 
@@ -5,6 +6,7 @@ export type BusListener = (payload: unknown) => void;
 
 interface BusRuntime {
 	driver: BusDriver;
+	ctx: AppContext;
 	started: boolean;
 }
 
@@ -15,13 +17,14 @@ export interface BusDriver {
 }
 
 /** Configure the bus driver. */
-const configure = (driver: BusDriver): void => {
+const configure = (driver: BusDriver, ctx: AppContext): void => {
 	if (hasPrimitiveRuntime('bus')) {
 		return;
 	}
 
 	registerPrimitiveRuntime<BusRuntime>('bus', {
 		driver,
+		ctx,
 		started: false,
 	});
 };
@@ -44,8 +47,12 @@ const publish = (event: string, payload?: unknown): boolean => {
 };
 
 /** Register a listener for an event. */
-const on = (event: string, listener: BusListener): void => {
-	getPrimitiveRuntime<BusRuntime>('bus').driver.on(event, listener);
+const on = <T = unknown>(event: string, listener: (ctx: AppContext, payload: T) => void): void => {
+	const runtime = getPrimitiveRuntime<BusRuntime>('bus');
+
+	runtime.driver.on(event, payload => {
+		listener(runtime.ctx, payload as T);
+	});
 };
 
 /**

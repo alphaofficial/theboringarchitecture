@@ -14,5 +14,6 @@ export default defineConfig({
 		fileParallelism: false,
 		clearMocks: true,
 		restoreMocks: true,
+		passWithNoTests: true,
 	},
 });
