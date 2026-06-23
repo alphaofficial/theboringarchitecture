@@ -9,7 +9,7 @@ export function injectAuthHelpers(req: Request, _: any, next: NextFunction) {
     req.user = async (): Promise<User | null> => {
         if (!req.user_id()) return null;
 
-        const em = req.orm.em;
+        const em = req.ctx.db;
         return em.findOne(User, { id:  req.user_id() }, {
             cache: 300000, // cache for 5 minutes
         });
