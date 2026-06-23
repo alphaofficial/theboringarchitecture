@@ -3,6 +3,7 @@ import { Scheduler } from '@/primitives/scheduler';
 import ormConfig from '@/database/orm.config';
 import { MikroORM } from '@mikro-orm/core';
 import { bootstrapPrimitives } from '@/runtime/bootstrapPrimitives';
+import { createApplicationCtx } from './context';
 
 let started = false;
 
@@ -12,8 +13,9 @@ export async function startWorker() {
 	}
 
 	const orm = await MikroORM.init(ormConfig);
+	const ctx = createApplicationCtx(orm);
 
-	bootstrapPrimitives(orm, ["queue", "scheduler"]);
+	bootstrapPrimitives(ctx, ["queue", "scheduler"]);
 	Queue.start();
 	Scheduler.start();
 	started = true;

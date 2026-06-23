@@ -12,7 +12,7 @@ import { createSqliteQueueDriver } from '@/runtime/drivers/queue/sqlite';
 import { createNodeCronSchedulerDriver } from '@/runtime/drivers/scheduler/nodeCron';
 import { createLocalDiskDriver } from '@/runtime/drivers/storage/localDisk';
 import { MikroORM } from '@mikro-orm/core';
-import { createApplicationCtx } from '@/runtime/context';
+import { AppContext, createApplicationCtx } from '@/runtime/context';
 
 
 type Primitive = "bus" | "cache" | "mail" | "queue" | "scheduler" | "storage";
@@ -20,9 +20,7 @@ type Primitive = "bus" | "cache" | "mail" | "queue" | "scheduler" | "storage";
 /**
  * Configure the primitive runtimes and load in-process registrations once.
  */
-export function bootstrapPrimitives(orm: MikroORM, primitives?: Primitive[] ): void {
-	const ctx = createApplicationCtx(orm);
-
+export function bootstrapPrimitives(ctx: AppContext, primitives?: Primitive[] ): void {
 	if (!primitives || primitives.length === 0) {
 		Bus.configure(createInMemoryBusDriver(), ctx);
 		Cache.configure(createMemoryCacheDriver());

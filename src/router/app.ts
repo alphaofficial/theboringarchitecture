@@ -21,36 +21,52 @@ export async function createApp() {
 	const orm = await MikroORM.init(ormConfig);
 	const sessionStore = new SessionStore(orm);
 	const app = express();
-	app.use((req, _res, next) => {
-		req.ctx = createApplicationCtx(orm);
-		RequestContext.create(req.ctx.db, next);
-	});
-	bootstrapPrimitives(orm);
+	const ctx = createApplicationCtx(orm);
 
-
+	/** Sets the trust proxy option */
 	app.set('trust proxy', variables.TRUST_PROXY);
 
+	/** Allows each request to receive a fresh ORM context */
+	app.use((_, __, next) => RequestContext.create(ctx.db.fork(), next));
+
+	/** Allows each request to receive the application context */
+	app.use((req, _res, next) => {
+		req.ctx = ctx;
+		next();
+	});
+	
+	/** Makes the application primitives ready for usage */
+	bootstrapPrimitives(ctx);
+
+	/** Adds helmet security headers.
+	 *  CSP is production-only to avoid blocking dev tooling.
+	 */
 	app.use(
 		helmet({
 			contentSecurityPolicy: variables.NODE_ENV === 'production' ? undefined : false,
 		}),
 	);
 
+	/** Compresses text responses before to reduce bytes sent over the network  */
 	app.use(compression());
 
+
+	/** Confirms the http process is running */
 	app.get('/healthz', (_req, res) => {
 		res.status(200).json({ status: 'ok' });
 	});
 
+	/** Confirms the app can reach the database before receiving traffic */
 	app.get('/readyz', async (_req, res) => {
 		try {
-			await orm.em.getConnection().execute('select 1');
+			await ctx.db.getConnection().execute('select 1');
 			res.status(200).json({ status: 'ready' });
 		} catch {
 			res.status(503).json({ status: 'not_ready' });
 		}
 	});
 
+	/** Adds request metadata to the session store for session persistence/auditing. */
 	app.use((req, _, next) => {
 		if (req.sessionID) {
 			sessionStore.setRequestData(req.sessionID, req.ip || '', req.get('User-Agent') || '');
@@ -58,6 +74,7 @@ export async function createApp() {
 		next();
 	});
 
+	/** Configures the session middleware */
 	app.use(
 		session({
 			store: sessionStore,
@@ -74,19 +91,28 @@ export async function createApp() {
 		}),
 	);
 
+	/** Injects authentication helpers into each request */
 	app.use((req, _, next) => {
 		const { injectAuthHelpers } = require('@/middleware/authUtils');
 		injectAuthHelpers(req, _, next);
 	});
 
+	/** Parses JSON request bodies with a limit to prevent oversized payloads. */
 	app.use(express.json({ limit: '100kb' }));
+	/** Parses form submissions with a limit so standard HTML forms work without accepting huge bodies. */
 	app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+	/** Logs each HTTP request and response. */
 	app.use(PinoLogger.instance);
+	/** Serves public assets from disk. */
 	app.use('/', express.static(path.join(process.cwd(), 'public')));
+	/** Rejects unsafe cross-origin state-changing requests before they reach routes. */
 	app.use(verifyOrigin);
+	/** Registers app routes */
 	app.use('/', routes);
+	/** Handles 404 errors */
 	app.use(notFoundHandler);
+	/** Handles global errors */
 	app.use(globalErrorHandler);
 
-	return { app, orm };
+	return { app, ctx };
 }
