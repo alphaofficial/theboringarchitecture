@@ -22,13 +22,8 @@ export async function createApp() {
 	const sessionStore = new SessionStore(orm);
 	const app = express();
 	app.use((req, _res, next) => {
-		try {
-			const ctx = createApplicationCtx(orm);
-			req.ctx = ctx;
-			RequestContext.create(ctx.db, next);
-		} catch (err) {
-			next(err);
-		}
+		req.ctx = createApplicationCtx(orm);
+		RequestContext.create(req.ctx.db, next);
 	});
 	bootstrapPrimitives(orm);
 
