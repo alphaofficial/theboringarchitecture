@@ -54,7 +54,7 @@ env.oneOf = <T extends string>(key: string, values: readonly T[], fallback: T): 
 
 const variables = {
 	NODE_ENV: env.oneOf('NODE_ENV', ['development', 'production', 'test'] as const, 'development'),
-	PORT: env.int('PORT', 3000),
+	PORT: env.int('PORT', 3008),
 	APP_NAME: env('APP_NAME', 'The Boring Architecture')!,
 	APP_URL: env('APP_URL', 'http://localhost:3000')!,
 	TRUST_PROXY: env('TRUST_PROXY', 'loopback')!,

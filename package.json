@@ -22,7 +22,7 @@
     "prework:prod": "npm run build:server",
     "start:dev": "concurrently --names \"pages,server,client,ssr\" --prefix-colors \"yellow,cyan,magenta,blue\" \"npm run pages:watch\" \"npm run start:dev:server\" \"npm run start:dev:client\" \"npm run start:dev:ssr\"",
     "start:dev:client": "vite build --watch",
-    "start:dev:server": "nodemon --exec tsx src/index.ts | pino-pretty",
+    "start:dev:server": "nodemon",
     "start:dev:ssr": "vite build --config vite.ssr.config.mjs --watch",
     "start:prod": "node dist/index.js",
     "test": "vitest run",
