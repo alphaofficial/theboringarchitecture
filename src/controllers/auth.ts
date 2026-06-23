@@ -20,7 +20,7 @@ export async function showRegister(req: Request, res: Response) {
  * Attempt to authenticate the current request and start a session on success.
  */
 export async function login(req: Request, res: Response) {
-	const { data, errors } = await auth.attemptLogin(req.database, req.body);
+	const { data, errors } = await auth.attemptLogin(req.ctx.db, req.body);
 	if (errors) {
 		return res.render('Auth/Login', { errors });
 	}
@@ -33,7 +33,7 @@ export async function login(req: Request, res: Response) {
  * Attempt to register a new user and authenticate them into the current session.
  */
 export async function register(req: Request, res: Response) {
-	const { data, errors } = await auth.attemptRegister(req.database, req.body);
+	const { data, errors } = await auth.attemptRegister(req.ctx.db, req.body);
 	if (errors) {
 		return res.render('Auth/Register', { errors });
 	}
@@ -74,7 +74,7 @@ export async function showForgotPassword(req: Request, res: Response) {
  * Attempt to create and email a password reset link.
  */
 export async function forgotPassword(req: Request, res: Response) {
-	const { data, errors } = await auth.attemptForgotPassword(req.database, req.body);
+	const { data, errors } = await auth.attemptForgotPassword(req.ctx.db, req.body);
 	if (errors) {
 		return res.render('Auth/ForgotPassword', { errors });
 	}
@@ -98,7 +98,7 @@ export async function showResetPassword(req: Request, res: Response) {
  * Attempt to replace the user's password using a reset token.
  */
 export async function resetPassword(req: Request, res: Response) {
-	const { errors } = await auth.attemptResetPassword(req.database, req.body);
+	const { errors } = await auth.attemptResetPassword(req.ctx.db, req.body);
 	if (errors) {
 		const body = req.body as Record<string, unknown>;
 		return res.render('Auth/ResetPassword', {
@@ -124,7 +124,7 @@ export async function showVerifyEmail(req: Request, res: Response) {
  */
 export async function verifyEmail(req: Request, res: Response) {
 	const token = typeof req.params.token === 'string' ? req.params.token : '';
-	const { errors } = await auth.attemptVerifyEmail(req.database, token);
+	const { errors } = await auth.attemptVerifyEmail(req.ctx.db, token);
 
 	if (errors) {
 		const user = await req.user();
