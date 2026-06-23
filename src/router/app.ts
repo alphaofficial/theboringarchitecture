@@ -12,6 +12,7 @@ import { SessionStore, generateSessionToken } from '@/middleware/sessionStore';
 import { verifyOrigin } from '@/middleware/csrf';
 import { notFoundHandler, globalErrorHandler } from '@/middleware/errorHandler';
 import { bootstrapPrimitives } from '@/runtime/bootstrapPrimitives';
+import { createApplicationCtx } from '@/runtime/context';
 
 /**
  * Build the Express application and its shared ORM instance.
@@ -20,7 +21,15 @@ export async function createApp() {
 	const orm = await MikroORM.init(ormConfig);
 	const sessionStore = new SessionStore(orm);
 	const app = express();
-	app.use((_, __, next) => RequestContext.create(orm.em.fork(), next));
+	app.use((req, _res, next) => {
+		try {
+			const ctx = createApplicationCtx(orm);
+			req.ctx = ctx;
+			RequestContext.create(ctx.db, next);
+		} catch (err) {
+			next(err);
+		}
+	});
 	bootstrapPrimitives(orm);
 
 
@@ -46,14 +55,6 @@ export async function createApp() {
 			res.status(503).json({ status: 'not_ready' });
 		}
 	});
-
-	app.use((req, _, next) => {
-		req.orm = orm;
-		req.database = orm.em.fork();
-		req.logger = PinoLogger;
-		next();
-	});
-
 
 	app.use((req, _, next) => {
 		if (req.sessionID) {
