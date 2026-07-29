@@ -4,7 +4,7 @@ module.exports = {
     // Good for web servers, APIs, services needing HTTP load balancing
     {
       name: "Application",
-      script: "./dist/index.js",
+      script: "./dist/app/index.js",
       exec_mode: "cluster",
       instances: 1,
       autorestart: true,

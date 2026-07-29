@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [react()],
   publicDir: false,
   build: {
-    ssr: resolve(__dirname, 'src/views/ssr.tsx'),
+    ssr: resolve(__dirname, 'app/views/ssr.jsx'),
     outDir: 'dist',
     emptyOutDir: false,
     sourcemap: true,
@@ -21,7 +21,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'),
+      '@': resolve(__dirname, './src.js'),
     },
   },
 })
