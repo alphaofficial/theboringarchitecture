@@ -6,7 +6,5 @@
  * @returns {Promise<import('express').Response>} The rendered Inertia response.
  */
 export async function index(req, res) {
-    return res.render('Home', {
-        timestamp: new Date().toISOString(),
-    });
+    return res.render('Home');
 }

@@ -4,7 +4,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import './styles/global.css';
 createInertiaApp({
     resolve: (name) => {
-        const pages = import.meta.glob('./pages/**/*.js', { eager: true });
+        const pages = import.meta.glob('./pages/**/*.jsx', { eager: true });
         return pages[`./pages/${name}.jsx`]?.default;
     },
     setup({ el, App, props }) {
