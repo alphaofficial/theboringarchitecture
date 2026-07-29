@@ -1,5 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
-import Navigation from '../components/Navigation.jsx';
+import PageShell from '@/views/components/PageShell.jsx';
+import { Badge } from '@/views/components/ui/badge';
+import { Card, CardContent } from '@/views/components/ui/card';
 /**
  * Renders links to all users in the example directory.
  *
@@ -9,29 +11,27 @@ import Navigation from '../components/Navigation.jsx';
 export default function Users({ users }) {
     return (<>
 			<Head title="Users"/>
-			<div className="min-h-screen bg-gray-50">
-				<Navigation />
-
-				<main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-					<div className="px-4 py-6 sm:px-0">
-						<div className="overflow-hidden">
-							<div>
-								<h1 className="text-3xl font-light mb-6">Users</h1>
-
-								<div className="grid gap-4">
-									{users.map(user => (<div key={user.id} className="bg-white p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-											<h3 className="text-lg font-medium mb-2">
-												<Link href={`/users/${user.id}`} className="text-gray-900 hover:underline">
-													{user.name}
-												</Link>
-											</h3>
-											<p className="text-gray-600">{user.email}</p>
-										</div>))}
+			<PageShell title="Users" description="Browse the example directory and open a user profile.">
+				<div className="grid gap-4">
+					{users.map(user => (<Card key={user.id} className="rounded-lg border border-border shadow-card">
+							<CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+								<div className="flex items-center gap-4">
+									<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-card text-[13px] font-semibold text-foreground" aria-hidden="true">
+										{user.name.split(' ').map(part => part[0]).join('').slice(0, 2)}
+									</span>
+									<div>
+									<h3 className="text-lg font-semibold tracking-[-0.02em]">
+										<Link href={`/users/${user.id}`} className="text-foreground hover:underline">
+											{user.name}
+										</Link>
+									</h3>
+									<p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
+									</div>
 								</div>
-							</div>
-						</div>
-					</div>
-				</main>
-			</div>
+								<Badge variant="secondary">User #{user.id}</Badge>
+							</CardContent>
+						</Card>))}
+				</div>
+			</PageShell>
 		</>);
 }
