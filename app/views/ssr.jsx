@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { createInertiaApp } from '@inertiajs/react';
-const pages = import.meta.glob('./pages/**/*.js', { eager: true });
+const pages = import.meta.glob('./pages/**/*.jsx', { eager: true });
 /**
  * Server-renders an Inertia page using the generated page-module registry.
  *
