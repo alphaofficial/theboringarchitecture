@@ -1,5 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
-import Navigation from '../components/Navigation.jsx';
+import PageShell from '@/views/components/PageShell.jsx';
+import { Button } from '@/views/components/ui/button';
+import { Card, CardContent } from '@/views/components/ui/card';
 /**
  * Renders details for one example directory user.
  *
@@ -9,34 +11,26 @@ import Navigation from '../components/Navigation.jsx';
 export default function User({ user }) {
     return (<>
 			<Head title={`User: ${user.name}`}/>
-			<div className="min-h-screen bg-gray-50">
-				<Navigation />
-				
-				<main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-					<div className="px-4 py-6 sm:px-0">
-						<div className="mb-4">
-							<Link href="/users" className="text-gray-600 hover:text-gray-900 hover:underline">
+			<PageShell title={user.name} description="User profile details from the example directory." actions={<Button asChild variant="outline"><Link href="/users">← Back to Users</Link></Button>}>
+				<Card className="rounded-lg border border-border shadow-card">
+					<CardContent className="p-6">
+						<div className="mb-6 sm:hidden">
+							<Link href="/users" className="text-sm font-medium text-muted-foreground hover:text-foreground hover:underline">
 								← Back to Users
 							</Link>
 						</div>
-
-						<div className="bg-white overflow-hidden shadow rounded-lg">
-							<div className="px-4 py-5 sm:p-6">
-								<h1 className="text-3xl font-light mb-4">{user.name}</h1>
-								<div className="space-y-3">
-									<div>
-										<span className="font-medium text-gray-700">Email:</span>
-										<span className="ml-2 text-gray-600">{user.email}</span>
-									</div>
-									<div>
-										<span className="font-medium text-gray-700">User ID:</span>
-										<span className="ml-2 text-gray-600">{user.id}</span>
-									</div>
-								</div>
+						<div className="grid gap-4 sm:grid-cols-2">
+							<div className="rounded-md bg-surface-card p-4">
+								<span className="text-sm font-medium text-muted-foreground">Email:</span>
+								<span className="mt-2 block text-sm font-semibold text-foreground">{user.email}</span>
+							</div>
+							<div className="rounded-md bg-surface-card p-4">
+								<span className="text-sm font-medium text-muted-foreground">User ID:</span>
+								<span className="mt-2 block text-sm font-semibold text-foreground">{user.id}</span>
 							</div>
 						</div>
-					</div>
-				</main>
-			</div>
+					</CardContent>
+				</Card>
+			</PageShell>
 		</>);
 }

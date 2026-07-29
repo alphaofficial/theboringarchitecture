@@ -1,12 +1,154 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @font-face {
-	font-family: 'Fraunces';
+	font-family: 'Cal Sans Display';
 	font-style: normal;
-	font-weight: 100 900;
+	font-weight: 600;
 	font-display: swap;
-	src: url('/fonts/fraunces-latin.woff2') format('woff2');
-	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+	src: url('/fonts/cal-sans-display-semibold.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Cal Sans UI';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('/fonts/cal-sans-ui-variable.woff2') format('woff2');
+}
+
+@layer base {
+  .theme {
+		--font-heading: 'Cal Sans Display', 'Inter Variable', sans-serif;
+		--font-sans: -apple-system, BlinkMacSystemFont, 'Cal Sans UI', 'Inter Variable', 'Segoe UI', sans-serif;
+	}
+  :root {
+		--canvas: #ffffff;
+		--ink: #111111;
+		--body: #374151;
+		--surface-soft: #f8f9fa;
+		--surface-card: #f5f5f5;
+		--surface-strong: #e5e7eb;
+		--surface-dark: #101010;
+		--surface-dark-elevated: #1a1a1a;
+		--hairline: #e5e7eb;
+		--background: var(--canvas);
+		--foreground: var(--ink);
+		--card: var(--canvas);
+		--card-foreground: var(--ink);
+		--popover: var(--canvas);
+		--popover-foreground: var(--ink);
+		--primary: #111111;
+		--primary-active: #242424;
+		--primary-foreground: #ffffff;
+		--secondary: var(--canvas);
+		--secondary-foreground: var(--ink);
+		--muted: var(--surface-card);
+		--muted-foreground: #6b7280;
+		--accent: var(--surface-soft);
+		--accent-foreground: var(--ink);
+		--destructive: #ef4444;
+		--success: #10b981;
+		--warning: #f59e0b;
+		--error: #ef4444;
+		--border: var(--hairline);
+		--input: var(--hairline);
+		--ring: var(--ink);
+		--chart-1: oklch(0.865 0.127 207.078);
+		--chart-2: oklch(0.715 0.143 215.221);
+		--chart-3: oklch(0.609 0.126 221.723);
+		--chart-4: oklch(0.52 0.105 223.128);
+		--chart-5: oklch(0.45 0.085 224.283);
+		--radius: 0.5rem;
+		--sidebar: oklch(0.987 0.002 197.1);
+		--sidebar-foreground: oklch(0.148 0.004 228.8);
+		--sidebar-primary: #111111;
+		--sidebar-primary-foreground: #ffffff;
+		--sidebar-accent: oklch(0.963 0.002 197.1);
+		--sidebar-accent-foreground: oklch(0.218 0.008 223.9);
+		--sidebar-border: oklch(0.925 0.005 214.3);
+		--sidebar-ring: oklch(0.723 0.014 214.4);
+	}
+  .dark {
+		--background: oklch(0.148 0.004 228.8);
+		--foreground: oklch(0.987 0.002 197.1);
+		--card: oklch(0.218 0.008 223.9);
+		--card-foreground: oklch(0.987 0.002 197.1);
+		--popover: oklch(0.218 0.008 223.9);
+		--popover-foreground: oklch(0.987 0.002 197.1);
+		--primary: oklch(0.45 0.085 224.283);
+		--primary-foreground: oklch(0.984 0.019 200.873);
+		--secondary: oklch(0.274 0.006 286.033);
+		--secondary-foreground: oklch(0.985 0 0);
+		--muted: oklch(0.275 0.011 216.9);
+		--muted-foreground: oklch(0.723 0.014 214.4);
+		--accent: oklch(0.275 0.011 216.9);
+		--accent-foreground: oklch(0.987 0.002 197.1);
+		--destructive: oklch(0.704 0.191 22.216);
+		--border: oklch(1 0 0 / 10%);
+		--input: oklch(1 0 0 / 15%);
+		--ring: oklch(0.56 0.021 213.5);
+		--chart-1: oklch(0.865 0.127 207.078);
+		--chart-2: oklch(0.715 0.143 215.221);
+		--chart-3: oklch(0.609 0.126 221.723);
+		--chart-4: oklch(0.52 0.105 223.128);
+		--chart-5: oklch(0.45 0.085 224.283);
+		--sidebar: oklch(0.218 0.008 223.9);
+		--sidebar-foreground: oklch(0.987 0.002 197.1);
+		--sidebar-primary: oklch(0.715 0.143 215.221);
+		--sidebar-primary-foreground: oklch(0.302 0.056 229.695);
+		--sidebar-accent: oklch(0.275 0.011 216.9);
+		--sidebar-accent-foreground: oklch(0.987 0.002 197.1);
+		--sidebar-border: oklch(1 0 0 / 10%);
+		--sidebar-ring: oklch(0.56 0.021 213.5);
+	}
+  * {
+		@apply border-border;
+		box-sizing: border-box;
+  }
+  body {
+    @apply m-0 bg-background font-sans text-body antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: 'Cal Sans Display', 'Inter Variable', sans-serif;
+    font-weight: 600;
+		color: var(--ink);
+	}
+  html {
+    @apply scroll-smooth font-sans;
+	}
+	button,
+	input,
+	textarea,
+	select {
+		font: inherit;
+	}
+	::selection {
+		background: #111111;
+		color: #ffffff;
+	}
+}
+
+@layer components {
+	.display-xl {
+		@apply font-display text-[2.75rem] font-semibold leading-[1.05] tracking-[-1.5px] sm:text-6xl sm:tracking-[-2px];
+	}
+
+	.display-lg {
+		@apply font-display text-4xl font-semibold leading-[1.1] tracking-[-1px] sm:text-5xl sm:tracking-[-1.5px];
+	}
+
+	.display-md {
+		@apply font-display text-3xl font-semibold leading-[1.15] tracking-[-1px] sm:text-4xl;
+	}
+
+	.display-sm {
+		@apply font-display text-[1.75rem] font-semibold leading-[1.2] tracking-[-0.5px];
+	}
 }

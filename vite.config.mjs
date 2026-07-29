@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
     mode: mode,
     resolve: {
       alias: {
-        '@': resolve(__dirname, './src.js')
+        '@': resolve(__dirname, './app')
       }
     },
   }

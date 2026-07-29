@@ -1,4 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
+import { Button } from '@/views/components/ui/button';
+import { Card, CardContent } from '@/views/components/ui/card';
 const titles = {
     404: 'Page not found',
     500: 'Server error',
@@ -17,13 +19,14 @@ export default function ErrorPage({ status = 500, message, stack }) {
     const isDev = Boolean(stack);
     return (<>
 			<Head title={`${status} — ${title}`}/>
-			<div className="min-h-screen bg-white flex items-center justify-center px-6 py-12">
+			<div className="flex min-h-screen items-center justify-center bg-background px-6 py-12 text-foreground">
 				<div className={isDev ? 'w-full max-w-3xl' : 'text-center max-w-md'}>
-					<p className="text-sm font-semibold text-gray-500">{status}</p>
-					<h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+					<p className="text-sm font-semibold text-muted-foreground">{status}</p>
+					<h1 className="display-md mt-2 text-foreground">
 						{title}
 					</h1>
-					{isDev ? (<div className="mt-6 overflow-hidden rounded-lg border border-gray-800 bg-[#1e1e1e] text-left shadow-xl">
+					{isDev ? (<Card className="mt-6 overflow-hidden rounded-lg border border-white/10 bg-surface-dark text-left shadow-card">
+							<CardContent className="p-0">
 							<div className="flex items-center gap-1.5 border-b border-gray-800 bg-[#2d2d2d] px-4 py-2.5">
 								<span className="h-3 w-3 rounded-full bg-[#ff5f56]"/>
 								<span className="h-3 w-3 rounded-full bg-[#ffbd2e]"/>
@@ -40,11 +43,12 @@ export default function ErrorPage({ status = 500, message, stack }) {
 									{stack ? <span className="text-gray-400">{stack}</span> : null}
 								</code>
 							</pre>
-						</div>) : (message && <p className="mt-4 text-base text-gray-600">{message}</p>)}
+							</CardContent>
+						</Card>) : (message && <p className="mt-4 text-base text-muted-foreground">{message}</p>)}
 					<div className={`mt-8 ${isDev ? '' : 'text-center'}`}>
-						<Link href="/" className="rounded-md bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800">
-							Go home
-						</Link>
+						<Button asChild>
+							<Link href="/">Go home</Link>
+						</Button>
 					</div>
 				</div>
 			</div>

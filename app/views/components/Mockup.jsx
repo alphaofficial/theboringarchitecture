@@ -1,12 +1,12 @@
 import { useState } from 'react';
 const IDE_FILES = {
     'public.js': {
-        lang: 'TypeScript',
+        lang: 'JavaScript',
         lines: [
-            { n: 1, t: <><span className="text-[#c586c0]">import</span> {'{'} Request, Response {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;express&apos;</span></> },
+            { n: 1, t: <><span className="text-[#6a9955]">// app/controllers/public.js</span></> },
             { n: 2, t: <><span className="text-[#c586c0]">import</span> {'{'} renderPage {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/primitives/inertia&apos;</span></> },
             { n: 3, t: '' },
-            { n: 4, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">index</span>(req: Request, res: Response) {'{'}</> },
+            { n: 4, t: <><span className="text-[#c586c0]">export function</span> <span className="text-[#dcdcaa]">index</span>(req, res) {'{'}</> },
             { n: 5, t: <span className="pl-4"><span className="text-[#c586c0]">return</span> <span className="text-[#dcdcaa]">renderPage</span>(req, res, <span className="text-[#ce9178]">&apos;Home&apos;</span>, {'{'}</span> },
             { n: 6, t: <span className="pl-8">timestamp: <span className="text-[#c586c0]">new</span> <span className="text-[#4ec9b0]">Date</span>().<span className="text-[#dcdcaa]">toISOString</span>(),</span> },
             { n: 7, t: <span className="pl-4">{'}'})</span> },
@@ -14,46 +14,46 @@ const IDE_FILES = {
         ],
     },
     'users.js': {
-        lang: 'TypeScript',
+        lang: 'JavaScript',
         lines: [
-            { n: 1, t: <><span className="text-[#c586c0]">import</span> {'{'} Request, Response {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;express&apos;</span></> },
+            { n: 1, t: <><span className="text-[#6a9955]">// app/controllers/users.js</span></> },
             { n: 2, t: <><span className="text-[#c586c0]">import</span> {'{'} renderPage {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/primitives/inertia&apos;</span></> },
             { n: 3, t: '' },
             { n: 4, t: <><span className="text-[#c586c0]">const</span> users = [{'{'} id: <span className="text-[#b5cea8]">1</span>, name: <span className="text-[#ce9178]">&apos;Alice&apos;</span> {'}'}]</> },
             { n: 5, t: '' },
-            { n: 6, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">index</span>(req: Request, res: Response) {'{'}</> },
+            { n: 6, t: <><span className="text-[#c586c0]">export function</span> <span className="text-[#dcdcaa]">index</span>(req, res) {'{'}</> },
             { n: 7, t: <span className="pl-4"><span className="text-[#c586c0]">return</span> <span className="text-[#dcdcaa]">renderPage</span>(req, res, <span className="text-[#ce9178]">&apos;Users&apos;</span>, {'{'} users {'}'})</span> },
             { n: 8, t: '}' },
             { n: 9, t: '' },
-            { n: 10, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">show</span>(req: Request, res: Response) {'{'}</> },
+            { n: 10, t: <><span className="text-[#c586c0]">export function</span> <span className="text-[#dcdcaa]">show</span>(req, res) {'{'}</> },
             { n: 11, t: <span className="pl-4"><span className="text-[#c586c0]">const</span> user = users.<span className="text-[#dcdcaa]">find</span>(entry =&gt; entry.id === <span className="text-[#dcdcaa]">parseInt</span>(req.params.id))</span> },
             { n: 12, t: <span className="pl-4"><span className="text-[#c586c0]">return</span> <span className="text-[#dcdcaa]">renderPage</span>(req, res, <span className="text-[#ce9178]">&apos;User&apos;</span>, {'{'} user {'}'})</span> },
             { n: 13, t: '}' },
         ],
     },
     'auth.js': {
-        lang: 'TypeScript',
+        lang: 'JavaScript',
         lines: [
-            { n: 1, t: <><span className="text-[#c586c0]">import</span> {'{'} Request, Response {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;express&apos;</span></> },
+            { n: 1, t: <><span className="text-[#6a9955]">// app/controllers/auth.js</span></> },
             { n: 2, t: <><span className="text-[#c586c0]">import</span> {'{'} renderPage {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/primitives/inertia&apos;</span></> },
             { n: 3, t: <><span className="text-[#c586c0]">import</span> variables <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/config/variables&apos;</span></> },
             { n: 4, t: <><span className="text-[#c586c0]">import</span> {'{'} loginUser, registerUser {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/core/auth&apos;</span></> },
             { n: 5, t: <><span className="text-[#c586c0]">import</span> {'{'} readLogin, readRegister {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/controllers/auth&apos;</span></> },
             { n: 6, t: '' },
             { n: 7, t: '' },
-            { n: 8, t: <><span className="text-[#c586c0]">export function</span> <span className="text-[#dcdcaa]">showLogin</span>(req: Request, res: Response) {'{'} <span className="text-[#c586c0]">return</span> <span className="text-[#dcdcaa]">renderPage</span>(req, res, <span className="text-[#ce9178]">&apos;Auth/Login&apos;</span>) {'}'}</> },
-            { n: 9, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">login</span>(req: Request, res: Response) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
-            { n: 10, t: <><span className="text-[#c586c0]">export function</span> <span className="text-[#dcdcaa]">showRegister</span>(req: Request, res: Response) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
-            { n: 11, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">register</span>(req: Request, res: Response) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
-            { n: 12, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">forgotPassword</span>(req: Request, res: Response) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
-            { n: 13, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">resetPassword</span>(req: Request, res: Response) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
-            { n: 14, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">verifyEmail</span>(req: Request, res: Response) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
-            { n: 15, t: <><span className="text-[#c586c0]">export function</span> <span className="text-[#dcdcaa]">dashboard</span>(req: Request, res: Response) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
-            { n: 16, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">logout</span>(req: Request, res: Response) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
+            { n: 8, t: <><span className="text-[#c586c0]">export function</span> <span className="text-[#dcdcaa]">showLogin</span>(req, res) {'{'} <span className="text-[#c586c0]">return</span> <span className="text-[#dcdcaa]">renderPage</span>(req, res, <span className="text-[#ce9178]">&apos;Auth/Login&apos;</span>) {'}'}</> },
+            { n: 9, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">login</span>(req, res) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
+            { n: 10, t: <><span className="text-[#c586c0]">export function</span> <span className="text-[#dcdcaa]">showRegister</span>(req, res) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
+            { n: 11, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">register</span>(req, res) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
+            { n: 12, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">forgotPassword</span>(req, res) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
+            { n: 13, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">resetPassword</span>(req, res) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
+            { n: 14, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">verifyEmail</span>(req, res) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
+            { n: 15, t: <><span className="text-[#c586c0]">export function</span> <span className="text-[#dcdcaa]">dashboard</span>(req, res) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
+            { n: 16, t: <><span className="text-[#c586c0]">export async function</span> <span className="text-[#dcdcaa]">logout</span>(req, res) {'{'} <span className="text-[#6a9955]">/* ... */</span> {'}'}</> },
         ],
     },
     'route.js': {
-        lang: 'TypeScript',
+        lang: 'JavaScript',
         lines: [
             { n: 1, t: <><span className="text-[#c586c0]">import</span> {'{'} Router {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;express&apos;</span></> },
             { n: 2, t: <><span className="text-[#c586c0]">import</span> * <span className="text-[#c586c0]">as</span> publicPages <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/controllers/public&apos;</span></> },
@@ -80,7 +80,7 @@ const IDE_FILES = {
         ],
     },
     'Dashboard.jsx': {
-        lang: 'TypeScript React',
+        lang: 'JavaScript React',
         lines: [
             { n: 1, t: <><span className="text-[#c586c0]">import</span> Navigation <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/views/components/Navigation&apos;</span></> },
             { n: 2, t: <><span className="text-[#c586c0]">import</span> {'{'} usePage {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@inertiajs/react&apos;</span></> },
@@ -101,15 +101,15 @@ const IDE_FILES = {
         ],
     },
     'Users.jsx': {
-        lang: 'TypeScript React',
+        lang: 'JavaScript React',
         lines: [
             { n: 1, t: <><span className="text-[#c586c0]">import</span> {'{'} Link {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@inertiajs/react&apos;</span></> },
             { n: 2, t: '' },
-            { n: 3, t: <><span className="text-[#c586c0]">interface</span> <span className="text-[#4ec9b0]">Props</span> {'{'}</> },
-            { n: 4, t: <span className="pl-4">users: {'{'} id: <span className="text-[#4ec9b0]">number</span>; name: <span className="text-[#4ec9b0]">string</span>; email: <span className="text-[#4ec9b0]">string</span> {'}'}[]</span> },
-            { n: 5, t: '}' },
+            { n: 3, t: '' },
+            { n: 4, t: '' },
+            { n: 5, t: '' },
             { n: 6, t: '' },
-            { n: 7, t: <><span className="text-[#c586c0]">export default function</span> <span className="text-[#dcdcaa]">Users</span>({'{'} users {'}'}: <span className="text-[#4ec9b0]">Props</span>) {'{'}</> },
+            { n: 7, t: <><span className="text-[#c586c0]">export default function</span> <span className="text-[#dcdcaa]">Users</span>({'{'} users {'}'}) {'{'}</> },
             { n: 8, t: <span className="pl-4"><span className="text-[#c586c0]">return</span> (</span> },
             { n: 9, t: <span className="pl-8"><span className="text-[#808080]">&lt;</span><span className="text-[#569cd6]">ul</span><span className="text-[#808080]">&gt;</span></span> },
             { n: 10, t: <span className="pl-12">{'{'}users.<span className="text-[#dcdcaa]">map</span>(u =&gt; (</span> },
@@ -123,7 +123,7 @@ const IDE_FILES = {
         ],
     },
     'index.js': {
-        lang: 'TypeScript',
+        lang: 'JavaScript',
         lines: [
             { n: 1, t: <><span className="text-[#c586c0]">import</span> express <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;express&apos;</span></> },
             { n: 2, t: <><span className="text-[#c586c0]">import</span> routes <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/router/route&apos;</span></> },
@@ -138,19 +138,19 @@ const IDE_FILES = {
         ],
     },
     'User.js': {
-        lang: 'TypeScript',
+        lang: 'JavaScript',
         lines: [
             { n: 1, t: <><span className="text-[#c586c0]">export class</span> <span className="text-[#4ec9b0]">User</span> {'{'}</> },
-            { n: 2, t: <span className="pl-4">id: <span className="text-[#4ec9b0]">string</span></span> },
-            { n: 3, t: <span className="pl-4">name: <span className="text-[#4ec9b0]">string</span></span> },
-            { n: 4, t: <span className="pl-4">email: <span className="text-[#4ec9b0]">string</span></span> },
-            { n: 5, t: <span className="pl-4">password: <span className="text-[#4ec9b0]">string</span></span> },
-            { n: 6, t: <span className="pl-4">emailVerifiedAt?: <span className="text-[#4ec9b0]">Date</span></span> },
-            { n: 7, t: <span className="pl-4">rememberToken?: <span className="text-[#4ec9b0]">string</span></span> },
-            { n: 8, t: <span className="pl-4">createdAt: <span className="text-[#4ec9b0]">Date</span> = <span className="text-[#c586c0]">new</span> <span className="text-[#4ec9b0]">Date</span>()</span> },
-            { n: 9, t: <span className="pl-4">updatedAt: <span className="text-[#4ec9b0]">Date</span> = <span className="text-[#c586c0]">new</span> <span className="text-[#4ec9b0]">Date</span>()</span> },
+            { n: 2, t: <span className="pl-4">emailVerifiedAt</span> },
+            { n: 3, t: <span className="pl-4">rememberToken</span> },
+            { n: 4, t: <span className="pl-4">createdAt = <span className="text-[#c586c0]">new</span> <span className="text-[#4ec9b0]">Date</span>()</span> },
+            { n: 5, t: <span className="pl-4">updatedAt = <span className="text-[#c586c0]">new</span> <span className="text-[#4ec9b0]">Date</span>()</span> },
+            { n: 6, t: '' },
+            { n: 7, t: '' },
+            { n: 8, t: '' },
+            { n: 9, t: '' },
             { n: 10, t: '' },
-            { n: 11, t: <span className="pl-4"><span className="text-[#dcdcaa]">constructor</span>(id: <span className="text-[#4ec9b0]">string</span>, name: <span className="text-[#4ec9b0]">string</span>, email: <span className="text-[#4ec9b0]">string</span>, password: <span className="text-[#4ec9b0]">string</span>) {'{'}</span> },
+            { n: 11, t: <span className="pl-4"><span className="text-[#dcdcaa]">constructor</span>(id, name, email, password) {'{'}</span> },
             { n: 12, t: <span className="pl-8"><span className="text-[#569cd6]">this</span>.id = id</span> },
             { n: 13, t: <span className="pl-8"><span className="text-[#569cd6]">this</span>.name = name</span> },
             { n: 14, t: <span className="pl-8"><span className="text-[#569cd6]">this</span>.email = email</span> },
@@ -160,30 +160,30 @@ const IDE_FILES = {
         ],
     },
     'PasswordReset.js': {
-        lang: 'TypeScript',
+        lang: 'JavaScript',
         lines: [
             { n: 1, t: <><span className="text-[#c586c0]">export class</span> <span className="text-[#4ec9b0]">PasswordReset</span> {'{'}</> },
-            { n: 2, t: <span className="pl-4">email!: <span className="text-[#4ec9b0]">string</span></span> },
-            { n: 3, t: <span className="pl-4">tokenHash!: <span className="text-[#4ec9b0]">string</span></span> },
-            { n: 4, t: <span className="pl-4">createdAt: <span className="text-[#4ec9b0]">Date</span> = <span className="text-[#c586c0]">new</span> <span className="text-[#4ec9b0]">Date</span>()</span> },
+            { n: 2, t: <span className="pl-4">email</span> },
+            { n: 3, t: <span className="pl-4">tokenHash</span> },
+            { n: 4, t: <span className="pl-4">createdAt = <span className="text-[#c586c0]">new</span> <span className="text-[#4ec9b0]">Date</span>()</span> },
             { n: 5, t: '}' },
         ],
     },
     'Session.js': {
-        lang: 'TypeScript',
+        lang: 'JavaScript',
         lines: [
             { n: 1, t: <><span className="text-[#c586c0]">export class</span> <span className="text-[#4ec9b0]">Session</span> {'{'}</> },
-            { n: 2, t: <span className="pl-4">id!: <span className="text-[#4ec9b0]">string</span></span> },
-            { n: 3, t: <span className="pl-4">user_id?: <span className="text-[#4ec9b0]">string</span></span> },
-            { n: 4, t: <span className="pl-4">ip_address?: <span className="text-[#4ec9b0]">string</span></span> },
-            { n: 5, t: <span className="pl-4">user_agent?: <span className="text-[#4ec9b0]">string</span></span> },
-            { n: 6, t: <span className="pl-4">payload!: <span className="text-[#4ec9b0]">string</span></span> },
-            { n: 7, t: <span className="pl-4">last_activity!: <span className="text-[#4ec9b0]">number</span></span> },
+            { n: 2, t: <span className="pl-4">id</span> },
+            { n: 3, t: <span className="pl-4">userId</span> },
+            { n: 4, t: <span className="pl-4">ipAddress</span> },
+            { n: 5, t: <span className="pl-4">userAgent</span> },
+            { n: 6, t: <span className="pl-4">payload</span> },
+            { n: 7, t: <span className="pl-4">lastActivity</span> },
             { n: 8, t: '}' },
         ],
     },
     'orm.config.js': {
-        lang: 'TypeScript',
+        lang: 'JavaScript',
         lines: [
             { n: 1, t: <><span className="text-[#c586c0]">import</span> {'{'} defineConfig {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@mikro-orm/core&apos;</span></> },
             { n: 2, t: <><span className="text-[#c586c0]">import</span> {'{'} SqliteDriver {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@mikro-orm/sqlite&apos;</span></> },
@@ -197,12 +197,12 @@ const IDE_FILES = {
         ],
     },
     'Mailer.js': {
-        lang: 'TypeScript',
+        lang: 'JavaScript',
         lines: [
             { n: 1, t: <><span className="text-[#c586c0]">import</span> nodemailer <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;nodemailer&apos;</span></> },
             { n: 2, t: '' },
             { n: 3, t: <><span className="text-[#c586c0]">export class</span> <span className="text-[#4ec9b0]">Mailer</span> {'{'}</> },
-            { n: 4, t: <span className="pl-4"><span className="text-[#c586c0]">static async</span> <span className="text-[#dcdcaa]">send</span>(to: <span className="text-[#4ec9b0]">string</span>, subject: <span className="text-[#4ec9b0]">string</span>, html: <span className="text-[#4ec9b0]">string</span>) {'{'}</span> },
+            { n: 4, t: <span className="pl-4"><span className="text-[#c586c0]">static async</span> <span className="text-[#dcdcaa]">send</span>(to, subject, html) {'{'}</span> },
             { n: 5, t: <span className="pl-8"><span className="text-[#c586c0]">const</span> transport = nodemailer.<span className="text-[#dcdcaa]">createTransport</span>(config.mail)</span> },
             { n: 6, t: <span className="pl-8"><span className="text-[#c586c0]">await</span> transport.<span className="text-[#dcdcaa]">sendMail</span>({'{'} to, subject, html {'}'})</span> },
             { n: 7, t: <span className="pl-4">{'}'}</span> },
@@ -210,29 +210,29 @@ const IDE_FILES = {
         ],
     },
     'sendWelcomeEmail.js': {
-        lang: 'TypeScript',
+        lang: 'JavaScript',
         lines: [
             { n: 1, t: <><span className="text-[#c586c0]">import</span> {'{'} Mailer {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/mail/Mailer&apos;</span></> },
             { n: 2, t: <><span className="text-[#c586c0]">import</span> {'{'} User {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/models/User&apos;</span></> },
             { n: 3, t: '' },
-            { n: 4, t: <><span className="text-[#c586c0]">export default async function</span> <span className="text-[#dcdcaa]">SendWelcomeEmail</span>(user: <span className="text-[#4ec9b0]">User</span>) {'{'}</> },
+            { n: 4, t: <><span className="text-[#c586c0]">export default async function</span> <span className="text-[#dcdcaa]">SendWelcomeEmail</span>(user) {'{'}</> },
             { n: 5, t: <span className="pl-4"><span className="text-[#c586c0]">await</span> Mailer.<span className="text-[#dcdcaa]">send</span>(user.email, <span className="text-[#ce9178]">&apos;Welcome!&apos;</span>, <span className="text-[#ce9178]">{"`Welcome, ${'{'}user.name${'}'}`"}</span>)</span> },
             { n: 6, t: '}' },
         ],
     },
     'processUpload.js': {
-        lang: 'TypeScript',
+        lang: 'JavaScript',
         lines: [
             { n: 1, t: <><span className="text-[#c586c0]">import</span> {'{'} Storage {'}'} <span className="text-[#c586c0]">from</span> <span className="text-[#ce9178]">&apos;@/primitives/storage&apos;</span></> },
             { n: 2, t: '' },
-            { n: 3, t: <><span className="text-[#c586c0]">export default async function</span> <span className="text-[#dcdcaa]">ProcessUpload</span>(payload: {'{'} path: <span className="text-[#4ec9b0]">string</span>; key: <span className="text-[#4ec9b0]">string</span> {'}'}) {'{'}</> },
+            { n: 3, t: <><span className="text-[#c586c0]">export default async function</span> <span className="text-[#dcdcaa]">ProcessUpload</span>(payload) {'{'}</> },
             { n: 4, t: <span className="pl-4"><span className="text-[#c586c0]">const</span> file = <span className="text-[#c586c0]">await</span> Storage.<span className="text-[#dcdcaa]">get</span>(payload.path)</span> },
             { n: 5, t: <span className="pl-4"><span className="text-[#c586c0]">await</span> Storage.<span className="text-[#dcdcaa]">put</span>(payload.key, file)</span> },
             { n: 6, t: '}' },
         ],
     },
     'pages.js': {
-        lang: 'TypeScript',
+        lang: 'JavaScript',
         lines: [
             { n: 1, t: <><span className="text-[#6a9955]">// Auto-generated page registry</span></> },
             { n: 2, t: '' },
@@ -246,9 +246,9 @@ const IDE_FILES = {
         ],
     },
     'variables.js': {
-        lang: 'TypeScript',
+        lang: 'JavaScript',
         lines: [
-            { n: 1, t: <><span className="text-[#c586c0]">function</span> <span className="text-[#dcdcaa]">readNumber</span>(key: string, fallback: number) {'{'}</> },
+            { n: 1, t: <><span className="text-[#c586c0]">function</span> <span className="text-[#dcdcaa]">readNumber</span>(key, fallback) {'{'}</> },
             { n: 2, t: <span className="pl-4"><span className="text-[#c586c0]">const</span> raw = process.env[key]</span> },
             { n: 3, t: <span className="pl-4"><span className="text-[#c586c0]">const</span> value = raw ? <span className="text-[#dcdcaa]">Number</span>(raw) : fallback</span> },
             { n: 4, t: <span className="pl-4"><span className="text-[#c586c0]">if</span> (<span className="text-[#dcdcaa]">Number</span>.<span className="text-[#dcdcaa]">isNaN</span>(value)) <span className="text-[#c586c0]">throw</span> <span className="text-[#c586c0]">new</span> <span className="text-[#dcdcaa]">Error</span>(<span className="text-[#ce9178]">&apos;PORT must be a number&apos;</span>)</span> },
@@ -325,7 +325,7 @@ export default function IDEMockup() {
         }
         return true;
     };
-    return (<figure aria-labelledby="how-it-works-pipeline-title" className="mx-auto mt-16 overflow-hidden rounded-xl border border-[#1e1e1e] shadow-2xl shadow-slate-900/30" data-testid="how-it-works-pipeline">
+    return (<figure aria-labelledby="how-it-works-pipeline-title" className="mx-auto mt-16 overflow-hidden rounded-xl border border-border shadow-sm" data-testid="how-it-works-pipeline">
 			<figcaption id="how-it-works-pipeline-title" className="sr-only">
 				From install to running app in three steps
 			</figcaption>
@@ -365,7 +365,7 @@ export default function IDEMockup() {
 				<div className="min-w-0 flex-1 bg-[#1e1e1e]">
 					
 					<div className="flex border-b border-[#2d2d2d]">
-						<div className="flex items-center gap-x-2 border-b-2 border-rose-500 bg-[#1e1e1e] px-4 py-2 font-mono text-xs text-white">
+						<div className="flex items-center gap-x-2 border-b-2 border-white bg-[#1e1e1e] px-4 py-2 font-mono text-xs text-white">
 							<span className="text-[10px] text-[#519aba]">{activeFile.endsWith('.jsx') ? 'TSX' : 'TS'}</span>
 							{activeFile}
 						</div>
