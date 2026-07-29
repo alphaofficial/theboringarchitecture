@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
       outDir: 'public',
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
-        input: resolve(__dirname, 'src/views/main.tsx'),
+        input: resolve(__dirname, 'app/views/main.jsx'),
         output: {
           entryFileNames: 'app.js',
           chunkFileNames: '[name].js',
@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
     mode: mode,
     resolve: {
       alias: {
-        '@': resolve(__dirname, './src')
+        '@': resolve(__dirname, './src.js')
       }
     },
   }
