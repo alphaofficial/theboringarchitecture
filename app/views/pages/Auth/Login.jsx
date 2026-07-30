@@ -1,10 +1,8 @@
-import { Link, useForm } from '@inertiajs/react';
+import { Link, router, useForm } from '@inertiajs/react';
 import AuthShell from '@/views/components/AuthShell';
 import { Button } from '@/views/components/ui/button';
 import { Input } from '@/views/components/ui/input';
 import { Label } from '@/views/components/ui/label';
-const ADMIN_EMAIL = 'admin@example.com';
-const ADMIN_PASSWORD = 'admin-password';
 /**
  * Renders the login form and development administrator shortcut.
  *
@@ -21,13 +19,9 @@ export default function Login({ status, errors }) {
         post('/login');
     };
     const handleAdminLogin = () => {
-        setData({
-            email: ADMIN_EMAIL,
-            password: ADMIN_PASSWORD
-        });
-        post('/login');
+        router.visit('/login/admin');
     };
-    return (<AuthShell title="Welcome back" description={<>Don't have an account? <Link href="/register" className="font-medium text-foreground underline-offset-4 hover:underline">Sign up</Link></>}>
+    return (<AuthShell eyebrow={null} title="Welcome back" description={<>Don't have an account? <Link href="/register" className="font-medium text-foreground underline-offset-4 hover:underline">Sign up</Link></>}>
         {status && <div className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{status}</div>}
         <form className="space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-2">

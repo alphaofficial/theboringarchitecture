@@ -10,11 +10,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/views/components/ui/
 export default function Dashboard() {
     const { props } = usePage();
     const { user } = props;
-    return (<PageShell title="Dashboard" description="Account details and quick actions for the current user.">
+    return (<PageShell eyebrow={null} title="Dashboard" description="Manage your account and app data.">
             <div className="grid gap-6 lg:grid-cols-[1fr_0.75fr]">
                 <Card className="rounded-lg border border-border shadow-card">
                     <CardHeader>
-                        <CardTitle className="text-[22px]">User Information</CardTitle>
+                        <CardTitle className="text-[22px]">Account</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -32,11 +32,11 @@ export default function Dashboard() {
 
                 <Card className="rounded-lg border border-border shadow-card">
                     <CardHeader>
-                        <CardTitle className="text-[22px]">Quick Actions</CardTitle>
+                        <CardTitle className="text-[22px]">Actions</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Button asChild>
-                            <Link href="/users">View Users</Link>
+                            <Link href="/users">View users</Link>
                         </Button>
                     </CardContent>
                 </Card>

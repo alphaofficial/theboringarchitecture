@@ -7,7 +7,7 @@ import SiteFooter from '@/views/components/SiteFooter.jsx';
 import { Button } from '@/views/components/ui/button';
 import { Card, CardContent } from '@/views/components/ui/card';
 
-const INSTALL_CMD = 'curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/install.sh | bash';
+const INSTALL_CMD = 'curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/bin/install.sh | bash';
 const GITHUB_URL = 'https://github.com/alphaofficial/theboringarchitecture';
 /**
  * Renders a button that copies text and briefly confirms success.
@@ -69,10 +69,10 @@ export default function Home(pageProps) {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 	return (<>
 		<Head>
-			<title>The Boring Architecture — A fullstack framework for Express, Inertia &amp; React</title>
-			<meta name="description" content="Boring until complexity forces otherwise. Server-rendered React on top of Express — no API layer, no glue code, no meta-framework detour." />
-			<meta property="og:title" content="The Boring Architecture — A fullstack framework for Express, Inertia & React" />
-			<meta property="og:description" content="Server-rendered React on top of Express. Auth, sessions, ORM, migrations and SSR included." />
+			<title>The Boring Architecture — Express, Inertia, and React</title>
+			<meta name="description" content="An Express and Inertia starter with React views, auth, sessions, migrations, jobs, mail, and SSR." />
+			<meta property="og:title" content="The Boring Architecture — Express, Inertia, and React" />
+			<meta property="og:description" content="React views on Express through Inertia. Auth, sessions, migrations, jobs, mail, and SSR included." />
 			<meta property="og:type" content="website" />
 		</Head>
 
@@ -88,7 +88,7 @@ export default function Home(pageProps) {
 					</nav>
 					<div className="hidden items-center gap-2 md:flex">
 						{isAuthenticated ? (
-							<Button asChild size="sm"><Link href="/home">Open dashboard</Link></Button>
+						<Button asChild size="sm"><Link href="/home">View dashboard</Link></Button>
 						) : (
 							<>
 								<Button asChild variant="ghost" size="sm"><Link href="/login">Sign in</Link></Button>
@@ -107,7 +107,7 @@ export default function Home(pageProps) {
 						<a href={GITHUB_URL} className="rounded-md px-3 py-3" onClick={() => setMobileMenuOpen(false)}>GitHub</a>
 						<div className="mt-4 grid gap-3 border-t border-border pt-5">
 							{isAuthenticated ? (
-								<Button asChild><Link href="/home">Open dashboard</Link></Button>
+								<Button asChild><Link href="/home">View dashboard</Link></Button>
 							) : (
 								<>
 									<Button asChild variant="outline"><Link href="/login">Sign in</Link></Button>
@@ -121,27 +121,27 @@ export default function Home(pageProps) {
 
 
 			<section data-testid="hero-section">
-				<div className="mx-auto max-w-content px-6 py-20 lg:px-8 lg:py-24">
-					<div className="max-w-4xl">
-						<h1 className="display-xl max-w-3xl text-foreground">
-							Fullstack development, without the detour.
+				<div className="mx-auto max-w-content px-6 py-20 text-center lg:px-8 lg:py-24">
+					<div className="mx-auto max-w-4xl">
+						<h1 className="display-xl mx-auto max-w-3xl text-foreground">
+							Express apps with React views.
 						</h1>
-						<p className="mt-7 max-w-2xl text-lg leading-8 text-body">
-						Express handles routing, React renders the views, Inertia connects the two. That&apos;s it.
+						<p className="mx-auto mt-7 max-w-2xl text-body">
+							Use Express for routing, Inertia for page responses, and React for the interface.
 					</p>
 
-						<div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center" data-testid="hero-cta-group">
+						<div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row sm:items-center" data-testid="hero-cta-group">
 							<Button asChild size="lg" className="gap-x-2">
 						<a href={GITHUB_URL}>
 							<GitFork className="h-4 w-4" aria-hidden="true" />
-							Get the starter
+							View on GitHub
 						</a>
 						</Button>
 							<Button asChild variant="outline" size="lg">
 								<a href="#how">See how it works <ArrowRight className="h-4 w-4" aria-hidden="true" /></a>
 							</Button>
 						</div>
-						<div className="mt-8 flex max-w-xl items-center gap-3 rounded-lg border border-border bg-surface-soft p-2 pl-4">
+						<div className="mx-auto mt-8 flex max-w-xl items-center gap-3 rounded-lg border border-border bg-surface-soft p-2 pl-4 text-left">
 							<code className="min-w-0 flex-1 truncate font-mono text-[13px] text-foreground">{INSTALL_CMD}</code>
 							<CopyButton text={INSTALL_CMD} />
 						</div>
@@ -154,10 +154,10 @@ export default function Home(pageProps) {
 				<div className="mx-auto max-w-content px-6 py-24 lg:px-8">
 					<div className="mx-auto max-w-3xl text-center">
 						<h2 className="display-lg text-foreground">
-							Batteries included.
+							What is included
 						</h2>
-						<p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-							Everything you need to ship a production app, wired up and ready to go.
+						<p className="mx-auto mt-4 max-w-2xl text-body">
+							The starter includes the common pieces most apps need before feature work starts.
 						</p>
 					</div>
 					<div className="mt-16 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -168,7 +168,7 @@ export default function Home(pageProps) {
 							</span>
 							<div className="min-w-0">
 								<h3 className="text-sm font-semibold text-foreground">{f.title}</h3>
-								<p className="mt-1.5 text-sm leading-6 text-muted-foreground">{f.description}</p>
+								<p className="mt-1.5 text-body">{f.description}</p>
 							</div>
 							</CardContent>
 						</Card>))}
@@ -181,7 +181,7 @@ export default function Home(pageProps) {
 				<div className="mx-auto max-w-content px-6 py-24 lg:px-8">
 					<div className="mx-auto max-w-3xl text-center">
 						<h2 className="display-lg text-foreground">
-							From zero to shipping in three steps.
+							How it works
 						</h2>
 					</div>
 
@@ -189,14 +189,14 @@ export default function Home(pageProps) {
 						<IDEMockup />
 					</div>
 
-					<div className="mx-auto mt-16 max-w-6xl">
-						{STEPS.map((step, i) => (<div key={step.title} className={`flex gap-6 ${i > 0 ? 'mt-10 border-t border-border pt-10' : ''}`}>
-							<span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary font-mono text-sm font-semibold text-primary-foreground">
+					<div className="mx-auto mt-10 max-w-6xl">
+						{STEPS.map((step, i) => (<div key={step.title} className={`flex gap-4 ${i > 0 ? 'mt-6 border-t border-border pt-6' : ''}`}>
+							<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary font-mono text-sm font-semibold text-primary-foreground">
 								{i + 1}
 							</span>
 							<div>
-								<h3 className="text-xl font-semibold text-foreground">{step.title}</h3>
-								<p className="mt-2 text-base leading-7 text-muted-foreground">{step.description}</p>
+								<h3 className="text-base font-semibold text-foreground">{step.title}</h3>
+								<p className="mt-2 text-body">{step.description}</p>
 							</div>
 						</div>))}
 					</div>
@@ -208,10 +208,10 @@ export default function Home(pageProps) {
 				<div className="mx-auto max-w-content px-6 py-24 text-center lg:px-8">
 					<div className="rounded-lg bg-surface-card px-6 py-12 sm:px-12">
 					<h2 className="display-lg text-foreground">
-						Ship something this weekend.
+						Start from a working app.
 					</h2>
-					<p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-						No accounts. No telemetry. No signup. Install, develop, deploy.
+					<p className="mx-auto mt-6 max-w-2xl text-body">
+						Install the starter, build your app, and deploy it on Node.
 					</p>
 					<div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
 						<Button asChild className="gap-x-2">
@@ -224,7 +224,7 @@ export default function Home(pageProps) {
 						</Button>
 						<Button asChild variant="outline">
 						<a href={`${GITHUB_URL}#readme`}>
-							Read the docs &rarr;
+							Read the README &rarr;
 						</a>
 						</Button>
 					</div>
@@ -295,24 +295,21 @@ function FeatureIcon({ name }) {
 	</span>);
 }
 const FEATURES = [
-	{ title: 'Server-side rendering', description: 'Pages render on the server first, then hydrate into a full SPA. Fast initial loads, smooth navigation after.', icon: 'react' },
-	{ title: 'Authentication', description: 'Registration, login, forgot password, password reset, and email verification — wired and ready to extend.', icon: 'shield' },
-	{ title: 'Database & ORM', description: 'Schema-first mappings with migrations. SQLite by default, Postgres when you need it.', icon: 'database' },
-	{ title: 'Background jobs', description: 'Dispatch async work and run it in a separate process. No external queue service required.', icon: 'queue' },
-	{ title: 'Mailer', description: 'Send transactional email out of the box. Log driver for dev, SMTP for production, pluggable for anything else.', icon: 'mail' },
-	{ title: 'Task scheduling', description: 'Cron-style recurring jobs. Define them in code, run them with one command.', icon: 'clock' },
-	{ title: 'Event bus', description: 'In-process events that decouple your features without adding infrastructure.', icon: 'signal' },
-	{ title: 'Cache', description: 'Simple key-value store. In-memory by default, pluggable for Redis or anything else.', icon: 'cache' },
-	{ title: 'File storage', description: 'Store and retrieve files with a clean API. Local driver included, custom drivers welcome.', icon: 'folder' },
-	{ title: 'Production hardened', description: 'Security headers, graceful shutdown, health probes, structured logs, body limits.', icon: 'lock' },
-	{ title: 'JavaScript throughout', description: 'Write controllers, models, and React pages in JavaScript with one consistent project structure.', icon: 'code' },
-	{ title: 'Fast tooling', description: 'Hot module replacement in dev, optimized bundles in production. No waiting around.', icon: 'wind' },
-	{ title: 'Rate limiting', description: 'Opt-in per-route throttling. Off by default, env-configured, ready for production.', icon: 'gauge' },
-	{ title: 'XSS protection', description: 'Page props are HTML-escaped end-to-end. Untrusted data is safe by default.', icon: 'check' },
-	{ title: 'AI ready', description: 'Opinionated structure means AI assistants follow conventions instead of guessing. Less correction, more shipping.', icon: 'validate' },
+	{ title: 'Server rendering', description: 'Initial page requests render on the server, then hydrate in React.', icon: 'react' },
+	{ title: 'Authentication', description: 'Registration, login, password reset, and email verification are included.', icon: 'shield' },
+	{ title: 'Database', description: 'MikroORM mappings and migrations are configured for SQLite by default.', icon: 'database' },
+	{ title: 'Jobs', description: 'Dispatch background work and run it from a worker process.', icon: 'queue' },
+	{ title: 'Mail', description: 'Use the log driver in development and SMTP in production.', icon: 'mail' },
+	{ title: 'Scheduling', description: 'Register recurring tasks with cron expressions.', icon: 'clock' },
+	{ title: 'Events', description: 'Publish and handle in-process domain events.', icon: 'signal' },
+	{ title: 'Cache', description: 'Use the memory driver locally or swap in another driver.', icon: 'cache' },
+	{ title: 'Storage', description: 'Store files through a driver-backed API.', icon: 'folder' },
+	{ title: 'Production basics', description: 'Security headers, health checks, graceful shutdown, and structured logs are configured.', icon: 'lock' },
+	{ title: 'JavaScript', description: 'Controllers, models, views, jobs, and config use JavaScript.', icon: 'code' },
+	{ title: 'Vite', description: 'Client and SSR bundles build through Vite.', icon: 'wind' },
 ];
 const STEPS = [
-	{ title: 'Install', description: 'One command scaffolds a full project — database, auth, sessions, migrations, and dev server.', code: 'curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/install.sh | bash' },
-	{ title: 'Develop', description: 'Write controllers, models, and React pages with familiar MVC patterns. JavaScript end-to-end.' },
-	{ title: 'Ship it', description: 'Your page is server-rendered and ready for production. Deploy anywhere Node runs.' },
+	{ title: 'Install', description: 'Run the install command to create the project and install dependencies.', code: 'curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/bin/install.sh | bash' },
+	{ title: 'Build', description: 'Add controllers, models, pages, jobs, and routes in JavaScript.' },
+	{ title: 'Deploy', description: 'Run migrations, build the client and SSR bundles, then start the Node process.' },
 ];

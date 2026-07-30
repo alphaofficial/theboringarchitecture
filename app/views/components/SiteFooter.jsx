@@ -53,7 +53,7 @@ export default function SiteFooter() {
                 <div className="grid gap-12 border-b border-white/10 pb-12 lg:grid-cols-[1.1fr_2fr]">
                     <div>
                         <Brand name={applicationName} inverse />
-                        <p className="mt-5 max-w-xs text-sm leading-6">
+                        <p className="mt-5 max-w-xs text-sm">
                             A deliberately straightforward fullstack foundation for Express, Inertia, and React.
                         </p>
                     </div>

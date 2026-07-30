@@ -17,8 +17,8 @@ COPY . .
 
 RUN npm run build
 
-COPY start.sh /usr/src/app/start.sh
-RUN chmod +x /usr/src/app/start.sh
+COPY bin/start.sh /usr/src/app/bin/start.sh
+RUN chmod +x /usr/src/app/bin/start.sh
 
 EXPOSE 3000
 

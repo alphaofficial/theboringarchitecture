@@ -1,6 +1,5 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/inter";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -24,7 +23,7 @@
 @layer base {
   .theme {
 		--font-heading: 'Cal Sans Display', 'Inter Variable', sans-serif;
-		--font-sans: -apple-system, BlinkMacSystemFont, 'Cal Sans UI', 'Inter Variable', 'Segoe UI', sans-serif;
+		--font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Segoe UI', 'Cal Sans UI', sans-serif;
 	}
   :root {
 		--canvas: #ffffff;
@@ -137,18 +136,18 @@
 
 @layer components {
 	.display-xl {
-		@apply font-display text-[2.75rem] font-semibold leading-[1.05] tracking-[-1.5px] sm:text-6xl sm:tracking-[-2px];
+		@apply font-display text-[2.75rem] font-semibold tracking-[-1.5px] sm:text-6xl sm:tracking-[-2px];
 	}
 
 	.display-lg {
-		@apply font-display text-4xl font-semibold leading-[1.1] tracking-[-1px] sm:text-5xl sm:tracking-[-1.5px];
+		@apply font-display text-4xl font-semibold tracking-[-1px] sm:text-5xl sm:tracking-[-1.5px];
 	}
 
 	.display-md {
-		@apply font-display text-3xl font-semibold leading-[1.15] tracking-[-1px] sm:text-4xl;
+		@apply font-display text-3xl font-semibold tracking-[-1px] sm:text-4xl;
 	}
 
 	.display-sm {
-		@apply font-display text-[1.75rem] font-semibold leading-[1.2] tracking-[-0.5px];
+		@apply font-display text-[1.75rem] font-semibold tracking-[-0.5px];
 	}
 }

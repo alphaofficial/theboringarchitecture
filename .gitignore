@@ -1,5 +1,6 @@
 node_modules/
 dist/
+app/.ssr/
 .env
 .DS_Store
 .vscode/

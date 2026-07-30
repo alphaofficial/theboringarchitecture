@@ -61,11 +61,11 @@ export default {
         xl: '16px',
         pill: '9999px',
       },
-      fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', 'Cal Sans UI', 'Inter Variable', 'Segoe UI', 'sans-serif'],
-        display: ['Cal Sans Display', 'Inter Variable', 'sans-serif'],
-        mono: ['JetBrains Mono', 'SFMono-Regular', 'Consolas', 'Liberation Mono', 'monospace'],
-      },
+		fontFamily: {
+			sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'SF Pro Display', 'Segoe UI', 'Cal Sans UI', 'sans-serif'],
+			display: ['Cal Sans Display', 'Inter Variable', 'sans-serif'],
+			mono: ['JetBrains Mono', 'SFMono-Regular', 'Consolas', 'Liberation Mono', 'monospace'],
+		},
       maxWidth: {
         content: '1200px',
       },

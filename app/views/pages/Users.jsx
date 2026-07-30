@@ -25,7 +25,7 @@ export default function Users({ users }) {
 											{user.name}
 										</Link>
 									</h3>
-									<p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
+									<p className="mt-1 text-body">{user.email}</p>
 									</div>
 								</div>
 								<Badge variant="secondary">User #{user.id}</Badge>

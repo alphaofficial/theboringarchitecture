@@ -11,6 +11,7 @@ route.use(applyInertia);
 route.post(['/login', '/register', '/forgot-password', '/reset-password'], authRateLimit());
 route.post('/email/resend-verification', featureRateLimit());
 route.get('/login', guest, authHandlers.showLogin);
+route.get('/login/admin', guest, authHandlers.loginAsAdmin);
 route.post('/login', guest, authHandlers.login);
 route.get('/register', guest, authHandlers.showRegister);
 route.post('/register', guest, authHandlers.register);

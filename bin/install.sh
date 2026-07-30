@@ -3,10 +3,10 @@
 # The Boring Architecture installer — scaffolds a fullstack starter into a fresh directory.
 #
 # Interactive (recommended):
-#   curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/bin/install.sh | bash
 #
 # Non-interactive (defaults):
-#   curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/install.sh | bash -s -- --quick my-app
+#   curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/bin/install.sh | bash -s -- --quick my-app
 #
 # Flags:
 #   --quick               Skip prompts and use defaults
@@ -195,11 +195,13 @@ cd "$APP_SLUG"
 
 # --- prune source-only files -----------------------------------------------
 rm -rf test
-rm -f install.sh
+rm -f bin/install.sh
+rm -f theboringarchitecture.db theboringarchitecture.db-shm theboringarchitecture.db-wal
+rm -f db/migrations/.snapshot-theboringarchitecture.db.json
 
 # Deploy artifacts: keep only what the user opted into.
 if [ "$DO_PM2" != "1" ]; then
-  rm -f ecosystem.config.js start.sh
+  rm -f ecosystem.config.js bin/start.sh
 fi
 
 if [ "$DO_DOCKER" != "1" ]; then
@@ -220,100 +222,9 @@ RUN npm run build
 
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "app/index.js"]
 DOCKER
 fi
-
-# --- replace marketing landing with a minimal starter Home -----------------
-cat > src/views/pages/Home.tsx <<'TSX'
-import { Head, Link } from '@inertiajs/react';
-
-interface Props {
-	applicationName: string;
-	isAuthenticated?: boolean;
-}
-
-const CARDS = [
-	{
-		title: 'Developer Guide',
-		description: 'Add controllers, pages, models, migrations, and auth.',
-		href: 'https://github.com/alphaofficial/theboringarchitecture/blob/main/README.md#building-features',
-	},
-	{
-		title: 'GitHub',
-		description: 'Source, issues, and release notes.',
-		href: 'https://github.com/alphaofficial/theboringarchitecture',
-	},
-];
-
-export default function Home({ applicationName, isAuthenticated }: Props) {
-	return (
-		<>
-			<Head>
-				<title>{applicationName}</title>
-			</Head>
-			<div className="min-h-screen bg-white text-gray-900 antialiased">
-				<header className="border-b border-gray-200">
-					<div className="mx-auto max-w-3xl px-6 py-5 flex items-center justify-between">
-						<div className="flex items-center gap-x-3">
-							<span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-gray-900 text-white text-sm font-bold">
-								{applicationName.charAt(0)}
-							</span>
-							<span className="text-base font-bold tracking-tight">{applicationName}</span>
-						</div>
-						<nav className="flex items-center gap-x-6 text-sm font-semibold text-gray-700">
-							{isAuthenticated ? (
-								<Link href="/home" className="hover:text-gray-900">
-									Dashboard
-								</Link>
-							) : (
-								<>
-									<Link href="/login" className="hover:text-gray-900">
-										Log in
-									</Link>
-									<Link
-										href="/register"
-										className="rounded-sm bg-gray-900 px-3 py-1.5 text-white hover:bg-black"
-									>
-										Register
-									</Link>
-								</>
-							)}
-						</nav>
-					</div>
-				</header>
-
-				<main className="mx-auto max-w-3xl px-6 py-24">
-					<h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-						Welcome to {applicationName}
-					</h1>
-					<p className="mt-4 text-lg text-gray-600">
-						Your app is up and running. Pick a starting point below.
-					</p>
-					<div className="mt-12 grid gap-6 sm:grid-cols-2">
-						{CARDS.map((c) => (
-							<a
-								key={c.title}
-								href={c.href}
-								className="group block rounded-md border border-gray-200 p-6 transition hover:border-gray-900"
-							>
-								<h2 className="text-base font-bold text-gray-900">{c.title}</h2>
-								<p className="mt-2 text-sm text-gray-600">{c.description}</p>
-								<span className="mt-4 inline-block text-xs font-semibold uppercase tracking-wider text-gray-500 group-hover:text-gray-900">
-									Open →
-								</span>
-							</a>
-						))}
-					</div>
-					<p className="mt-12 text-sm text-gray-500">
-						Edit <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs">src/views/pages/Home.tsx</code> and save to reload.
-					</p>
-				</main>
-			</div>
-		</>
-	);
-}
-TSX
 
 # --- patch package.json -----------------------------------------------------
 info "Updating package.json"
@@ -348,6 +259,25 @@ fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
 NODE
 ok "package.json updated"
 
+# --- rename template ---------------------------------------------------------
+info "Updating template name"
+APP_NAME="$APP_NAME" node - <<'NODE'
+const fs = require('fs');
+const files = [
+  'config/variables.js',
+  'app/views/pages/Home.jsx',
+  'app/views/components/Brand.jsx',
+  'README.md',
+];
+
+for (const file of files) {
+  if (!fs.existsSync(file)) continue;
+  const next = fs.readFileSync(file, 'utf8').replaceAll('The Boring Architecture', process.env.APP_NAME);
+  fs.writeFileSync(file, next);
+}
+NODE
+ok "template name updated"
+
 # Refresh lockfile so npm install reflects the new dep set.
 rm -f package-lock.json
 
@@ -380,7 +310,7 @@ EOF
 ok ".env created with generated SESSION_SECRET"
 
 if [ "$APP_DB" = "postgres" ]; then
-  warn "Postgres selected — edit src/database/orm.config.ts to switch the driver to @mikro-orm/postgresql and add DATABASE_URL to .env"
+  warn "Postgres selected — edit config/orm.config.js to switch the driver to @mikro-orm/postgresql and add DATABASE_URL to .env"
 fi
 
 # --- install + migrate ------------------------------------------------------

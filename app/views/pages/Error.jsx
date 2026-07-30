@@ -33,7 +33,7 @@ export default function ErrorPage({ status = 500, message, stack }) {
 								<span className="h-3 w-3 rounded-full bg-[#27c93f]"/>
 								<span className="ml-3 text-xs text-gray-400 font-mono">error</span>
 							</div>
-							<pre className="whitespace-pre-wrap break-words p-4 text-sm leading-relaxed font-mono text-gray-100">
+							<pre className="whitespace-pre-wrap break-words p-4 text-sm font-mono text-gray-100">
 								<code>
 									{message ? (<>
 											<span className="text-red-400">$ </span>
@@ -44,7 +44,7 @@ export default function ErrorPage({ status = 500, message, stack }) {
 								</code>
 							</pre>
 							</CardContent>
-						</Card>) : (message && <p className="mt-4 text-base text-muted-foreground">{message}</p>)}
+						</Card>) : (message && <p className="mt-4 text-body">{message}</p>)}
 					<div className={`mt-8 ${isDev ? '' : 'text-center'}`}>
 						<Button asChild>
 							<Link href="/">Go home</Link>
