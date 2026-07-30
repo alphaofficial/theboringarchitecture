@@ -1,11 +1,19 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "baseUrl": ".",
+    "checkJs": false,
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ES2022",
     "types": [],
     "paths": {
       "@/*": ["app/*"]
     }
   },
+  "include": ["app/**/*.js", "app/**/*.jsx", "*.js", "*.mjs"],
+  "exclude": ["node_modules", "dist", "public"],
   "typeAcquisition": {
     "enable": false
   }

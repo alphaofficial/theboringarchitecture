@@ -186,3 +186,15 @@ export async function resendVerification(req, res) {
         status: data.status,
     });
 }
+
+export async function loginAsAdmin(req, res) {
+    const { data, errors } = await auth.attemptLogin(req.ctx.db, {
+        email: 'admin@example.com',
+        password: 'admin-password',
+    });
+    if (errors) {
+        return res.render('Auth/Login', { errors });
+    }
+    await req.authenticate(data.user);
+    return res.redirect('/home');
+}

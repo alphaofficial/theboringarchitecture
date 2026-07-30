@@ -7,7 +7,7 @@
  */
 export async function index(req, res) {
     return res.render('About', {
-        title: 'About Us',
-        description: 'This is an Inertia.js app running on Express with React.',
+        title: 'About',
+        description: 'This app uses Express for routing, Inertia for page responses, and React for views.',
     });
 }

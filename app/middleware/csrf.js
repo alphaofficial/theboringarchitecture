@@ -6,8 +6,8 @@ const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
  * @returns {string} Hostname and optional port accepted for unsafe requests.
  * @throws {TypeError} If `APP_URL` is not a valid URL.
  */
-function expectedHost() {
-    return new URL(variables.APP_URL).host;
+function expectedHosts(req) {
+    return new Set([new URL(variables.APP_URL).host, req.get('Host')].filter(Boolean));
 }
 /**
  * Rejects cross-origin state-changing requests using Origin/Referer validation.
@@ -27,7 +27,7 @@ export function verifyOrigin(req, res, next) {
         return next();
     try {
         const host = new URL(origin).host;
-        if (host !== expectedHost()) {
+        if (!expectedHosts(req).has(host)) {
             return res.status(403).send('Forbidden');
         }
     }

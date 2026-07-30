@@ -3,7 +3,7 @@ import * as path from 'path';
 import { pathToFileURL } from 'url';
 import variables from '../../config/variables.js';
 const templatePath = path.join(process.cwd(), 'public', 'template.html');
-const ssrBundlePath = path.join(process.cwd(), 'dist', 'ssr.mjs');
+const ssrBundlePath = path.join(process.cwd(), 'app', '.ssr', 'ssr.mjs');
 const HTML_ESCAPES = {
     '&': '&amp;',
     '<': '&lt;',

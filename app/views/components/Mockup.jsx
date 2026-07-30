@@ -262,18 +262,17 @@ const IDE_FILES = {
     },
 };
 const IDE_TREE = [
-    { name: 'src', indent: 0, folder: 'src', defaultOpen: true },
+    { name: 'app', indent: 0, folder: 'app', defaultOpen: true },
     { name: 'controllers', indent: 1, folder: 'controllers', defaultOpen: true },
     { name: 'public.js', indent: 2, fileId: 'public.js' },
     { name: 'users.js', indent: 2, fileId: 'users.js' },
     { name: 'auth.js', indent: 2, fileId: 'auth.js' },
-    { name: 'database', indent: 1, folder: 'database', defaultOpen: false },
-    { name: 'migrations', indent: 2, folder: 'migrations', defaultOpen: false },
-    { name: 'orm.config.js', indent: 2, fileId: 'orm.config.js' },
+    { name: 'core', indent: 1, folder: 'core', defaultOpen: false },
     { name: 'models', indent: 1, folder: 'models', defaultOpen: false },
     { name: 'User.js', indent: 2, fileId: 'User.js' },
     { name: 'PasswordReset.js', indent: 2, fileId: 'PasswordReset.js' },
     { name: 'Session.js', indent: 2, fileId: 'Session.js' },
+    { name: 'mappings', indent: 2, folder: 'mappings', defaultOpen: false },
     { name: 'router', indent: 1, folder: 'router', defaultOpen: true },
     { name: 'route.js', indent: 2, fileId: 'route.js' },
     { name: 'views', indent: 1, folder: 'views', defaultOpen: true },
@@ -290,6 +289,12 @@ const IDE_TREE = [
     { name: 'sendWelcomeEmail.js', indent: 2, fileId: 'sendWelcomeEmail.js' },
     { name: 'processUpload.js', indent: 2, fileId: 'processUpload.js' },
     { name: 'index.js', indent: 1, fileId: 'index.js' },
+    { name: 'config', indent: 0, folder: 'root-config', defaultOpen: false },
+    { name: 'orm.config.js', indent: 1, fileId: 'orm.config.js' },
+    { name: 'db', indent: 0, folder: 'db', defaultOpen: false },
+    { name: 'migrations', indent: 1, folder: 'migrations', defaultOpen: false },
+    { name: 'lib', indent: 0, folder: 'lib', defaultOpen: false },
+    { name: 'runtime', indent: 1, folder: 'runtime', defaultOpen: false },
 ];
 /**
  * Renders the interactive IDE preview used on the landing page.
@@ -366,13 +371,13 @@ export default function IDEMockup() {
 					
 					<div className="flex border-b border-[#2d2d2d]">
 						<div className="flex items-center gap-x-2 border-b-2 border-white bg-[#1e1e1e] px-4 py-2 font-mono text-xs text-white">
-							<span className="text-[10px] text-[#519aba]">{activeFile.endsWith('.jsx') ? 'TSX' : 'TS'}</span>
+							<span className="text-[10px] text-[#519aba]">{activeFile.endsWith('.jsx') ? 'JSX' : 'JS'}</span>
 							{activeFile}
 						</div>
 					</div>
 					
 					<div className="overflow-x-auto py-2">
-						{file.lines.map((line) => (<div key={line.n} className="flex font-mono text-[13px] leading-6">
+						{file.lines.map((line) => (<div key={line.n} className="flex font-mono text-[13px]">
 								<span className="w-10 shrink-0 select-none pr-4 text-right text-[#5a5a5a]">{line.n}</span>
 								<span className="text-[#d4d4d4]">{line.t || '\u00A0'}</span>
 							</div>))}
