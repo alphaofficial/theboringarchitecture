@@ -10,7 +10,7 @@ export default defineConfig({
   publicDir: false,
   build: {
     ssr: resolve(__dirname, 'app/views/ssr.jsx'),
-    outDir: 'app/.ssr',
+    outDir: '.ssr',
     emptyOutDir: false,
     sourcemap: true,
     rollupOptions: {

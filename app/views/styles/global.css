@@ -108,6 +108,10 @@
   * {
 		@apply border-border;
 		box-sizing: border-box;
+	}
+  html,
+  body {
+    overscroll-behavior-y: none;
   }
   body {
     @apply m-0 bg-background font-sans text-body antialiased;

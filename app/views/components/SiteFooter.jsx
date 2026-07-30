@@ -23,13 +23,6 @@ export default function SiteFooter() {
             ],
         },
         {
-            title: 'Framework',
-            links: [
-                { label: 'Dashboard', href: isAuthenticated ? '/home' : '/login' },
-                { label: 'Example users', href: isAuthenticated ? '/users' : '/login' },
-            ],
-        },
-        {
             title: 'Account',
             links: isAuthenticated
                 ? [{ label: 'Your dashboard', href: '/home' }]
@@ -81,7 +74,6 @@ export default function SiteFooter() {
                 </div>
                 <div className="flex flex-col gap-3 pt-6 text-[13px] sm:flex-row sm:items-center sm:justify-between">
                     <p>&copy; {year} {applicationName}. MIT licensed.</p>
-                    <p>Built to stay boring.</p>
                 </div>
             </div>
         </footer>
