@@ -66,7 +66,7 @@ A controller calls `res.render('Home', props)`. The Inertia middleware (`app/mid
 
 1. Call `InertiaExpressAdapter.render` (in `app/primitives/inertia.js`) to build the Inertia page object (`{ component, props, url, version }`).
 2. If the request is an Inertia navigation (`X-Inertia: true` header, e.g. a client-side `router.visit`), the adapter responds with the page object as JSON. **SSR only runs for the initial document request** — partial updates never hit the SSR bundle.
-3. Otherwise, call `renderHtml`. Unless `DISABLE_SSR=true`, it dynamically imports the SSR bundle from `app/.ssr/ssr.mjs` (the bundle's `mtimeMs` is appended as a cache-buster, so a fresh build is picked up on the next request) and invokes `render(page)`, which returns `{ head, body }`.
+3. Otherwise, call `renderHtml`. Unless `DISABLE_SSR=true`, it dynamically imports the SSR bundle from `.ssr/ssr.mjs` (the bundle's `mtimeMs` is appended as a cache-buster, so a fresh build is picked up on the next request) and invokes `render(page)`, which returns `{ head, body }`.
 4. Read `public/template.html` and substitute the four placeholders: `{{TITLE}}` (page title or `APP_NAME`), `{{HEAD}}` (controller-supplied head snippets + SSR-emitted head tags), `{{APP}}` (the rendered body, or the client-only `<div id="app" data-page="…">` shell), and `{{CLIENT_ENTRY}}` (`/app.js`).
 
 The SSR module is `app/views/ssr.jsx`. It uses `import.meta.glob('./pages/**/*.jsx', { eager: true })` to resolve page components by name and `renderToString` from `react-dom/server` via Inertia's `createInertiaApp`. If a page name can't be resolved, the module throws `SSR: page not found: <name>` — the adapter catches this and falls back to the client-only shell.
@@ -76,9 +76,9 @@ The SSR module is `app/views/ssr.jsx`. It uses `import.meta.glob('./pages/**/*.j
 ### Build pipeline
 
 - `prestart:dev` runs `pages:generate && build:ssr`, so the SSR bundle is on disk before the watchers start.
-- `start:dev` runs four concurrent processes — `pages:watch` regenerates `app/config/pages.js`, `start:dev:server` runs nodemon, `start:dev:client` emits `public/app.js` and `public/main.css`, and `start:dev:ssr` emits `app/.ssr/ssr.mjs`.
+- `start:dev` runs four concurrent processes — `pages:watch` regenerates `app/config/pages.js`, `start:dev:server` runs nodemon, `start:dev:client` emits `public/app.js` and `public/main.css`, and `start:dev:ssr` emits `.ssr/ssr.mjs`.
 - `prestart:prod` runs `pages:generate && build:client && build:ssr` before production start.
-- `build` runs `build:client` then `build:ssr`. The Express process reads `app/.ssr/ssr.mjs` from disk at request time. See `vite.config.mjs` (client) and `vite.ssr.config.mjs` (SSR) for the two Vite configs.
+- `build` runs `build:client` then `build:ssr`. The Express process reads `.ssr/ssr.mjs` from disk at request time. See `vite.config.mjs` (client) and `vite.ssr.config.mjs` (SSR) for the two Vite configs.
 
 ### Hydration
 
@@ -92,7 +92,7 @@ If the SSR bundle fails to load or render (e.g. a bad page import, a missing/ren
 
 - **Page paints blank for a second, then the client takes over.** Either the page is shipping from a cached client-only shell, or the SSR pass failed. Check the server logs for `[SSR] render failed…` and the error above it.
 - **`SSR: page not found: <Name>` in the logs.** The page name passed to `res.render` doesn't match any file under `app/views/pages/`. Check `app/config/pages.js` and the casing — Inertia page names are case-sensitive.
-- **Stale content after editing a page.** Both `start:dev:client` and `start:dev:ssr` watchers should rebuild the bundles; check the watcher logs. After a fresh `prestart:dev` rebuild you may need a hard refresh in the browser so the new `app/.ssr/ssr.mjs` is re-imported.
+- **Stale content after editing a page.** Both `start:dev:client` and `start:dev:ssr` watchers should rebuild the bundles; check the watcher logs. After a fresh `prestart:dev` rebuild you may need a hard refresh in the browser so the new `.ssr/ssr.mjs` is re-imported.
 - **Want to debug with the client-only shell.** Set `DISABLE_SSR=true`, restart the server, view source — you'll see `<div id="app" data-page="…">` and no server-rendered body.
 
 ## Database

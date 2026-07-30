@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowRight, GitFork, Menu, X } from 'lucide-react';
+import { ArrowRight, Menu, X } from 'lucide-react';
 import IDEMockup from '../components/Mockup.jsx';
 import Brand from '@/views/components/Brand.jsx';
 import SiteFooter from '@/views/components/SiteFooter.jsx';
@@ -131,9 +131,8 @@ export default function Home(pageProps) {
 					</p>
 
 						<div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row sm:items-center" data-testid="hero-cta-group">
-							<Button asChild size="lg" className="gap-x-2">
+						<Button asChild size="lg" className="gap-x-2">
 						<a href={GITHUB_URL}>
-							<GitFork className="h-4 w-4" aria-hidden="true" />
 							View on GitHub
 						</a>
 						</Button>
@@ -295,18 +294,18 @@ function FeatureIcon({ name }) {
 	</span>);
 }
 const FEATURES = [
-	{ title: 'Server rendering', description: 'Initial page requests render on the server, then hydrate in React.', icon: 'react' },
-	{ title: 'Authentication', description: 'Registration, login, password reset, and email verification are included.', icon: 'shield' },
-	{ title: 'Database', description: 'MikroORM mappings and migrations are configured for SQLite by default.', icon: 'database' },
-	{ title: 'Jobs', description: 'Dispatch background work and run it from a worker process.', icon: 'queue' },
-	{ title: 'Mail', description: 'Use the log driver in development and SMTP in production.', icon: 'mail' },
+	{ title: 'Server rendering', description: 'Render initial page requests on the server, then hydrate in React.', icon: 'react' },
+	{ title: 'Authentication', description: 'Handle registration, login, password reset, and email verification.', icon: 'shield' },
+	{ title: 'Database', description: 'Manage SQLite data with MikroORM mappings and migrations.', icon: 'database' },
+	{ title: 'Jobs', description: 'Dispatch background work to a worker process.', icon: 'queue' },
+	{ title: 'Mail', description: 'Send application email through SMTP.', icon: 'mail' },
 	{ title: 'Scheduling', description: 'Register recurring tasks with cron expressions.', icon: 'clock' },
-	{ title: 'Events', description: 'Publish and handle in-process domain events.', icon: 'signal' },
-	{ title: 'Cache', description: 'Use the memory driver locally or swap in another driver.', icon: 'cache' },
-	{ title: 'Storage', description: 'Store files through a driver-backed API.', icon: 'folder' },
-	{ title: 'Production basics', description: 'Security headers, health checks, graceful shutdown, and structured logs are configured.', icon: 'lock' },
-	{ title: 'JavaScript', description: 'Controllers, models, views, jobs, and config use JavaScript.', icon: 'code' },
-	{ title: 'Vite', description: 'Client and SSR bundles build through Vite.', icon: 'wind' },
+	{ title: 'Events', description: 'Publish domain events inside the application process.', icon: 'signal' },
+	{ title: 'Cache', description: 'Cache application data through the memory store.', icon: 'cache' },
+	{ title: 'Storage', description: 'Store application files through the storage API.', icon: 'folder' },
+	{ title: 'Production basics', description: 'Run with security headers, health checks, shutdown hooks, and structured logs.', icon: 'lock' },
+	{ title: 'JavaScript', description: 'Build controllers, models, views, jobs, and config in JavaScript.', icon: 'code' },
+	{ title: 'Vite', description: 'Build client and SSR bundles through Vite.', icon: 'wind' },
 ];
 const STEPS = [
 	{ title: 'Install', description: 'Run the install command to create the project and install dependencies.', code: 'curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/bin/install.sh | bash' },
