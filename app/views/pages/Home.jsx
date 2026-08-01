@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { ArrowRight, Menu, X } from 'lucide-react';
-import IDEMockup from '../components/Mockup.jsx';
+import SystemDiagram from '../components/Mockup.jsx';
 import Brand from '@/views/components/Brand.jsx';
 import SiteFooter from '@/views/components/SiteFooter.jsx';
 import { Button } from '@/views/components/ui/button';
@@ -184,9 +184,7 @@ export default function Home(pageProps) {
 						</h2>
 					</div>
 
-					<div className="hidden md:block">
-						<IDEMockup />
-					</div>
+					<SystemDiagram />
 
 					<div className="mx-auto mt-10 max-w-6xl">
 						{STEPS.map((step, i) => (<div key={step.title} className={`flex gap-4 ${i > 0 ? 'mt-6 border-t border-border pt-6' : ''}`}>

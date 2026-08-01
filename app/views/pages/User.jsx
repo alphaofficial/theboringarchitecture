@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import PageShell from '@/views/components/PageShell.jsx';
+import DashboardShell from '@/views/components/dashboard/DashboardShell.jsx';
 import { Button } from '@/views/components/ui/button';
 import { Card, CardContent } from '@/views/components/ui/card';
 /**
@@ -11,26 +11,31 @@ import { Card, CardContent } from '@/views/components/ui/card';
 export default function User({ user }) {
     return (<>
 			<Head title={`User: ${user.name}`}/>
-			<PageShell title={user.name} description="User profile details from the example directory." actions={<Button asChild variant="outline"><Link href="/users">← Back to Users</Link></Button>}>
-				<Card className="rounded-lg border border-border shadow-card">
-					<CardContent className="p-6">
-						<div className="mb-6 sm:hidden">
-							<Link href="/users" className="text-sm font-medium text-muted-foreground hover:text-foreground hover:underline">
-								← Back to Users
-							</Link>
+			<DashboardShell title="Users" subtitle="Customer profile">
+				<div className="mx-auto max-w-[1440px]">
+					<section className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+						<div>
+							<p className="text-sm font-medium text-muted-foreground">User profile</p>
+							<h1 className="mt-1 font-display text-3xl font-semibold tracking-[-0.8px] text-foreground">{user.name}</h1>
+							<p className="mt-2 text-body">User profile details from the example directory.</p>
 						</div>
+						<Button asChild variant="outline"><Link href="/users">← Back to Users</Link></Button>
+					</section>
+					<Card className="rounded-lg border border-border shadow-card">
+					<CardContent className="p-6">
 						<div className="grid gap-4 sm:grid-cols-2">
 							<div className="rounded-md bg-surface-card p-4">
-								<span className="text-sm font-medium text-muted-foreground">Email:</span>
-								<span className="mt-2 block text-sm font-semibold text-foreground">{user.email}</span>
+								<span className="font-medium text-muted-foreground">Email:</span>
+								<span className="mt-2 block font-semibold text-foreground">{user.email}</span>
 							</div>
 							<div className="rounded-md bg-surface-card p-4">
-								<span className="text-sm font-medium text-muted-foreground">User ID:</span>
-								<span className="mt-2 block text-sm font-semibold text-foreground">{user.id}</span>
+								<span className="font-medium text-muted-foreground">User ID:</span>
+								<span className="mt-2 block font-semibold text-foreground">{user.id}</span>
 							</div>
 						</div>
 					</CardContent>
-				</Card>
-			</PageShell>
+					</Card>
+				</div>
+			</DashboardShell>
 		</>);
 }

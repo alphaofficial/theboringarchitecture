@@ -154,4 +154,104 @@
 	.display-sm {
 		@apply font-display text-[1.75rem] font-semibold tracking-[-0.5px];
 	}
+
+	.request-flow {
+		width: 100%;
+	}
+
+	.request-flow text {
+		user-select: none;
+	}
+
+	.request-flow-boundary {
+		fill: none;
+		stroke: #252525;
+		stroke-width: 2;
+		stroke-dasharray: 8 9;
+	}
+
+	.request-flow-heading rect {
+		fill: #181818;
+	}
+
+	.request-flow-heading text {
+		fill: #ffffff;
+		font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+		font-size: 18px;
+		font-weight: 500;
+	}
+
+	.request-flow-link {
+		fill: none;
+		stroke: #3b3b3b;
+		stroke-width: 1.8;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		vector-effect: non-scaling-stroke;
+	}
+
+	.request-flow-arrowhead {
+		fill: none;
+		stroke: #3b3b3b;
+		stroke-width: 1.8;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.request-flow-pulse {
+		opacity: 1;
+		pointer-events: none;
+	}
+
+	.request-flow-pulse-halo {
+		fill: rgba(17, 17, 17, 0.2);
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: request-flow-pulse-halo 900ms ease-out infinite;
+	}
+
+	.request-flow-pulse-core {
+		fill: #111111;
+		stroke: #ffffff;
+		stroke-width: 2;
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: request-flow-pulse-core 900ms ease-in-out infinite;
+}
+
+@keyframes request-flow-pulse-halo {
+	0% { opacity: 0.45; transform: scale(0.75); }
+	70%, 100% { opacity: 0; transform: scale(1.65); }
+}
+
+@keyframes request-flow-pulse-core {
+	0%, 100% { transform: scale(0.92); }
+	50% { transform: scale(1.12); }
+}
+	.request-flow-node-surface {
+		stroke-width: 2.2;
+	}
+
+	.request-flow-node-cyan .request-flow-node-surface {
+		fill: #c5f3f5;
+		stroke: #26b5bd;
+	}
+
+	.request-flow-node-violet .request-flow-node-surface {
+		fill: #e2ddff;
+		stroke: #8a78f5;
+	}
+
+	.request-flow-node-coral .request-flow-node-surface {
+		fill: #ffd1d0;
+		stroke: #ff6e70;
+	}
+
+	.request-flow-node text {
+		fill: #20242a;
+		font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+		font-size: 18px;
+		font-weight: 500;
+	}
+
 }
