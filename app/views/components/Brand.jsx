@@ -4,11 +4,12 @@ import { cn } from '@/views/lib/utils';
 /**
  * Renders the shared product wordmark.
  *
- * @param {{name?: string, inverse?: boolean, compact?: boolean, className?: string}} props - Wordmark options.
+ * @param {{name?: string, href?: string, inverse?: boolean, compact?: boolean, className?: string}} props - Wordmark options.
  * @returns {import('react').ReactElement} Linked brand mark and name.
  */
 export default function Brand({
     name = 'The Boring Architecture',
+    href = '/',
     inverse = false,
     compact = false,
     className,
@@ -16,7 +17,7 @@ export default function Brand({
 }) {
     return (
         <Link
-            href="/"
+            href={href}
             className={cn(
                 'inline-flex items-center gap-2.5 font-display text-[17px] font-semibold tracking-[-0.4px]',
                 inverse ? 'text-white' : 'text-ink',

@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import PageShell from '@/views/components/PageShell.jsx';
+import DashboardShell from '@/views/components/dashboard/DashboardShell.jsx';
 import { Badge } from '@/views/components/ui/badge';
 import { Card, CardContent } from '@/views/components/ui/card';
 /**
@@ -11,8 +11,14 @@ import { Card, CardContent } from '@/views/components/ui/card';
 export default function Users({ users }) {
     return (<>
 			<Head title="Users"/>
-			<PageShell title="Users" description="Browse the example directory and open a user profile.">
-				<div className="grid gap-4">
+			<DashboardShell title="Users" subtitle="Manage your customer directory">
+				<div className="mx-auto max-w-[1440px]">
+					<section className="mb-6">
+						<p className="text-sm font-medium text-muted-foreground">Directory</p>
+						<h1 className="mt-1 font-display text-3xl font-semibold tracking-[-0.8px] text-foreground">Users</h1>
+						<p className="mt-2 text-body">Browse the example directory and open a user profile.</p>
+					</section>
+					<div className="grid gap-4">
 					{users.map(user => (<Card key={user.id} className="rounded-lg border border-border shadow-card">
 							<CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
 								<div className="flex items-center gap-4">
@@ -31,7 +37,8 @@ export default function Users({ users }) {
 								<Badge variant="secondary">User #{user.id}</Badge>
 							</CardContent>
 						</Card>))}
+					</div>
 				</div>
-			</PageShell>
+			</DashboardShell>
 		</>);
 }
