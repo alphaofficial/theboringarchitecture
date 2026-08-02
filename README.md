@@ -164,7 +164,7 @@ All primitives follow the same `configure`/`start`/`stop` lifecycle and support 
 | ----------- | -------------- | -------------------------------------------------------------- |
 | `Bus`       | `inMemory`     | In-process event bus for publishing and subscribing to domain events |
 | `Cache`     | `memory`       | Key/value store for caching data with optional TTL             |
-| `Mailer`    | `log`          | Sends transactional emails                                    |
+| `Mailer`    | `smtp`         | Sends transactional emails                                    |
 | `Queue`     | `inMemory`     | Runs background jobs with retry and concurrency support         |
 | `Scheduler` | (cron-based)   | Registers and runs recurring tasks on a schedule                |
 | `Storage`   | `local`        | Stores and retrieves files                                     |
@@ -200,6 +200,11 @@ await Cache.flush();
 ```
 
 ### Mailer
+
+The built-in mail driver sends through SMTP. Configure `MAIL_HOST`, `MAIL_PORT`,
+`MAIL_USER`, `MAIL_PASS`, and `MAIL_FROM` in `.env` before sending mail. When
+`MAIL_HOST`, `MAIL_USER`, or `MAIL_PASS` is missing, sends safely do nothing and
+log a warning listing the missing settings.
 
 ```js
 import { Mailer } from './app/primitives/mail.js';

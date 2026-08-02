@@ -306,6 +306,13 @@ DB_PATH=$APP_SLUG.db
 RATE_LIMIT_ENABLED=false
 RATE_LIMIT_AUTH_MAX=5
 RATE_LIMIT_AUTH_WINDOW_MS=60000
+
+# SMTP mail (missing host or credentials logs a warning and skips delivery)
+MAIL_FROM=noreply@example.com
+MAIL_HOST=
+MAIL_PORT=587
+MAIL_USER=
+MAIL_PASS=
 EOF
 ok ".env created with generated SESSION_SECRET"
 
