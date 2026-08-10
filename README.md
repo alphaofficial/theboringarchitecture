@@ -7,6 +7,8 @@ An Express and Inertia starter with React views, authentication, sessions, migra
 - [Quick start for agents](#quick-start-for-agents)
 - [Architecture](#architecture)
 - [Database](#database)
+- [CLI generators](#cli-generators)
+- [Validation and authorization](#validation-and-authorization)
 - [Authentication helpers](#authentication-helpers)
 - [Primitives](#primitives)
 - [Adding or replacing drivers](#adding-or-replacing-drivers)
@@ -111,6 +113,45 @@ const post1 = new Post('Title 1', 'Body 1');
 const post2 = new Post('Title 2', 'Body 2');
 
 await db.persistAndFlush([post1, post2]); // Both inserted in one transaction
+```
+
+## CLI generators
+
+The starter includes a small Laravel-inspired CLI for the common make/run commands:
+
+```bash
+node bin/boring.js --help
+node bin/boring.js make:controller posts
+node bin/boring.js make:model Post
+node bin/boring.js make:job sendDigest
+node bin/boring.js make:request StorePostRequest
+node bin/boring.js make:policy PostPolicy
+node bin/boring.js queue:work
+node bin/boring.js test
+```
+
+When installed as a package, the binary is exposed as `boring`.
+
+## Validation and authorization
+
+Use `app/support/validation.js` for Laravel-style rule validation:
+
+```js
+import { validate } from './app/support/validation.js';
+
+const result = validate(req.body, {
+  email: 'required|email',
+  password: 'required|min:8|confirmed',
+});
+```
+
+Use `app/support/authorization.js` for Gate-style checks and route middleware:
+
+```js
+import { Gate, can } from './app/support/authorization.js';
+
+Gate.define('posts.update', (user, post) => user?.id === post.userId);
+route.post('/posts/:id', auth, can('posts.update', req => req.post), updatePost);
 ```
 
 ## Authentication helpers
