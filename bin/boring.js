@@ -21,6 +21,9 @@ Usage:
   boring make:middleware Name
   boring make:request Name
   boring make:policy Name
+  boring make:factory Name
+  boring make:seeder Name
+  boring db:seed          Run database seeders
   boring queue:work       Start the queue and scheduler worker
   boring queue:failed     List failed jobs
   boring queue:retry ID   Move one failed job back to pending; use "all" for every failed job
@@ -38,7 +41,7 @@ function ensureName(name) {
 }
 
 function className(name) {
-    return path.basename(name).replace(/(^|[-_/.])(\w)/g, (_, __, c) => c.toUpperCase());
+    return path.basename(name).replace(/(^|[-_/.])(\w)/g, (_, __, character) => character.toUpperCase());
 }
 
 function write(relativePath, content) {
@@ -58,18 +61,18 @@ function run(script) {
 }
 
 function makeController(name) {
-    const c = className(name);
-    write(`app/controllers/${name}.js`, `/** @param {import('express').Request} req @param {import('express').Response} res */\nexport async function index(req, res) {\n    return res.render('${c}');\n}\n`);
+    const controllerName = className(name);
+    write(`app/controllers/${name}.js`, `/** @param {import('express').Request} req @param {import('express').Response} res */\nexport async function index(req, res) {\n    return res.render('${controllerName}');\n}\n`);
 }
 
 function makeModel(name) {
-    const c = className(name);
-    write(`app/models/${c}.js`, `export class ${c} {\n    id;\n    createdAt = new Date();\n    updatedAt = new Date();\n\n    constructor(id) {\n        this.id = id;\n    }\n}\n`);
+    const modelName = className(name);
+    write(`app/models/${modelName}.js`, `export class ${modelName} {\n    id;\n    createdAt = new Date();\n    updatedAt = new Date();\n\n    constructor(id) {\n        this.id = id;\n    }\n}\n`);
 }
 
 function makeJob(name) {
-    const c = className(name);
-    write(`app/jobs/${name}.js`, `import { Queue } from '../primitives/queue.js';\n\nQueue.on('${name}', async (_ctx, payload) => {\n    // Handle ${c}.\n    console.log('${name}', payload);\n});\n`);
+    const jobName = className(name);
+    write(`app/jobs/${name}.js`, `import { Queue } from '../primitives/queue.js';\n\nQueue.on('${name}', async (_ctx, payload) => {\n    // Handle ${jobName}.\n    console.log('${name}', payload);\n});\n`);
 }
 
 function makeEvent(name) {
@@ -77,8 +80,8 @@ function makeEvent(name) {
 }
 
 function makeMail(name) {
-    const c = className(name);
-    write(`app/mail/templates/${c}.js`, `export function ${c}({ name = 'there' } = {}) {\n    return \`<p>Hello \${name},</p>\`;\n}\n`);
+    const templateName = className(name);
+    write(`app/mail/templates/${templateName}.js`, `export function ${templateName}({ name = 'there' } = {}) {\n    return \`<p>Hello \${name},</p>\`;\n}\n`);
 }
 
 function makeMiddleware(name) {
@@ -94,6 +97,18 @@ function makePolicy(name) {
     const policyName = className(name);
     const subjectName = policyName.replace(/Policy$/, '') || policyName;
     write(`app/policies/${policyName}.js`, `import { Policy } from '../support/policies.js';\n\nPolicy.define('${subjectName}', {\n    view: (user, subject) => Boolean(user && subject),\n});\n`);
+}
+
+function makeFactory(name) {
+    const modelName = className(name).replace(/Factory$/, '');
+    const factoryName = `${modelName}Factory`;
+    write(`db/factories/${factoryName}.js`, `import { Factory } from '@mikro-orm/seeder';\nimport { ${modelName} } from '../../app/models/${modelName}.js';\n\nexport class ${factoryName} extends Factory {\n    model = ${modelName};\n\n    definition(input = {}) {\n        return { ...input };\n    }\n}\n`);
+}
+
+function makeSeeder(name) {
+    const modelName = className(name).replace(/Seeder$/, '');
+    const seederName = `${modelName}Seeder`;
+    write(`db/seeder/${seederName}.js`, `import { Seeder } from '@mikro-orm/seeder';\n\nexport class ${seederName} extends Seeder {\n    async run(db) {\n        // Seed records with db.persistAndFlush(...).\n    }\n}\n`);
 }
 
 async function withOrm(callback) {
@@ -152,6 +167,7 @@ async function queueForget(id) {
 }
 
 if (!command || command === '--help' || command === '-h') usage();
+else if (command === 'db:seed') run('db:seed');
 else if (command === 'queue:work') run('work:dev');
 else if (command === 'queue:failed') await queueFailed();
 else if (command === 'queue:retry') await queueRetry(rawName);
@@ -165,6 +181,8 @@ else if (command === 'make:mail') makeMail(ensureName(rawName));
 else if (command === 'make:middleware') makeMiddleware(ensureName(rawName));
 else if (command === 'make:request') makeRequest(ensureName(rawName));
 else if (command === 'make:policy') makePolicy(ensureName(rawName));
+else if (command === 'make:factory') makeFactory(ensureName(rawName));
+else if (command === 'make:seeder') makeSeeder(ensureName(rawName));
 else {
     console.error(`Unknown command: ${command}`);
     usage();
