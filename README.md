@@ -708,3 +708,7 @@ Command.define('users:prune', { description: 'Prune inactive users', async handl
 const config = Config.create({ mail: { from: { address: 'hello@example.com' } } });
 await Cache.remember('stats.users', 300, () => countUsers());
 ```
+
+## Routing ergonomics
+
+See [Routing ergonomics](./docs/routing.md) for named-route URL generation, route groups, and resource route registration.

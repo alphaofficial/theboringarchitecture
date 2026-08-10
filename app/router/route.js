@@ -1,35 +1,49 @@
-import { Router } from 'express';
-import * as publicPages from '../controllers/public.js';
-import * as aboutPages from '../controllers/about.js';
-import * as userPages from '../controllers/users.js';
-import * as authHandlers from '../controllers/auth.js';
+import { Router } from './routing.js';
+import * as PublicController from '../controllers/public.js';
+import * as AboutController from '../controllers/about.js';
+import * as UsersController from '../controllers/users.js';
+import * as AuthController from '../controllers/auth.js';
 import { applyInertia } from '../middleware/inertia.js';
 import { auth, guest } from '../middleware/auth.js';
 import { authRateLimit, featureRateLimit } from '../middleware/rateLimit.js';
-const route = Router();
+
+const route = Router.create();
+
 route.use(applyInertia);
 route.post(['/login', '/register', '/forgot-password', '/reset-password'], authRateLimit());
 route.post('/email/resend-verification', featureRateLimit());
-route.get('/login', guest, authHandlers.showLogin);
-route.get('/login/admin', guest, authHandlers.loginAsAdmin);
-route.post('/login', guest, authHandlers.login);
-route.get('/register', guest, authHandlers.showRegister);
-route.post('/register', guest, authHandlers.register);
-route.get('/forgot-password', guest, authHandlers.showForgotPassword);
-route.post('/forgot-password', guest, authHandlers.forgotPassword);
-route.get('/reset-password/:token', guest, authHandlers.showResetPassword);
-route.post('/reset-password', guest, authHandlers.resetPassword);
-route.get('/verify-email', auth, authHandlers.showVerifyEmail);
-route.get('/verify-email/:token', auth, authHandlers.verifyEmail);
-route.post('/email/resend-verification', auth, authHandlers.resendVerification);
-route.get('/settings', auth, authHandlers.showSettings);
-route.post('/settings/profile', auth, authHandlers.updateProfile);
-route.post('/settings/password', auth, authHandlers.updatePassword);
-route.post('/settings/delete', auth, authHandlers.deleteAccount);
-route.get('/', publicPages.index);
-route.get('/about', auth, aboutPages.index);
-route.get('/home', auth, authHandlers.dashboard);
-route.post('/logout', auth, authHandlers.logout);
-route.get('/users', auth, userPages.index);
-route.get('/users/:id', auth, userPages.show);
+
+route.group({ middleware: [guest] }, guests => {
+    guests.get('/login', AuthController.showLogin);
+    guests.get('/login/admin', AuthController.loginAsAdmin);
+    guests.post('/login', AuthController.login);
+    guests.get('/register', AuthController.showRegister);
+    guests.post('/register', AuthController.register);
+    guests.get('/forgot-password', AuthController.showForgotPassword);
+    guests.post('/forgot-password', AuthController.forgotPassword);
+    guests.get('/reset-password/:token', AuthController.showResetPassword);
+    guests.post('/reset-password', AuthController.resetPassword);
+});
+
+route.get('/', PublicController.index);
+
+route.group({ middleware: [auth] }, authenticated => {
+    authenticated.get('/verify-email', AuthController.showVerifyEmail);
+    authenticated.get('/verify-email/:token', AuthController.verifyEmail);
+    authenticated.post('/email/resend-verification', AuthController.resendVerification);
+
+    authenticated.group('/settings', settings => {
+        settings.get('/', AuthController.showSettings);
+        settings.post('/profile', AuthController.updateProfile);
+        settings.post('/password', AuthController.updatePassword);
+        settings.post('/delete', AuthController.deleteAccount);
+    });
+
+    authenticated.get('/about', AboutController.index);
+    authenticated.get('/home', AuthController.dashboard);
+    authenticated.post('/logout', AuthController.logout);
+    authenticated.get('/users', UsersController.index);
+    authenticated.get('/users/:id', UsersController.show);
+});
+
 export default route;
