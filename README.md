@@ -7,6 +7,10 @@ An Express and Inertia starter with React views, authentication, sessions, migra
 - [Quick start for agents](#quick-start-for-agents)
 - [Architecture](#architecture)
 - [Database](#database)
+- [CLI generators](#cli-generators)
+- [Validation and authorization](#validation-and-authorization)
+- [Notifications](#notifications)
+- [Convention-based loading](#convention-based-loading)
 - [Authentication helpers](#authentication-helpers)
 - [Primitives](#primitives)
 - [Adding or replacing drivers](#adding-or-replacing-drivers)
@@ -113,6 +117,119 @@ const post2 = new Post('Title 2', 'Body 2');
 await db.persistAndFlush([post1, post2]); // Both inserted in one transaction
 ```
 
+## CLI generators
+
+The starter includes a small CLI for common make/run commands:
+
+```bash
+node bin/boring.js --help
+node bin/boring.js make:controller posts
+node bin/boring.js make:model Post
+node bin/boring.js make:job sendDigest
+node bin/boring.js make:request StorePostRequest
+node bin/boring.js make:policy PostPolicy
+node bin/boring.js queue:work
+node bin/boring.js queue:failed
+node bin/boring.js queue:retry all
+node bin/boring.js queue:forget <job-id>
+```
+
+Command behavior:
+
+- `make:controller Name` creates `app/controllers/Name.js` with an `index` action.
+- `make:model Name` creates `app/models/Name.js` with id/timestamps.
+- `make:job Name` creates `app/jobs/Name.js` and registers a queue handler.
+- `make:event Name` creates `app/events/Name.js` and registers an event listener.
+- `make:mail Name` creates `app/mail/templates/Name.js`.
+- `make:middleware Name` creates `app/middleware/Name.js`.
+- `make:request Name` creates `app/requests/` if needed, then writes a reusable request-rule module there.
+- `make:policy Name` creates `app/policies/` if needed, then writes a named-ability policy module there.
+- `queue:work` starts the queue/scheduler worker.
+- `queue:failed` lists failed jobs from the queue table.
+- `queue:retry ID` moves one failed job back to pending; `queue:retry all` retries all failed jobs.
+- `queue:forget ID` deletes one failed job; `queue:forget all` clears all failed jobs.
+- `schedule:run` starts the process that loads scheduled tasks.
+
+When installed as a package, the binary is exposed as `boring`.
+
+## Validation and authorization
+
+Use `app/support/validation.js` for rule-based request validation:
+
+```js
+import { validate, validateRequest } from './app/support/validation.js';
+
+const result = validate(req.body, {
+  email: 'required|email',
+  password: 'required|min:8|confirmed',
+  'items.*.sku': 'required|string',
+});
+
+route.post('/settings/profile', auth, validateRequest({
+  name: 'required|string|max:255',
+  email: 'required|email|max:255',
+}), updateProfile);
+```
+
+Validation supports nested paths, wildcard array paths, control rules (`nullable`, `sometimes`, `exclude_if`, `bail`), string/number/date/URL/UUID/boolean rules, inclusion rules, comparison rules, regex rules, confirmation rules, and sync/async custom rule functions via `validateAsync`.
+
+Use `app/support/authorization.js` for named ability checks and route middleware:
+
+```js
+import { Gate, can } from './app/support/authorization.js';
+
+Gate.define('posts.update', (user, post) => user?.id === post.userId);
+route.post('/posts/:id', auth, can('posts.update', req => req.post), updatePost);
+```
+
+## Notifications
+
+Use `NotificationCenter` for user-facing delivery. This is separate from the event bus:
+
+- events announce that something happened inside the app (`auth.registered`);
+- notifications deliver something to a recipient through channels (`database`, `mail`).
+
+```js
+import { NotificationCenter } from './app/primitives/notification.js';
+
+await NotificationCenter.send(user, {
+  type: 'invoice.paid',
+  channels: ['database', 'mail'],
+  toDatabase: () => ({ invoiceId: invoice.id, amount: invoice.amount }),
+  toMail: () => ({
+    subject: 'Invoice paid',
+    html: '<p>Your invoice was paid.</p>',
+  }),
+});
+
+const unread = await NotificationCenter.unread(user);
+await NotificationCenter.markRead(user, unread[0].id);
+```
+
+The default driver stores database notifications in `notifications` and delegates mail-channel delivery to the existing `Mailer` primitive.
+
+## Convention-based loading
+
+Some runtime modules are loaded by directory convention because their files register handlers as side effects:
+
+- `Queue.start()` loads files under `app/jobs/`; each job file calls `Queue.on('name', handler)`.
+- `Scheduler.start()` loads files under `app/scheduler/`; each scheduler file calls `Scheduler.on(expression, handler)`.
+
+Example job:
+
+```js
+// app/jobs/sendDigest.js
+import { Queue } from '../primitives/queue.js';
+
+Queue.on('sendDigest', async (ctx, payload) => {
+  // process payload
+});
+```
+
+That file does not need to be imported from `app/worker.js`; the queue runtime loads the jobs directory before polling. This works well for jobs and scheduler tasks because registering handlers is the whole purpose of those files.
+
+Controllers, requests, and policies are intentionally not loaded this way in this PR. Routes are still explicit in `app/router/route.js`, so a generated controller is not reachable until a route imports and uses it. Auto-wiring controllers would require a routing convention, route naming rules, parameter binding rules, and conflict handling. That is a separate routing design decision, not a small generator feature.
+
 ## Authentication helpers
 
 Available on every `req` and can be extended
@@ -165,7 +282,8 @@ All primitives follow the same `configure`/`start`/`stop` lifecycle and support 
 | `Bus`       | `inMemory`     | In-process event bus for publishing and subscribing to domain events |
 | `Cache`     | `memory`       | Key/value store for caching data with optional TTL             |
 | `Mailer`    | `smtp`         | Sends transactional emails                                    |
-| `Queue`     | `inMemory`     | Runs background jobs with retry and concurrency support         |
+| `NotificationCenter` | `database` | Delivers user-facing notifications through database/mail channels |
+| `Queue`     | `sqlite`       | Runs background jobs with retry and concurrency support         |
 | `Scheduler` | (cron-based)   | Registers and runs recurring tasks on a schedule                |
 | `Storage`   | `local`        | Stores and retrieves files                                     |
 

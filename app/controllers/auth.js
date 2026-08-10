@@ -187,6 +187,40 @@ export async function resendVerification(req, res) {
     });
 }
 
+export async function showSettings(req, res) {
+    const user = await req.user();
+    return res.render('Auth/Settings', { user });
+}
+
+export async function updateProfile(req, res) {
+    const user = await req.user();
+    const result = await auth.updateUserProfile(req.ctx.db, user, req.body);
+    if (result.errors) {
+        return res.status(422).render('Auth/Settings', { user, errors: result.errors });
+    }
+    return res.render('Auth/Settings', { user: result.data.user, status: result.data.status });
+}
+
+export async function updatePassword(req, res) {
+    const user = await req.user();
+    const result = await auth.updateUserPassword(req.ctx.db, user, req.body);
+    if (result.errors) {
+        return res.status(422).render('Auth/Settings', { user, errors: result.errors });
+    }
+    await req.logout();
+    return res.redirect('/login?password=1');
+}
+
+export async function deleteAccount(req, res) {
+    const user = await req.user();
+    const result = await auth.deleteUserAccount(req.ctx.db, user, req.body);
+    if (result.errors) {
+        return res.status(422).render('Auth/Settings', { user, errors: result.errors });
+    }
+    await req.logout();
+    return res.redirect('/');
+}
+
 export async function loginAsAdmin(req, res) {
     const { data, errors } = await auth.attemptLogin(req.ctx.db, {
         email: 'admin@example.com',

@@ -7,6 +7,7 @@ import { hash } from '../../lib/utilities/hash.js';
 import { Mailer } from '../primitives/mail.js';
 import { Bus } from '../primitives/bus.js';
 import { Queue } from '../primitives/queue.js';
+import { validate } from '../support/validation.js';
 
 /**
  * Field-level validation messages keyed by input name.
@@ -442,6 +443,54 @@ export async function resendVerification(user) {
     await sendVerificationEmail(user, '<p>Please verify your email address.</p>');
     return { data: { status: 'A new verification link has been sent to your email address.' }, errors: null };
 }
+export async function updateUserProfile(database, user, body) {
+    const result = validate(body, {
+        name: 'required|string|max:255',
+        email: 'required|email|max:255',
+    });
+    if (!result.valid) return { data: null, errors: result.errors };
+
+    const email = String(result.data.email);
+    const existingUser = await database.findOne(User, { email });
+    if (existingUser && existingUser.id !== user.id) {
+        return { data: null, errors: { email: ['Email already taken'] } };
+    }
+
+    const emailChanged = user.email !== email;
+    user.name = String(result.data.name);
+    user.email = email;
+    if (emailChanged) user.emailVerifiedAt = null;
+    await database.flush();
+    if (emailChanged) await sendVerificationEmail(user, '<p>Please verify your new email address.</p>');
+    return { data: { user, status: emailChanged ? 'Profile updated. Please verify your new email address.' : 'Profile updated.' }, errors: null };
+}
+
+export async function updateUserPassword(database, user, body) {
+    const result = validate(body, {
+        current_password: 'required',
+        password: 'required|min:8|confirmed',
+    });
+    if (!result.valid) return { data: null, errors: result.errors };
+    if (!(await hash.check(String(result.data.current_password), user.password))) {
+        return { data: null, errors: { current_password: ['Current password is incorrect'] } };
+    }
+    user.password = await hash.make(String(result.data.password));
+    await database.nativeDelete(Session, { user_id: user.id });
+    await database.flush();
+    return { data: { status: 'Password updated. Please sign in again.' }, errors: null };
+}
+
+export async function deleteUserAccount(database, user, body) {
+    const result = validate(body, { password: 'required' });
+    if (!result.valid) return { data: null, errors: result.errors };
+    if (!(await hash.check(String(result.data.password), user.password))) {
+        return { data: null, errors: { password: ['Password is incorrect'] } };
+    }
+    await database.nativeDelete(Session, { user_id: user.id });
+    await database.removeAndFlush(user);
+    return { data: { status: 'Account deleted.' }, errors: null };
+}
+
 /**
  * Logs the payload received for an `auth.registered` event.
  *
