@@ -154,24 +154,26 @@ When installed as a package, the binary is exposed as `boring`.
 
 ## Validation and authorization
 
-Use `app/support/validation.js` for rule-based request validation:
+Use `app/support/validation.js` for rule-based data validation and Express request middleware:
 
 ```js
-import { validate, validateRequest } from './app/support/validation.js';
+import { Validation } from './app/support/validation.js';
 
-const result = validate(req.body, {
+const result = Validation.validate(req.body, {
   email: 'required|email',
   password: 'required|min:8|confirmed',
   'items.*.sku': 'required|string',
 });
 
-route.post('/settings/profile', auth, validateRequest({
+route.post('/settings/profile', auth, Validation.request({
   name: 'required|string|max:255',
   email: 'required|email|max:255',
 }), updateProfile);
+// Validation.request(...) is Express middleware: it reads req.body,
+// writes the validated payload to req.validated, then calls next().
 ```
 
-Validation supports nested paths, wildcard array paths, control rules (`nullable`, `sometimes`, `exclude_if`, `bail`), string/number/date/URL/UUID/boolean rules, inclusion rules, comparison rules, regex rules, confirmation rules, and sync/async custom rule functions via `validateAsync`.
+Validation supports nested paths, wildcard array paths, control rules (`nullable`, `sometimes`, `exclude_if`, `bail`), string/number/date/URL/UUID/boolean rules, file rules, inclusion rules, comparison rules, regex rules, confirmation rules, custom labels/messages, named error bags, database-backed `unique`/`exists` rules through `Validation.validateAsync()` or request middleware with `req.ctx.db`, and sync/async custom rule functions.
 
 Use `app/support/authorization.js` for named ability checks and route middleware:
 
