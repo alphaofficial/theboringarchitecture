@@ -714,3 +714,29 @@ await Cache.remember('stats.users', 300, () => countUsers());
 ## Routing ergonomics
 
 See [Routing ergonomics](./docs/routing.md) for named-route URL generation, route groups, and resource route registration.
+
+## Data and productivity helpers
+
+Use `Storage` for app files, MikroORM factories for test/seed model instances, `db.findAndCount()` for database pagination, and MikroORM `serialize()` for API output.
+
+```js
+import { serialize } from '@mikro-orm/core';
+import { Storage } from './app/primitives/storage.js';
+import { User } from './app/models/User.js';
+
+await Storage.put('exports/users.json', `${JSON.stringify(users)}\n`);
+
+const page = Number(req.query.page ?? 1);
+const pageSize = Number(req.query.page_size ?? 25);
+const [users, total] = await db.findAndCount(User, {}, {
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+});
+
+return res.json({
+    data: serialize(users, { exclude: ['password', 'rememberToken'] }),
+    meta: { page, page_size: pageSize, total },
+});
+```
+
+See [Data and productivity helpers](./docs/data-productivity-helpers.md) for the full API.
