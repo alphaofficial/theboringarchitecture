@@ -142,8 +142,8 @@ Command behavior:
 - `make:event Name` creates `app/events/Name.js` and registers an event listener.
 - `make:mail Name` creates `app/mail/templates/Name.js`.
 - `make:middleware Name` creates `app/middleware/Name.js`.
-- `make:request Name` creates `app/requests/` if needed, then writes a reusable request-rule module there.
-- `make:policy Name` creates `app/policies/` if needed, then writes a named-ability policy module there.
+- `make:request Name` creates `app/requests/` if needed, then writes a request-rule module that registers with `RequestModules`.
+- `make:policy Name` creates `app/policies/` if needed, then writes a subject policy module that registers with `Policy`.
 - `queue:work` starts the queue/scheduler worker.
 - `queue:failed` lists failed jobs from the queue table.
 - `queue:retry ID` moves one failed job back to pending; `queue:retry all` retries all failed jobs.
