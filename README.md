@@ -669,3 +669,22 @@ The Docker image also configures `pm2-logrotate` to rotate logs at 5 MB, retain 
 ## License
 
 MIT — see [LICENSE](./LICENSE).
+
+## Web security helpers
+
+Use the support facades for sensitive web flows that need route-level protection.
+
+```js
+import { SignedUrl } from './app/support/signedUrl.js';
+import { PasswordConfirmation } from './app/middleware/passwordConfirmation.js';
+import { RateLimitPresets } from './app/support/rateLimitPresets.js';
+
+const url = SignedUrl.create('/email/verify/abc', { user: user.id }, {
+    secret: process.env.APP_KEY,
+    expiresAt: Date.now() + 60 * 60 * 1000,
+});
+
+route.get('/email/verify/:token', SignedUrl.middleware({ secret: process.env.APP_KEY }), verifyEmail);
+route.post('/settings/delete', PasswordConfirmation.requireFresh(), deleteAccount);
+route.post('/login', RateLimitPresets.middleware('login'), login);
+```
