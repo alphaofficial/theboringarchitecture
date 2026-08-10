@@ -4,6 +4,9 @@
   "description": "The Boring Architecture — a fullstack starter for Express, Inertia, and React.",
   "main": "app/index.js",
   "type": "module",
+  "bin": {
+    "boring": "bin/boring.js"
+  },
   "scripts": {
     "build": "npm run build:client && npm run build:ssr",
     "build:client": "vite build",
