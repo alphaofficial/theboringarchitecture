@@ -14,6 +14,8 @@ import { injectAuthHelpers } from '../middleware/authUtils.js';
 import { notFoundHandler, globalErrorHandler } from '../middleware/errorHandler.js';
 import { bootstrapPrimitives } from '../../lib/runtime/bootstrapPrimitives.js';
 import { createApplicationCtx } from '../../lib/runtime/context.js';
+import { PolicyDiscovery } from '../support/policyDiscovery.js';
+import { RequestModules } from '../support/requestModules.js';
 /**
  * Creates the Express application, database context, and middleware stack.
  *
@@ -35,6 +37,8 @@ export async function createApp() {
         next();
     });
     bootstrapPrimitives(ctx);
+    await PolicyDiscovery.load();
+    await RequestModules.load();
     app.use(helmet({
         contentSecurityPolicy: variables.NODE_ENV === 'production' ? undefined : false,
     }));

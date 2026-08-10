@@ -86,13 +86,14 @@ function makeMiddleware(name) {
 }
 
 function makeRequest(name) {
-    const c = className(name);
-    write(`app/requests/${c}.js`, `export const ${c} = {\n    rules: {\n        // name: 'required|string|max:255',\n    },\n};\n`);
+    const requestName = className(name);
+    write(`app/requests/${requestName}.js`, `export const ${requestName} = {\n    name: '${requestName}',\n    rules: {\n        // name: 'required|string|max:255',\n    },\n};\n`);
 }
 
 function makePolicy(name) {
-    const c = className(name);
-    write(`app/policies/${c}.js`, `import { Gate } from '../support/authorization.js';\n\nGate.define('${name}.view', (user, subject) => Boolean(user && subject));\n`);
+    const policyName = className(name);
+    const subjectName = policyName.replace(/Policy$/, '') || policyName;
+    write(`app/policies/${policyName}.js`, `import { Policy } from '../support/policies.js';\n\nPolicy.define('${subjectName}', {\n    view: (user, subject) => Boolean(user && subject),\n});\n`);
 }
 
 async function withOrm(callback) {
