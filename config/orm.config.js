@@ -16,7 +16,8 @@ const mikroOrmOptions = {
     },
     migrations: {
         path: "db/migrations",
-            },
+        emit: "js",
+    },
     resultCache: {
         global: 0,
     },
