@@ -412,7 +412,7 @@ async function runValidationAsync(data, rules, options = {}) {
  * @returns {{valid: boolean, data: Record<string, unknown>, errors: Record<string, string[]>, errorBag?: string, errorBags?: Record<string, Record<string, string[]>>}}
  */
 /** Validate data synchronously and return errors plus validated values. */
-function validate(data, rules, options = {}) {
+export function validate(data, rules, options = {}) {
     return runValidation(data, rules, options);
 }
 
