@@ -4,10 +4,30 @@ import { User } from '../models/User.js';
 import { PasswordReset } from '../models/PasswordReset.js';
 import { Session } from '../models/Session.js';
 import { hash } from '../../lib/utilities/hash.js';
-import { Mailer } from '../primitives/mail.js';
 import { Bus } from '../primitives/bus.js';
 import { Queue } from '../primitives/queue.js';
+import { Mailer } from '../primitives/mail.js';
+import { MailTemplate } from '../support/mailTemplate.js';
 import { validate } from '../support/validation.js';
+
+MailTemplate.define('auth.verifyEmail', ({ introHtml, verifyUrl }) => ({
+    subject: 'Verify your email address',
+    html: `
+        ${introHtml}
+        <p><a href="${verifyUrl}">Click here to verify your email address</a></p>
+        <p>If you did not create an account, please ignore this email.</p>
+    `,
+}));
+
+MailTemplate.define('auth.passwordReset', ({ resetUrl, expiryMinutes }) => ({
+    subject: 'Password Reset Request',
+    html: `
+        <p>You requested a password reset for your account.</p>
+        <p><a href="${resetUrl}">Click here to reset your password</a></p>
+        <p>This link expires in ${expiryMinutes} minutes.</p>
+        <p>If you did not request this, please ignore this email.</p>
+    `,
+}));
 
 /**
  * Field-level validation messages keyed by input name.
@@ -238,12 +258,8 @@ export async function loginUser(database, email, password) {
 export async function sendVerificationEmail(user, introHtml) {
     const token = makeVerificationToken(user.id, user.email);
     const verifyUrl = `${variables.APP_URL}/verify-email/${token}`;
-    const html = `
-        ${introHtml}
-        <p><a href="${verifyUrl}">Click here to verify your email address</a></p>
-        <p>If you did not create an account, please ignore this email.</p>
-    `;
-    await Mailer.send(user.email, 'Verify your email address', html);
+    const message = MailTemplate.render('auth.verifyEmail', { introHtml, verifyUrl });
+    await Mailer.send(user.email, message.subject, message.html);
 }
 /**
  * Creates a new account and publishes `auth.registered`.
@@ -285,13 +301,11 @@ export async function requestPasswordReset(database, email) {
     const reset = database.create(PasswordReset, { email, tokenHash, createdAt: new Date() });
     await database.persistAndFlush(reset);
     const resetUrl = `${variables.APP_URL}/reset-password/${rawToken}?email=${encodeURIComponent(email)}`;
-    const html = `
-        <p>You requested a password reset for your account.</p>
-        <p><a href="${resetUrl}">Click here to reset your password</a></p>
-        <p>This link expires in ${variables.PASSWORD_RESET_EXPIRY} minutes.</p>
-        <p>If you did not request this, please ignore this email.</p>
-    `;
-    await Mailer.send(email, 'Password Reset Request', html);
+    const message = MailTemplate.render('auth.passwordReset', {
+        resetUrl,
+        expiryMinutes: variables.PASSWORD_RESET_EXPIRY,
+    });
+    await Mailer.send(email, message.subject, message.html);
 }
 /**
  * Replaces a password using a valid, unexpired reset token.

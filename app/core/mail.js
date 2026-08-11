@@ -2,6 +2,12 @@ import variables from '../../config/variables.js';
 import { PinoLogger } from '../../lib/logger/pinoLogger.js';
 import { WelcomeEmail } from '../mail/templates/WelcomeEmail.js';
 import { Mailer } from '../primitives/mail.js';
+import { MailTemplate } from '../support/mailTemplate.js';
+
+MailTemplate.define('welcome', ({ name, appName }) => ({
+    subject: `Welcome to ${appName}`,
+    html: WelcomeEmail({ name, appName }),
+}));
 
 /**
  * @typedef {Object} SendWelcomeEmailPayload
@@ -16,10 +22,11 @@ import { Mailer } from '../primitives/mail.js';
  * @returns {Promise<void>} Resolves after the configured mail transport accepts the message.
  */
 export async function sendWelcomeEmail(payload) {
-    await Mailer.send(payload.to, `Welcome to ${variables.APP_NAME}`, WelcomeEmail({
+    const message = MailTemplate.render('welcome', {
         name: payload.name,
         appName: variables.APP_NAME,
-    }));
+    });
+    await Mailer.send(payload.to, message.subject, message.html);
     PinoLogger.info({
         scope: 'sendWelcomeEmail',
         message: 'Sending welcome email',

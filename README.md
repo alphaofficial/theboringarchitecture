@@ -688,3 +688,23 @@ route.get('/email/verify/:token', SignedUrl.middleware({ secret: process.env.APP
 route.post('/settings/delete', PasswordConfirmation.requireFresh(), deleteAccount);
 route.post('/login', RateLimitPresets.middleware('login'), login);
 ```
+
+## Operations and developer ergonomics
+
+Use `MailTemplate` in mail composition code to render `{ subject, html }` before handing the rendered message to the `Mailer` primitive. The primitive remains transport-only: it receives `to`, `subject`, and `html` and delegates delivery to the configured SMTP driver. Use `Command` for app command handlers, `Config` for nested configuration reads, `QueueMonitor` for queue-driver stats, and `Cache.remember()` for cache-aside values.
+
+```js
+import { MailTemplate } from './app/support/mailTemplate.js';
+import { Mailer } from './app/primitives/mail.js';
+import { Command } from './app/support/command.js';
+import { Config } from './app/support/config.js';
+import { Cache } from './app/primitives/cache.js';
+
+MailTemplate.define('welcome', user => ({ subject: 'Welcome', html: `<p>${user.name}</p>` }));
+const message = MailTemplate.render('welcome', user);
+await Mailer.send(user.email, message.subject, message.html);
+
+Command.define('users:prune', { description: 'Prune inactive users', async handle() {} });
+const config = Config.create({ mail: { from: { address: 'hello@example.com' } } });
+await Cache.remember('stats.users', 300, () => countUsers());
+```
