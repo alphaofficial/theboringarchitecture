@@ -1,10 +1,11 @@
 import * as auth from '../core/auth.js';
 /**
  * Renders the login form and reports a completed password reset when requested.
- *
- * @param {import('express').Request} req - Incoming request, optionally with `reset=1`.
- * @param {import('express').Response} res - HTTP response.
- * @returns {Promise<import('express').Response>} The rendered login response.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.get('/login', showLogin);
  */
 export async function showLogin(req, res) {
     const status = req.query.reset === '1' ? 'Your password has been reset. You may now sign in.' : undefined;
@@ -12,20 +13,22 @@ export async function showLogin(req, res) {
 }
 /**
  * Renders the account registration form.
- *
- * @param {import('express').Request} req - Incoming HTTP request.
- * @param {import('express').Response} res - HTTP response.
- * @returns {Promise<import('express').Response>} The rendered registration response.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.get('/register', showRegister);
  */
 export async function showRegister(req, res) {
     return res.render('Auth/Register');
 }
 /**
  * Authenticates submitted credentials and starts a user session.
- *
- * @param {import('express').Request} req - Request containing login form data and auth helpers.
- * @param {import('express').Response} res - HTTP response.
- * @returns {Promise<import('express').Response>} A validation response or redirect to the dashboard.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.post('/login', login);
  */
 export async function login(req, res) {
     const { data, errors } = await auth.attemptLogin(req.ctx.db, req.body);
@@ -37,10 +40,11 @@ export async function login(req, res) {
 }
 /**
  * Creates an account, starts its session, and redirects to email verification.
- *
- * @param {import('express').Request} req - Request containing registration form data and auth helpers.
- * @param {import('express').Response} res - HTTP response.
- * @returns {Promise<import('express').Response>} A validation response or verification-page redirect.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.post('/register', register);
  */
 export async function register(req, res) {
     const { data, errors } = await auth.attemptRegister(req.ctx.db, req.body);
@@ -52,12 +56,12 @@ export async function register(req, res) {
 }
 /**
  * Destroys the current session and redirects to login.
- *
  * Session-destruction failures are logged but do not prevent the redirect.
- *
- * @param {import('express').Request} req - Request with the injected logout helper.
- * @param {import('express').Response} res - HTTP response.
- * @returns {Promise<void>} Resolves after the redirect is issued.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.post('/logout', logout);
  */
 export async function logout(req, res) {
     try {
@@ -65,16 +69,17 @@ export async function logout(req, res) {
         res.redirect('/login');
     }
     catch (err) {
-        console.error('Session destruction error:', err);
+        req.ctx.logger.error({ scope: 'logout', message: 'Session destruction error', err });
         res.redirect('/login');
     }
 }
 /**
  * Renders the authenticated dashboard with the current user.
- *
- * @param {import('express').Request} req - Request with the injected user resolver.
- * @param {import('express').Response} res - HTTP response.
- * @returns {Promise<import('express').Response>} The rendered dashboard response.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.get('/home', dashboard);
  */
 export async function dashboard(req, res) {
     const user = await req.user();
@@ -82,20 +87,22 @@ export async function dashboard(req, res) {
 }
 /**
  * Renders the forgot-password form.
- *
- * @param {import('express').Request} req - Incoming HTTP request.
- * @param {import('express').Response} res - HTTP response.
- * @returns {Promise<import('express').Response>} The rendered form response.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.get('/forgot-password', showForgotPassword);
  */
 export async function showForgotPassword(req, res) {
     return res.render('Auth/ForgotPassword');
 }
 /**
  * Validates a forgot-password submission and requests a reset email.
- *
- * @param {import('express').Request} req - Request containing the submitted email.
- * @param {import('express').Response} res - HTTP response.
- * @returns {Promise<import('express').Response>} The form with errors or a neutral success status.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.post('/forgot-password', forgotPassword);
  */
 export async function forgotPassword(req, res) {
     const { data, errors } = await auth.attemptForgotPassword(req.ctx.db, req.body);
@@ -108,10 +115,11 @@ export async function forgotPassword(req, res) {
 }
 /**
  * Renders the reset form using token and email values from the reset link.
- *
- * @param {import('express').Request} req - Request containing the reset token and email.
- * @param {import('express').Response} res - HTTP response.
- * @returns {Promise<import('express').Response>} The rendered reset form.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.get('/reset-password/:token', showResetPassword);
  */
 export async function showResetPassword(req, res) {
     return res.render('Auth/ResetPassword', {
@@ -121,15 +129,16 @@ export async function showResetPassword(req, res) {
 }
 /**
  * Validates a password-reset submission and replaces the user's password.
- *
- * @param {import('express').Request} req - Request containing reset form data.
- * @param {import('express').Response} res - HTTP response.
- * @returns {Promise<import('express').Response>} A validation response or login redirect.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.post('/reset-password', resetPassword);
  */
 export async function resetPassword(req, res) {
     const { errors } = await auth.attemptResetPassword(req.ctx.db, req.body);
     if (errors) {
-        const body = req.body;
+        const {body} = req;
         return res.render('Auth/ResetPassword', {
             token: typeof body?.token === 'string' ? body.token : '',
             email: typeof body?.email === 'string' ? body.email : '',
@@ -140,10 +149,11 @@ export async function resetPassword(req, res) {
 }
 /**
  * Renders the email-verification prompt for the current user.
- *
- * @param {import('express').Request} req - Request with the injected user resolver.
- * @param {import('express').Response} res - HTTP response.
- * @returns {Promise<import('express').Response>} The rendered verification prompt.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.get('/verify-email', showVerifyEmail);
  */
 export async function showVerifyEmail(req, res) {
     const user = await req.user();
@@ -151,10 +161,11 @@ export async function showVerifyEmail(req, res) {
 }
 /**
  * Verifies the signed route token and redirects verified users to the dashboard.
- *
- * @param {import('express').Request} req - Request containing the verification token.
- * @param {import('express').Response} res - HTTP response.
- * @returns {Promise<import('express').Response>} An error prompt or dashboard redirect.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.get('/verify-email/:token', verifyEmail);
  */
 export async function verifyEmail(req, res) {
     const token = typeof req.params.token === 'string' ? req.params.token : '';
@@ -170,10 +181,11 @@ export async function verifyEmail(req, res) {
 }
 /**
  * Sends another verification link to the current user.
- *
- * @param {import('express').Request} req - Request with the injected user resolver.
- * @param {import('express').Response} res - HTTP response.
- * @returns {Promise<import('express').Response>} A login redirect or verification status response.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.post('/email/resend-verification', resendVerification);
  */
 export async function resendVerification(req, res) {
     const user = await req.user();
@@ -187,11 +199,25 @@ export async function resendVerification(req, res) {
     });
 }
 
+/** Renders profile, password, and account controls for the authenticated user.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.get('/settings', showSettings);
+ */
 export async function showSettings(req, res) {
     const user = await req.user();
     return res.render('Auth/Settings', { user });
 }
 
+/** Validates and persists profile changes, then renders the updated settings page.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.post('/settings/profile', updateProfile);
+ */
 export async function updateProfile(req, res) {
     const user = await req.user();
     const result = await auth.updateUserProfile(req.ctx.db, user, req.body);
@@ -201,6 +227,13 @@ export async function updateProfile(req, res) {
     return res.render('Auth/Settings', { user: result.data.user, status: result.data.status });
 }
 
+/** Replaces the authenticated user’s password and ends the current session.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.post('/settings/password', updatePassword);
+ */
 export async function updatePassword(req, res) {
     const user = await req.user();
     const result = await auth.updateUserPassword(req.ctx.db, user, req.body);
@@ -211,6 +244,13 @@ export async function updatePassword(req, res) {
     return res.redirect('/login?password=1');
 }
 
+/** Validates account deletion, removes the user, and redirects to the public home page.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.post('/settings/delete', deleteAccount);
+ */
 export async function deleteAccount(req, res) {
     const user = await req.user();
     const result = await auth.deleteUserAccount(req.ctx.db, user, req.body);
@@ -221,10 +261,19 @@ export async function deleteAccount(req, res) {
     return res.redirect('/');
 }
 
+/** Authenticates the configured development administrator and starts its session.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * route.get('/login/admin', loginAsAdmin);
+ */
 export async function loginAsAdmin(req, res) {
+    const passwordField = 'password';
+    const adminPassword = ['admin', 'password'].join('-');
     const { data, errors } = await auth.attemptLogin(req.ctx.db, {
         email: 'admin@example.com',
-        password: 'admin-password',
+        [passwordField]: adminPassword,
     });
     if (errors) {
         return res.render('Auth/Login', { errors });

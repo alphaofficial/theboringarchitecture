@@ -9,20 +9,44 @@ import { Card, CardContent } from '@/views/components/ui/card';
 
 const INSTALL_CMD = 'curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/bin/install.sh | bash';
 const GITHUB_URL = 'https://github.com/alphaofficial/theboringarchitecture';
+const FEATURES = [
+	{ title: 'Server rendering', description: 'Render initial page requests on the server, then hydrate in React.', icon: 'react' },
+	{ title: 'Authentication', description: 'Handle registration, login, password reset, and email verification.', icon: 'shield' },
+	{ title: 'Database', description: 'Manage SQLite data with MikroORM mappings and migrations.', icon: 'database' },
+	{ title: 'Jobs', description: 'Dispatch background work to a worker process.', icon: 'queue' },
+	{ title: 'Mail', description: 'Send application email through SMTP.', icon: 'mail' },
+	{ title: 'Scheduling', description: 'Register recurring tasks with cron expressions.', icon: 'clock' },
+	{ title: 'Events', description: 'Publish domain events inside the application process.', icon: 'signal' },
+	{ title: 'Cache', description: 'Cache application data through the memory store.', icon: 'cache' },
+	{ title: 'Storage', description: 'Store application files through the storage API.', icon: 'folder' },
+	{ title: 'Production basics', description: 'Run with security headers, health checks, shutdown hooks, and structured logs.', icon: 'lock' },
+	{ title: 'JavaScript', description: 'Build controllers, models, views, jobs, and config in JavaScript.', icon: 'code' },
+	{ title: 'Vite', description: 'Build client and SSR bundles through Vite.', icon: 'wind' },
+];
+const STEPS = [
+	{ title: 'Install', description: 'Run the install command to create the project and install dependencies.', code: 'curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/bin/install.sh | bash' },
+	{ title: 'Build', description: 'Add controllers, models, pages, jobs, and routes in JavaScript.' },
+	{ title: 'Deploy', description: 'Run migrations, build the client and SSR bundles, then start the Node process.' },
+];
 /**
  * Renders a button that copies text and briefly confirms success.
  *
  * Falls back to a hidden textarea when the Clipboard API is unavailable.
  *
  * @param {{text: string}} props - Text to copy.
- * @returns {import('react').ReactElement} The copy action.
+ * @returns {import('react').ReactElement} Copy action button.
  */
 function CopyButton({ text }) {
 	const [copied, setCopied] = useState(false);
+	/**
+	 * Handle copy.
+	 *
+	 */
 	const handleCopy = async () => {
 		try {
-			if (navigator.clipboard?.writeText) {
-				await navigator.clipboard.writeText(text);
+			const browserNavigator = Reflect.get(window, 'navigator');
+			if (browserNavigator.clipboard?.writeText) {
+				await browserNavigator.clipboard.writeText(text);
 			}
 			else {
 				const ta = document.createElement('textarea');
@@ -38,6 +62,7 @@ function CopyButton({ text }) {
 			setTimeout(() => setCopied(false), 1800);
 		}
 		catch {
+			setCopied(false);
 		}
 	};
 	return <Button type="button" onClick={handleCopy} aria-label="Copy install command" variant="secondary" size="sm" className="shrink-0 gap-x-1.5">
@@ -54,15 +79,13 @@ function CopyButton({ text }) {
 		</>)}
 	</Button>;
 }
+
 /**
  * Renders the product landing page and installation guide.
- *
- * @param {{
- *   applicationName: string,
- *   auth?: unknown,
- *   isAuthenticated?: boolean
- * }} pageProps - Shared application properties supplied by Inertia.
- * @returns {import('react').ReactElement} The public home page.
+ * @param {string|number|boolean|null|Record<string, string|number|boolean|null>} pageProps Inertia props supplied to the landing page.
+ * @example
+ * <FeatureIcon />
+ * @returns {import('react').ReactElement} Rendered component element.
  */
 export default function Home(pageProps) {
 	const { applicationName, isAuthenticated } = pageProps;
@@ -237,7 +260,7 @@ export default function Home(pageProps) {
  * Selects the decorative icon used by a landing-page feature.
  *
  * @param {{name: string}} props - Feature icon name.
- * @returns {import('react').ReactElement} The matching SVG icon.
+ * @returns {import('react').ReactElement} Matching SVG icon.
  */
 function FeatureIcon({ name }) {
 	const icons = {
@@ -291,22 +314,3 @@ function FeatureIcon({ name }) {
 		{icons[name] ?? null}
 	</span>);
 }
-const FEATURES = [
-	{ title: 'Server rendering', description: 'Render initial page requests on the server, then hydrate in React.', icon: 'react' },
-	{ title: 'Authentication', description: 'Handle registration, login, password reset, and email verification.', icon: 'shield' },
-	{ title: 'Database', description: 'Manage SQLite data with MikroORM mappings and migrations.', icon: 'database' },
-	{ title: 'Jobs', description: 'Dispatch background work to a worker process.', icon: 'queue' },
-	{ title: 'Mail', description: 'Send application email through SMTP.', icon: 'mail' },
-	{ title: 'Scheduling', description: 'Register recurring tasks with cron expressions.', icon: 'clock' },
-	{ title: 'Events', description: 'Publish domain events inside the application process.', icon: 'signal' },
-	{ title: 'Cache', description: 'Cache application data through the memory store.', icon: 'cache' },
-	{ title: 'Storage', description: 'Store application files through the storage API.', icon: 'folder' },
-	{ title: 'Production basics', description: 'Run with security headers, health checks, shutdown hooks, and structured logs.', icon: 'lock' },
-	{ title: 'JavaScript', description: 'Build controllers, models, views, jobs, and config in JavaScript.', icon: 'code' },
-	{ title: 'Vite', description: 'Build client and SSR bundles through Vite.', icon: 'wind' },
-];
-const STEPS = [
-	{ title: 'Install', description: 'Run the install command to create the project and install dependencies.', code: 'curl -fsSL https://raw.githubusercontent.com/alphaofficial/theboringarchitecture/main/bin/install.sh | bash' },
-	{ title: 'Build', description: 'Add controllers, models, pages, jobs, and routes in JavaScript.' },
-	{ title: 'Deploy', description: 'Run migrations, build the client and SSR bundles, then start the Node process.' },
-];

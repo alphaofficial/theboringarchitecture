@@ -1,10 +1,11 @@
 /**
  * Renders the HTML body for a new user's welcome email.
- *
- * @param {Object} data - Template data.
- * @param {string} data.name - Recipient display name.
- * @param {string} [data.appName='The Boring Architecture'] - Product name shown in the message.
- * @returns {string} Rendered welcome-email HTML.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component props.
+ * @param {string} root0.name Display name used to personalize the generated content.
+ * @param {string} root0.appName Application name.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * WelcomeEmail();
  */
 export function WelcomeEmail({ name, appName = 'The Boring Architecture' }) {
     return `

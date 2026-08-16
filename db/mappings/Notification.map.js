@@ -1,6 +1,7 @@
 import { EntitySchema } from "@mikro-orm/postgresql";
-import { Notification } from "../Notification.js";
+import { Notification } from "../../app/models/Notification.js";
 
+/** Provides the NotificationMapper public API for its configured application behavior. */
 export const NotificationMapper = new EntitySchema({
     class: Notification,
     tableName: "notifications",

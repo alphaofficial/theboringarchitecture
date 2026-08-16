@@ -5,16 +5,11 @@ import { Input } from '@/views/components/ui/input';
 import { Label } from '@/views/components/ui/label';
 /**
  * Renders the account-registration form.
- *
- * @param {{
- *   errors?: {
- *     name?: string[],
- *     email?: string[],
- *     password?: string[],
- *     password_confirmation?: string[]
- *   }
- * }} props - Field-level validation errors from the server.
- * @returns {import('react').ReactElement} The registration page.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {Record<string, string>} root0.errors Validation errors keyed by form field.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <Register />
  */
 export default function Register({ errors }) {
     const { data, setData, post, processing } = useForm({
@@ -23,6 +18,11 @@ export default function Register({ errors }) {
         password: '',
         password_confirmation: ''
     });
+    /**
+     * Submits the form.
+     *
+     * @param {import('react').FormEvent<HTMLFormElement>} e Form submission event.
+     */
     const handleSubmit = (e) => {
         e.preventDefault();
         post('/register');

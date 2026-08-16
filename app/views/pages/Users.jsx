@@ -4,9 +4,11 @@ import { Badge } from '@/views/components/ui/badge';
 import { Card, CardContent } from '@/views/components/ui/card';
 /**
  * Renders links to all users in the example directory.
- *
- * @param {{users: Array<{id: number, name: string, email: string}>}} props - Directory entries.
- * @returns {import('react').ReactElement} The user listing page.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {string|number|boolean|null|Record<string, string|number|boolean|null>} root0.users User records displayed in the directory.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <Users />
  */
 export default function Users({ users }) {
     return (<>

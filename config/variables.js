@@ -3,23 +3,24 @@ const DEV_APP_KEY = 'dev_app_key_change_me_in_production_32chars!!';
 /**
  * Reads a non-empty environment variable, falling back when it is unset.
  *
- * @param {string} key - Environment variable name.
- * @param {string} [fallback] - Value to use when the variable is missing or empty.
+ * @param {string} key Registry or configuration key to resolve.
+ * @param {string|number|boolean|null|Record<string, string|number|boolean|null>} [fallback] Value returned when the configuration key is absent.
  * @returns {string|undefined} The configured value or the supplied fallback.
  */
 function envValue(key, fallback) {
     const value = process.env[key];
     return typeof value === 'string' && value.length > 0 ? value : fallback;
 }
+
 /**
  * Reads an environment variable and coerces it according to the fallback type.
- *
  * Numeric fallbacks use {@link env.int}; boolean fallbacks use {@link env.bool};
  * all other values are returned as strings.
- *
- * @param {string} key - Environment variable name.
- * @param {string|number|boolean} [fallback] - Default value and coercion hint.
- * @returns {string|number|boolean|undefined} The configured or fallback value.
+ * @param {string} key Registry or configuration key to resolve.
+ * @param fallback Value returned when the configuration key is absent.
+ * @returns {Record<string, string|number|boolean|null>} Configured runtime interface.
+ * @example
+ * env(key, fallback);
  */
 export function env(key, fallback) {
     if (typeof fallback === 'number') {
@@ -89,4 +90,5 @@ if (!variables.APP_KEY) {
     }
     variables.APP_KEY = DEV_APP_KEY;
 }
+/** Provides the Export public API for its configured application behavior. */
 export default variables;

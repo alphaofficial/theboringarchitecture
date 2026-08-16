@@ -5,8 +5,8 @@ const presets = new Map();
 /**
  * Register or replace a named rate-limit preset.
  *
- * @param {string} name Preset name used by routes.
- * @param {import('express-rate-limit').Options} options express-rate-limit options.
+ * @param {string} name Name used to identify or label the generated value.
+ * @param {Record<string, string|number|boolean|string[]|undefined>} options Validation options including database access and custom messages.
  */
 function define(name, options) {
     presets.set(name, options);
@@ -15,9 +15,9 @@ function define(name, options) {
 /**
  * Build Express middleware from a named preset.
  *
- * @param {string} name Registered preset name.
- * @param {Partial<import('express-rate-limit').Options>} [overrides] Per-route overrides.
- * @returns {import('express').RequestHandler}
+ * @param {string} name Name used to identify or label the generated value.
+ * @param {string|number|boolean|null|Record<string, string|number|boolean|null>} [overrides] Preset overrides.
+ * @returns {import('express').RequestHandler} Configured middleware.
  */
 function middleware(name, overrides = {}) {
     if (!presets.has(name)) throw new Error(`Unknown rate limit preset: ${name}`);

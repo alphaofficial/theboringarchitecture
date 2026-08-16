@@ -3,9 +3,14 @@ import { Card, CardContent } from '@/views/components/ui/card';
 
 /**
  * Wraps authentication forms in the Cal.com-style shadcn shell.
- *
- * @param {{title: string, eyebrow?: string, description?: import('react').ReactNode, children: import('react').ReactNode}} props - Auth shell content.
- * @returns {import('react').ReactElement} The authentication shell.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {string} root0.title Document title rendered for the Inertia page.
+ * @param {string} root0.eyebrow Short contextual label displayed above the heading.
+ * @param {string} root0.description Supporting copy displayed below the heading.
+ * @param {import('react').ReactNode} root0.children Nested React content rendered inside the component.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <AuthShell />
  */
 export default function AuthShell({ title, eyebrow = 'The Boring Architecture', description, children }) {
     return (<main className="min-h-screen bg-background text-foreground">

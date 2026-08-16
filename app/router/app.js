@@ -1,10 +1,10 @@
 import express from 'express';
 import session from 'express-session';
-import path from 'path';
+import path from 'node:path';
 import helmet from 'helmet';
 import compression from 'compression';
 import { MikroORM, RequestContext } from '@mikro-orm/core';
-import routes from './route.js';
+import route from './route.js';
 import ormConfig from '../../config/orm.config.js';
 import { PinoLogger } from '../../lib/logger/pinoLogger.js';
 import variables from '../../config/variables.js';
@@ -18,12 +18,9 @@ import { PolicyDiscovery } from '../support/policyDiscovery.js';
 import { RequestModules } from '../support/requestModules.js';
 /**
  * Creates the Express application, database context, and middleware stack.
- *
- * @returns {Promise<{
- *   app: import('express').Express,
- *   ctx: import('../../lib/runtime/context.js').ApplicationContext
- * }>} The configured application and its shared runtime context.
- * @throws {Error} If the ORM or another required runtime cannot be initialized.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * createApp();
  */
 export async function createApp() {
     const orm = await MikroORM.init(ormConfig);
@@ -43,6 +40,7 @@ export async function createApp() {
         contentSecurityPolicy: variables.NODE_ENV === 'production' ? undefined : false,
     }));
     app.use(compression());
+    app.use('/', express.static(path.join(process.cwd(), 'public')));
     app.get('/healthz', (_req, res) => {
         res.status(200).json({ status: 'ok' });
     });
@@ -80,9 +78,8 @@ export async function createApp() {
     app.use(express.json({ limit: '100kb' }));
     app.use(express.urlencoded({ extended: true, limit: '100kb' }));
     app.use(PinoLogger.instance);
-    app.use('/', express.static(path.join(process.cwd(), 'public')));
     app.use(verifyOrigin);
-    app.use('/', routes);
+    app.use('/', route);
     app.use(notFoundHandler);
     app.use(globalErrorHandler);
     return { app, ctx };

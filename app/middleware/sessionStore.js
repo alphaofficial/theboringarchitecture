@@ -1,12 +1,14 @@
 import { Store } from 'express-session';
-import { createHash, randomBytes, timingSafeEqual } from 'crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { Session } from '../models/Session.js';
 import variables from '../../config/variables.js';
+
 const TOKEN_ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789';
 /**
  * Generates a 24-character session-token segment without ambiguous characters.
- *
- * @returns {string} A cryptographically random identifier or secret segment.
+ * @returns {Record<string, string|number|boolean|null>} Configured runtime interface.
+ * @example
+ * generateTokenSegment();
  */
 export function generateTokenSegment() {
     const bytes = randomBytes(24);
@@ -18,8 +20,9 @@ export function generateTokenSegment() {
 }
 /**
  * Generates an opaque session token containing a public ID and private secret.
- *
- * @returns {string} A token in `<id>.<secret>` format.
+ * @returns {Record<string, string|number|boolean|null>} Configured runtime interface.
+ * @example
+ * generateSessionToken();
  */
 export function generateSessionToken() {
     return `${generateTokenSegment()}.${generateTokenSegment()}`;
@@ -27,29 +30,31 @@ export function generateSessionToken() {
 /**
  * Hashes the private portion of a session token for safe persistence.
  *
- * @param {string} secret - Raw session secret.
+ * @param {string} secret Session signing secret.
  * @returns {Buffer} SHA-256 digest of the secret.
  */
 function hashSecret(secret) {
     return createHash('sha256').update(secret).digest();
 }
+
 /**
  * Splits a session token into its database ID and private secret.
  *
- * @param {string} token - Token in `<id>.<secret>` format.
+ * @param {string} token Signed or random token submitted for verification.
  * @returns {{id: string, secret: string}|null} Parsed components, or `null` for malformed input.
  */
 function parseToken(token) {
     const dot = token.indexOf('.');
     if (dot <= 0 || dot === token.length - 1)
-        return null;
+        {return null;}
     return { id: token.slice(0, dot), secret: token.slice(dot + 1) };
 }
+
 /**
  * Compares a submitted session secret with a stored digest in constant time.
  *
- * @param {string} submitted - Raw secret from the session cookie.
- * @param {string} storedHex - Persisted SHA-256 digest in hexadecimal form.
+ * @param {string} submitted Submitted signature.
+ * @param {string} storedHex Stored hexadecimal signature.
  * @returns {boolean} Whether the submitted secret matches the stored digest.
  */
 function secretMatches(submitted, storedHex) {
@@ -62,9 +67,10 @@ function secretMatches(submitted, storedHex) {
         return false;
     }
     if (storedBuf.length !== submittedHash.length)
-        return false;
+        {return false;}
     return timingSafeEqual(submittedHash, storedBuf);
 }
+
 /**
  * Persists Express sessions through MikroORM using split ID/secret tokens.
  *
@@ -87,29 +93,30 @@ export class SessionStore extends Store {
         try {
             const parsed = parseToken(sid);
             if (!parsed)
-                return callback(null, null);
+                {return callback(null, null);}
             const em = this.orm.em.fork();
             const session = await em.findOne(Session, { id: parsed.id });
             if (!session)
-                return callback(null, null);
+                {return callback(null, null);}
             if (!secretMatches(parsed.secret, session.secret_hash)) {
                 return callback(null, null);
             }
-            if (this.isExpired(session)) {
+            if (SessionStore.isExpired(session)) {
                 await em.nativeDelete(Session, { id: parsed.id });
                 return callback(null, null);
             }
             callback(null, JSON.parse(session.payload));
+            return undefined;
         }
         catch (error) {
-            callback(error);
+            return callback(error);
         }
     }
     async set(sid, session, callback) {
         try {
             const parsed = parseToken(sid);
             if (!parsed)
-                throw new Error('Invalid session token format');
+                {throw new Error('Invalid session token format');}
             const em = this.orm.em.fork();
             const payload = JSON.stringify(session);
             const now = Math.floor(Date.now() / 1000);
@@ -138,9 +145,10 @@ export class SessionStore extends Store {
                 await em.persistAndFlush(record);
             }
             callback?.();
+            return undefined;
         }
         catch (error) {
-            callback?.(error);
+            return callback?.(error);
         }
     }
     async destroy(sid, callback) {
@@ -154,25 +162,26 @@ export class SessionStore extends Store {
             await em.nativeDelete(Session, { id: parsed.id });
             this.requestStore.delete(sid);
             callback?.();
+            return undefined;
         }
         catch (error) {
-            callback?.(error);
+            return callback?.(error);
         }
     }
     async touch(sid, _, callback) {
         try {
             const parsed = parseToken(sid);
             if (!parsed)
-                return callback?.();
+                {return callback?.();}
             const em = this.orm.em.fork();
             await em.nativeUpdate(Session, { id: parsed.id }, { last_activity: Math.floor(Date.now() / 1000) });
-            callback?.();
+            return callback?.();
         }
         catch (error) {
-            callback?.(error);
+            return callback?.(error);
         }
     }
-    isExpired(session) {
+    static isExpired(session) {
         const now = Math.floor(Date.now() / 1000);
         const maxAge = Math.floor(variables.SESSION_MAX_AGE / 1000);
         return (now - session.last_activity) > maxAge;

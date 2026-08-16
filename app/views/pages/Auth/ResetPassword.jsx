@@ -5,13 +5,13 @@ import { Input } from '@/views/components/ui/input';
 import { Label } from '@/views/components/ui/label';
 /**
  * Renders the form for replacing a password from an emailed reset link.
- *
- * @param {{
- *   token: string,
- *   email: string,
- *   errors?: {token?: string[], password?: string[], password_confirmation?: string[]}
- * }} props - Reset-link identity and field errors.
- * @returns {import('react').ReactElement} The password-reset page.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {string} root0.token Token submitted to verify the requested account action.
+ * @param {string} root0.email Email address associated with the account.
+ * @param {Record<string, string>} root0.errors Validation errors keyed by form field.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <ResetPassword />
  */
 export default function ResetPassword({ token, email, errors }) {
     const { data, setData, post, processing } = useForm({
@@ -20,6 +20,11 @@ export default function ResetPassword({ token, email, errors }) {
         password: '',
         password_confirmation: ''
     });
+    /**
+     * Submits the form.
+     *
+     * @param {import('react').FormEvent<HTMLFormElement>} e Form submission event.
+     */
     const handleSubmit = (e) => {
         e.preventDefault();
         post('/reset-password');

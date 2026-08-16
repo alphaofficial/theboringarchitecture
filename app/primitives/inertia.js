@@ -1,7 +1,8 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { pathToFileURL } from 'url';
+import fs from 'node:fs/promises';
+import * as path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import variables from '../../config/variables.js';
+
 const templatePath = path.join(process.cwd(), 'public', 'template.html');
 const ssrBundlePath = path.join(process.cwd(), '.ssr', 'ssr.mjs');
 const HTML_ESCAPES = {
@@ -13,15 +14,15 @@ const HTML_ESCAPES = {
 };
 
 /**
- * @typedef {Object} InertiaPage
+ * @typedef InertiaPage
  * @property {string} component - Page component name.
- * @property {Record<string, unknown>} props - Shared and page-specific properties.
+ * @property {Record<string, string|number|boolean|null|undefined>} props - Shared and page-specific properties.
  * @property {string} url - Original request URL.
  * @property {string} version - Asset version used for client reload checks.
  */
 
 /**
- * @typedef {Object} SsrPayload
+ * @typedef SsrPayload
  * @property {string[]} head - Server-rendered document head elements.
  * @property {string} body - Server-rendered application markup.
  */
@@ -29,31 +30,32 @@ const HTML_ESCAPES = {
 /**
  * Escapes text for safe interpolation into the HTML document template.
  *
- * @param {string} value - Untrusted text or serialized page data.
+ * @param {string} value Primary metric value to display.
  * @returns {string} Text with HTML-significant characters replaced by entities.
  */
 function escapeHtml(value) {
     return value.replace(/[&<>"']/g, ch => HTML_ESCAPES[ch]);
 }
-const importSsrModule = new Function('specifier', 'return import(specifier)');
+
 /**
  * Imports the current SSR bundle using its modification time as a cache buster.
  *
- * @returns {Promise<{render: (page: unknown) => Promise<SsrPayload|void>}>} The current server-rendering module.
+ * @returns {Promise<{render: (page: unknown) => Promise<SsrPayload|void>}>} Current server-rendering module.
  * @throws {Error} If the SSR bundle cannot be read or imported.
  */
 async function loadSsrModule() {
-    const mtime = fs.statSync(ssrBundlePath).mtimeMs;
+    const mtime = (await fs.stat(ssrBundlePath)).mtimeMs;
     const url = `${pathToFileURL(ssrBundlePath).href}?v=${mtime}`;
-    return importSsrModule(url);
+    return import(url);
 }
+
 /**
  * Attempts to server-render an Inertia page.
  *
  * Failures are logged and converted to `null` so callers can fall back to the
  * client-rendered application shell.
  *
- * @param {unknown} page - Inertia page payload.
+ * @param {string} page Inertia page payload containing the component name and props.
  * @returns {Promise<SsrPayload|null>} Rendered head/body content, or `null` on failure.
  */
 async function renderOnSsr(page) {
@@ -63,10 +65,11 @@ async function renderOnSsr(page) {
         return result ?? null;
     }
     catch (err) {
-        console.error('[SSR] render failed, falling back to client-only:', err);
+        process.emitWarning(`SSR render failed, falling back to client-only: ${err instanceof Error ? err.message : String(err)}`);
         return null;
     }
 }
+
 /**
  * Translates Express requests into Inertia protocol responses or page objects.
  *
@@ -127,18 +130,18 @@ export class InertiaExpressAdapter {
 }
 /**
  * Renders a complete HTML document for an Inertia page.
- *
  * SSR output is used when enabled and available; otherwise the page payload is
  * safely embedded for client-side hydration.
- *
- * @param {unknown} page - Inertia page payload.
- * @param {string} [title] - Document title; defaults to the configured application name.
- * @param {string} [head] - Additional trusted markup for the document head.
- * @returns {Promise<string>} Fully populated HTML document.
+ * @param {string} page Inertia page payload containing the component name and props.
+ * @param title Document title rendered for the Inertia page.
+ * @param {import('react').ReactNode} head React elements collected for the document head.
+ * @example
+ * renderHtml(page, title, head);
+ * @returns {Record<string, string|number|boolean|null>} Value produced from the supplied inputs.
  */
 export async function renderHtml(page, title, head) {
     const ssr = variables.DISABLE_SSR ? null : await renderOnSsr(page);
-    const template = fs.readFileSync(templatePath, 'utf-8');
+    const template = await fs.readFile(templatePath, 'utf-8');
     const app = ssr
         ? ssr.body
         : `<div id="app" data-page="${escapeHtml(JSON.stringify(page))}"></div>`;
@@ -151,18 +154,19 @@ export async function renderHtml(page, title, head) {
 }
 /**
  * Sends an Inertia protocol response or renders its initial HTML document.
- *
- * @param {import('express').Request} req - Request with an attached Inertia adapter.
- * @param {import('express').Response} res - HTTP response.
- * @param {string} componentName - Page component name.
- * @param {Record<string, unknown>} [componentProps={}] - Page-specific properties.
- * @param {{title?: string, head?: string}} [documentMetadata={}] - Initial document metadata.
- * @returns {Promise<import('express').Response|void>} The HTML response, or nothing when the adapter already sent a protocol response.
+ * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.
+ * @param {import('express').Response} res Express response used to render, redirect, or send the route result.
+ * @param {string} componentName Registered Inertia page component name to render.
+ * @param componentProps Serializable props supplied to the selected page component.
+ * @param {string} documentMetadata Optional title and head elements for the initial HTML document.
+ * @returns {Promise<import('express').Response|void>} Promise resolving after the response is sent.
+ * @example
+ * renderPage(req, res, componentName, componentProps, documentMetadata);
  */
 export async function renderPage(req, res, componentName, componentProps = {}, documentMetadata = {}) {
     const page = req.inertia.render(req, res, componentName, componentProps);
     if (res.headersSent) {
-        return;
+        return undefined;
     }
     const html = await renderHtml(page, documentMetadata.title, documentMetadata.head);
     return res.send(html);

@@ -1,6 +1,6 @@
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Storage } from '../app/primitives/storage.js';
 import { clearPrimitiveRuntime } from '../lib/runtime/primitiveRegistry.js';
@@ -10,7 +10,7 @@ afterEach(() => clearPrimitiveRuntime('storage'));
 
 describe('Storage ergonomics', () => {
     it('reads/writes files, appends text, lists files, and ignores missing deletes', async () => {
-        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'tba-storage-'));
+        const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'tba-storage-'));
         Storage.configure(createLocalDiskDriver(root, 'https://example.test'));
 
         await Storage.put('exports/report.json', `${JSON.stringify({ ok: true })}\n`);

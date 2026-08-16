@@ -1,13 +1,12 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { resolve } from 'path'
+import viteReact from '@vitejs/plugin-react'
+import { resolve } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
-export default defineConfig(({ mode }) => {
-  return {
-    plugins: [react()],
+export default defineConfig(({ mode }) => ({
+    plugins: [viteReact()],
     publicDir: false,
     build: {
       emptyOutDir: false,
@@ -27,11 +26,10 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
-    mode: mode,
+    mode,
     resolve: {
       alias: {
         '@': resolve(__dirname, './app')
       }
     },
-  }
-})
+  }))

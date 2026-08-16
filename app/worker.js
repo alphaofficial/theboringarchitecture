@@ -8,10 +8,10 @@ import { startWorker } from '../lib/runtime/startWorker.js';
  */
 async function bootstrap() {
     const disposables = await startWorker();
-    process.on('SIGTERM', () => void shutdown('SIGTERM', [...disposables]));
-    process.on('SIGINT', () => void shutdown('SIGINT', [...disposables]));
+    process.on('SIGTERM', async () => shutdown('SIGTERM', [...disposables]));
+    process.on('SIGINT', async () => shutdown('SIGINT', [...disposables]));
 }
 bootstrap().catch(err => {
-    console.error(err);
-    process.exit(1);
+    process.stderr.write(`${String(err)}\n`);
+    process.exitCode = 1;
 });

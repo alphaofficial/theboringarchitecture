@@ -25,6 +25,12 @@ const secondaryNavigation = [
     { label: 'Orders', href: '/home#orders', icon: FileText },
 ];
 
+/**
+ * Renders a dashboard navigation link.
+ *
+ * @param {{item?: {href: string, label: string}, currentPath?: string, onNavigate?: () => void}} [options] Configuration options.
+ * @returns {import('react').ReactElement} Sidebar navigation link with active-route styling.
+ */
 function SidebarLink({ item, currentPath, onNavigate }) {
     const Icon = item.icon;
     const isActive = item.match?.(currentPath) || false;
@@ -48,9 +54,13 @@ function SidebarLink({ item, currentPath, onNavigate }) {
 
 /**
  * Authenticated application shell used by the example dashboard.
- *
- * @param {{title?: string, subtitle?: string, children: import('react').ReactNode}} props - Dashboard content.
- * @returns {import('react').ReactElement} Responsive dashboard shell.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {string} root0.title Document title rendered for the Inertia page.
+ * @param {string} root0.subtitle Supporting text displayed below the dashboard title.
+ * @param {import('react').ReactNode} root0.children Nested React content rendered inside the component.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <DashboardShell />
  */
 export default function DashboardShell({
     title = 'Dashboard',
@@ -70,6 +80,11 @@ export default function DashboardShell({
         .slice(0, 2)
         .toUpperCase() || 'U';
 
+    /**
+     * Signs out the current user.
+     *
+     * @param {string} event Event name.
+     */
     const handleLogout = event => {
         event.preventDefault();
         post('/logout');

@@ -5,19 +5,31 @@ import { Input } from '@/views/components/ui/input';
 import { Label } from '@/views/components/ui/label';
 /**
  * Renders the login form and development administrator shortcut.
- *
- * @param {{status?: string, errors?: {email?: string[], password?: string[]}}} props - Status message and field errors.
- * @returns {import('react').ReactElement} The login page.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {string} root0.status Optional outcome message displayed after an account action.
+ * @param {Record<string, string>} root0.errors Validation errors keyed by form field.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <Login />
  */
 export default function Login({ status, errors }) {
     const { data, setData, post, processing } = useForm({
         email: '',
         password: ''
     });
+    /**
+     * Submits the form.
+     *
+     * @param {import('react').FormEvent<HTMLFormElement>} e Form submission event.
+     */
     const handleSubmit = (e) => {
         e.preventDefault();
         post('/login');
     };
+    /**
+     * Handle admin login.
+     *
+     */
     const handleAdminLogin = () => {
         router.visit('/login/admin');
     };

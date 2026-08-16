@@ -2,9 +2,15 @@ import Navigation from '@/views/components/Navigation.jsx';
 
 /**
  * Wraps authenticated and public app pages in the shared product shell.
- *
- * @param {{eyebrow?: string, title: string, description?: import('react').ReactNode, actions?: import('react').ReactNode, children: import('react').ReactNode}} props - Page shell content.
- * @returns {import('react').ReactElement} The page shell.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {string} root0.eyebrow Short contextual label displayed above the heading.
+ * @param {string} root0.title Document title rendered for the Inertia page.
+ * @param {string} root0.description Supporting copy displayed below the heading.
+ * @param {string|number|boolean|null|Record<string, string|number|boolean|null>} root0.actions Action controls displayed alongside the heading.
+ * @param {import('react').ReactNode} root0.children Nested React content rendered inside the component.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <PageShell />
  */
 export default function PageShell({ eyebrow = 'The Boring Architecture', title, description, actions, children }) {
     return (<div className="flex min-h-screen flex-col bg-background text-foreground">

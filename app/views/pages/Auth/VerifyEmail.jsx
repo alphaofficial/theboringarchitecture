@@ -3,12 +3,21 @@ import AuthShell from '@/views/components/AuthShell.jsx';
 import { Button } from '@/views/components/ui/button';
 /**
  * Renders email-verification guidance and the resend action.
- *
- * @param {{email?: string, status?: string, errors?: {email?: string[]}}} props - Current email and verification feedback.
- * @returns {import('react').ReactElement} The email-verification page.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {string} root0.email Email address associated with the account.
+ * @param {string} root0.status Optional outcome message displayed after an account action.
+ * @param {Record<string, string>} root0.errors Validation errors keyed by form field.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <VerifyEmail />
  */
 export default function VerifyEmail({ email, status, errors }) {
     const { post, processing } = useForm({});
+    /**
+     * Handle resend.
+     *
+     * @param {import('react').FormEvent<HTMLFormElement>} e Form submission event.
+     */
     const handleResend = (e) => {
         e.preventDefault();
         post('/email/resend-verification');

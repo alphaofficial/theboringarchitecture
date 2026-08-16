@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 pages_dir="app/views/pages"
-out_file="app/config/pages.js"
+out_file="config/pages.js"
 mkdir -p "$(dirname "$out_file")"
 names=""
 if [ -d "$pages_dir" ]; then

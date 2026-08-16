@@ -1,5 +1,13 @@
 import { cn } from "@/views/lib/utils"
 
+/**
+ * Renders the Card UI primitive while forwarding supported element properties.
+ * @param {string} props.className Additional CSS classes.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} props Additional element properties.
+ * @returns {import('react').ReactElement} Rendered Card element.
+ * @example
+ * <Card />
+ */
 function Card({
   className,
   ...props
@@ -15,6 +23,14 @@ function Card({
   );
 }
 
+/**
+ * Renders the CardHeader UI primitive while forwarding supported element properties.
+ * @param {string} props.className Additional CSS classes.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} props Additional element properties.
+ * @returns {import('react').ReactElement} Rendered CardHeader element.
+ * @example
+ * <CardHeader />
+ */
 function CardHeader({
   className,
   ...props
@@ -30,6 +46,14 @@ function CardHeader({
   );
 }
 
+/**
+ * Renders the CardTitle UI primitive while forwarding supported element properties.
+ * @param {string} props.className Additional CSS classes.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} props Additional element properties.
+ * @returns {import('react').ReactElement} Rendered CardTitle element.
+ * @example
+ * <CardTitle />
+ */
 function CardTitle({
   className,
   ...props
@@ -45,6 +69,14 @@ function CardTitle({
   );
 }
 
+/**
+ * Renders the CardDescription UI primitive while forwarding supported element properties.
+ * @param {string} props.className Additional CSS classes.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} props Additional element properties.
+ * @returns {import('react').ReactElement} Rendered CardDescription element.
+ * @example
+ * <CardDescription />
+ */
 function CardDescription({
   className,
   ...props
@@ -57,6 +89,14 @@ function CardDescription({
   );
 }
 
+/**
+ * Renders the CardAction UI primitive while forwarding supported element properties.
+ * @param {string} props.className Additional CSS classes.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} props Additional element properties.
+ * @returns {import('react').ReactElement} Rendered CardAction element.
+ * @example
+ * <CardAction />
+ */
 function CardAction({
   className,
   ...props
@@ -72,6 +112,14 @@ function CardAction({
   );
 }
 
+/**
+ * Renders the CardContent UI primitive while forwarding supported element properties.
+ * @param {string} props.className Additional CSS classes.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} props Additional element properties.
+ * @returns {import('react').ReactElement} Rendered CardContent element.
+ * @example
+ * <CardContent />
+ */
 function CardContent({
   className,
   ...props
@@ -84,6 +132,14 @@ function CardContent({
   );
 }
 
+/**
+ * Renders the CardFooter UI primitive while forwarding supported element properties.
+ * @param {string} props.className Additional CSS classes.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} props Additional element properties.
+ * @returns {import('react').ReactElement} Rendered CardFooter element.
+ * @example
+ * <CardFooter />
+ */
 function CardFooter({
   className,
   ...props
@@ -99,6 +155,7 @@ function CardFooter({
   );
 }
 
+/** Provides the Card public API for its configured application behavior. */
 export {
   Card,
   CardHeader,

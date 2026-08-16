@@ -14,18 +14,19 @@ const resourceActions = [
 /**
  * Normalizes path fragments so group prefixes and route paths join predictably.
  *
- * @param {string} [path=''] - Path fragment.
+ * @param {string|number|boolean|null|Record<string, string|number|boolean|null>} [path=''] Path fragment.
+ * @param {string} path Resource path.
  * @returns {string} Normalized path fragment.
  */
 function normalizePath(path = '') {
     if (!path || path === '/') return '';
-    return `/${String(path).replace(/^\/+|\/+$/g, '')}`;
+    return `/${String(path).split('/').filter(Boolean).join('/')}`;
 }
 
 /**
  * Joins normalized path fragments into one Express path.
  *
- * @param {...string} parts - Path fragments.
+ * @param {string|number|boolean|null|Record<string, string|number|boolean|null>} parts Path fragments to join.
  * @returns {string} Joined Express path.
  */
 function joinPaths(...parts) {
@@ -36,8 +37,8 @@ function joinPaths(...parts) {
 /**
  * Flattens middleware/handler arrays and removes empty entries.
  *
- * @param {Array<unknown>} handlers - Handler values.
- * @returns {Function[]} Flattened handlers.
+ * @param {Map<string, (...args: never[]) => Promise<string|number|boolean|null|void>>} handlers Route handlers to normalize.
+ * @returns {Array<(...args: never[]) => void>} Flattened handlers.
  */
 function normalizeHandlers(handlers) {
     return handlers.flat(Infinity).filter(Boolean);
@@ -46,18 +47,19 @@ function normalizeHandlers(handlers) {
 /**
  * Derives the default route parameter name for a resource path.
  *
- * @param {string} name - Resource path.
+ * @param {string} name Name used to identify or label the generated value.
  * @returns {string} Route parameter name.
  */
 function singularResourceName(name) {
-    return String(name).replace(/^\/+|\/+$/g, '').split('/').at(-1).replace(/ies$/i, 'y').replace(/s$/i, '') || 'id';
+    return String(name).split('/').filter(Boolean).at(-1).replace(/ies$/i, 'y').replace(/s$/i, '') || 'id';
 }
 
 /**
  * Accepts either a prefix string or a full group options object.
  *
- * @param {string|object} [options={}] - Group options or prefix.
- * @returns {{prefix?: string, name?: string, middleware?: Function|Function[]}} Normalized group options.
+ * @param {Record<string, string|number|boolean|undefined>} [options={}] Group options or prefix.
+ * @param {Record<string, string|number|boolean|string[]|undefined>} options Configuration options.
+ * @returns {{prefix?: string, name?: string, middleware?: (...args: never[]) => void|Array<(...args: never[]) => void>}} Normalized group options.
  */
 function normalizeGroupOptions(options = {}) {
     if (typeof options === 'string') return { prefix: options };
@@ -67,13 +69,13 @@ function normalizeGroupOptions(options = {}) {
 /**
  * Substitutes named :params into a registered route path and tracks consumed params.
  *
- * @param {string} pattern - Registered route path.
- * @param {Record<string, unknown>} params - Route parameters.
+ * @param {string|RegExp} pattern Route path pattern.
+ * @param {Record<string, string|number>} params Route parameter values.
  * @returns {{path: string, used: Set<string>}} Built path and consumed parameter names.
  */
 function applyPathParams(pattern, params) {
     const used = new Set();
-    const path = pattern.replace(/:([A-Za-z0-9_]+)(\?)?/g, (_match, key, optional) => {
+    const path = pattern.replace(/:(\w+)(\?)?/g, (_match, key, optional) => {
         const value = params[key];
         if ((value === undefined || value === null || value === '') && optional) return '';
         if (value === undefined || value === null) throw new Error(`Missing route parameter: ${key}`);
@@ -86,8 +88,8 @@ function applyPathParams(pattern, params) {
 /**
  * Appends remaining parameters as a URL query string.
  *
- * @param {string} path - URL path.
- * @param {Record<string, unknown>} query - Query parameters.
+ * @param {string} path URL or route path.
+ * @param {Record<string, string|number|boolean>} query Query parameter values.
  * @returns {string} URL path with query string.
  */
 function appendQuery(path, query) {
@@ -105,18 +107,19 @@ function appendQuery(path, query) {
 /**
  * Create an Express Router with named-route URLs, groups, and resource routes.
  *
- * @param {import('express').RouterOptions} options
- * @returns {import('express').Router & {
- *   name: (name: string) => Record<string, Function>,
- *   group: (options: {prefix?: string, name?: string, middleware?: Function|Function[]}|string, callback: Function) => void,
- *   resource: (name: string, controller: Record<string, Function>, options?: {only?: string[], except?: string[], middleware?: Function|Function[], param?: string, names?: Record<string, string>}) => void,
- *   url: (name: string, params?: Record<string, unknown>, options?: {query?: Record<string, unknown>}) => string,
+ * @param {Record<string, string|number|boolean|string[]|undefined>} options Validation options including database access and custom messages.
+ *   name: (name: string) => Record<string, (...args: never[]) => void>,
+ *   group: (options: {prefix?: string, name?: string, middleware?: (...args: never[]) => void|Array<(...args: never[]) => void>}|string, callback: (...args: never[]) => void) => void,
+ *   resource: (name: string, controller: Record<string, (...args: never[]) => void>, options?: {only?: string[], except?: string[], middleware?: (...args: never[]) => void|Array<(...args: never[]) => void>, param?: string, names?: Record<string, string>}) => void,
+ *   url: (name: string, params?: Record<string, string|number|boolean|null|undefined>, options?: {query?: Record<string, string|number|boolean|null|undefined>}) => string,
  *   urls: () => import('express').RequestHandler,
  *   namedRoutes: Map<string, {method: string, path: string}>
  * }}
+ * @param {import('express').RouterOptions} routerOptions Express router options.
+ * @returns {import('express').Router} Express router enhanced with grouping, naming, resources, and URL generation.
  */
-function create(options = {}) {
-    const router = ExpressRouter(options);
+function create(routerOptions = {}) {
+    const router = ExpressRouter(routerOptions);
     const native = Object.fromEntries(httpMethods.map(method => [method, router[method].bind(router)]));
     const namedRoutes = new Map();
     const groups = [{ prefix: '', name: '', middleware: [] }];
@@ -124,7 +127,7 @@ function create(options = {}) {
     /**
      * Returns the active group context while nested groups register routes.
      *
-     * @returns {{prefix: string, name: string, middleware: Function[]}} Current group context.
+     * @returns {{prefix: string, name: string, middleware: Array<(...args: never[]) => void>}} Current group context.
      */
     function currentGroup() {
         return groups.at(-1);
@@ -133,10 +136,10 @@ function create(options = {}) {
     /**
      * Registers one Express route and optionally records its generated URL name.
      *
-     * @param {string} method - HTTP method.
-     * @param {string|string[]} path - Route path or paths.
-     * @param {Function[]} handlers - Route middleware and handler stack.
-     * @param {string} [routeName] - Optional route name.
+     * @param {string} method HTTP method.
+     * @param {string} path URL or route path.
+     * @param {Map<string, (...args: never[]) => Promise<string|number|boolean|null|void>>} handlers Route handlers to normalize.
+     * @param {string} [routeName] Optional route name.
      * @returns {import('express').Router} Router instance.
      */
     function register(method, path, handlers, routeName = undefined) {
@@ -166,12 +169,12 @@ function create(options = {}) {
     });
 
     router.group = (rawOptions, callback) => {
-        const options = normalizeGroupOptions(rawOptions);
+        const groupOptions = normalizeGroupOptions(rawOptions);
         const parent = currentGroup();
         groups.push({
-            prefix: joinPaths(parent.prefix, options.prefix || ''),
-            name: `${parent.name}${options.name || ''}`,
-            middleware: [...parent.middleware, ...normalizeHandlers([options.middleware])],
+            prefix: joinPaths(parent.prefix, groupOptions.prefix || ''),
+            name: `${parent.name}${groupOptions.name || ''}`,
+            middleware: [...parent.middleware, ...normalizeHandlers([groupOptions.middleware])],
         });
         try {
             callback(router);
@@ -182,36 +185,45 @@ function create(options = {}) {
         return router;
     };
 
-    router.resource = (name, controller, options = {}) => {
-        const only = options.only ? new Set(options.only) : null;
-        const except = new Set(options.except || []);
-        const param = options.param || singularResourceName(name);
+    router.resource = (name, controller, resourceOptions = {}) => {
+        const only = resourceOptions.only ? new Set(resourceOptions.only) : null;
+        const except = new Set(resourceOptions.except || []);
+        const param = resourceOptions.param || singularResourceName(name);
         const base = normalizePath(name);
         for (const definition of resourceActions) {
             if (only && !only.has(definition.action)) continue;
             if (except.has(definition.action)) continue;
             const handler = controller[definition.action];
             if (typeof handler !== 'function') continue;
-            const path = `${base}${definition.path.replace(':param', `:${param}`)}`;
-            const routeName = options.names?.[definition.action] || `${name}.${definition.action}`;
+            const parameterPath = definition.path.replace(':param', `:${param}`);
+            const path = `${base}${parameterPath}`;
+            const routeName = resourceOptions.names?.[definition.action] || `${name}.${definition.action}`;
             const methods = Array.isArray(definition.method) ? definition.method : [definition.method];
             for (const method of methods) {
-                register(method, path, [options.middleware, handler], routeName);
+                register(method, path, [resourceOptions.middleware, handler], routeName);
             }
         }
         return router;
     };
 
-    router.url = (name, params = {}, options = {}) => {
+    router.url = (name, params = {}, urlOptions = {}) => {
         const route = namedRoutes.get(name);
         if (!route) throw new Error(`Unknown route name: ${name}`);
         const { path, used } = applyPathParams(route.path, params);
-        const query = { ...Object.fromEntries(Object.entries(params).filter(([key]) => !used.has(key))), ...(options.query || {}) };
+        const query = { ...Object.fromEntries(Object.entries(params).filter(([key]) => !used.has(key))), ...(urlOptions.query || {}) };
         return appendQuery(path, query);
     };
 
     router.urls = () => (req, res, next) => {
-        const routeUrl = (name, params, options) => router.url(name, params, options);
+        /**
+         * Builds a URL for a named route.
+         *
+         * @param {string} name Registered name.
+         * @param {Record<string, string|number>} params Params value.
+         * @param {{query?: Record<string, string|number|boolean>}} urlOptions URL generation options.
+         * @returns {string} URL generated from the registered route name.
+         */
+        const routeUrl = (name, params, urlOptions) => router.url(name, params, urlOptions);
         req.routeUrl = routeUrl;
         res.locals.routeUrl = routeUrl;
         next();

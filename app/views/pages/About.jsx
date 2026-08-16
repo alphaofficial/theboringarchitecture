@@ -3,9 +3,12 @@ import DashboardShell from '@/views/components/dashboard/DashboardShell.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/views/components/ui/card';
 /**
  * Renders the authenticated overview and technology stack.
- *
- * @param {{title: string, description: string}} props - Server-provided page content.
- * @returns {import('react').ReactElement} The About page.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {string} root0.title Document title rendered for the Inertia page.
+ * @param {string} root0.description Supporting copy displayed below the heading.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <About />
  */
 export default function About({ title, description }) {
     return (<>

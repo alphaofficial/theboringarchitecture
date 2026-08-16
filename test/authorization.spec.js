@@ -21,7 +21,9 @@ describe('Gate', () => {
         });
         app.get('/admin', can('admin'), (_req, res) => res.json({ ok: true }));
 
-        await request(app).get('/admin').set('x-role', 'admin').expect(200, { ok: true });
-        await request(app).get('/admin').set('x-role', 'user').expect(403);
+        const allowed = await request(app).get('/admin').set('x-role', 'admin').expect(200, { ok: true });
+        const denied = await request(app).get('/admin').set('x-role', 'user').expect(403);
+        expect(allowed.body).toEqual({ ok: true });
+        expect(denied.status).toBe(403);
     });
 });

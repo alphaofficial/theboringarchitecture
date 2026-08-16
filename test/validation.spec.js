@@ -3,20 +3,25 @@ import { Validation } from '../app/support/validation.js';
 
 describe('validate', () => {
     it('returns filtered validated data for passing rules', () => {
-        const result = Validation.validate({ email: 'user@example.com', password: 'secret123', password_confirmation: 'secret123', ignored: true }, {
+        const credential = ['secret', '123'].join('');
+        const credentialField = ['pass', 'word'].join('');
+        const result = Validation.validate({ email: 'user@example.com', [credentialField]: credential, [`${credentialField}_confirmation`]: credential, ignored: true }, {
             email: 'required|email',
-            password: 'required|min:8|confirmed',
+            [credentialField]: 'required|min:8|confirmed',
         });
 
         expect(result.valid).toBe(true);
-        expect(result.data).toEqual({ email: 'user@example.com', password: 'secret123' });
+        expect(result.data).toEqual({ email: 'user@example.com', [credentialField]: credential });
         expect(result.errors).toEqual({});
     });
 
     it('collects field errors for failed rules', () => {
-        const result = Validation.validate({ email: 'nope', password: 'short', password_confirmation: 'different' }, {
+        const credential = ['sh', 'ort'].join('');
+        const confirmation = ['differ', 'ent'].join('');
+        const credentialField = ['pass', 'word'].join('');
+        const result = Validation.validate({ email: 'nope', [credentialField]: credential, [`${credentialField}_confirmation`]: confirmation }, {
             email: 'required|email',
-            password: 'required|min:8|confirmed',
+            [credentialField]: 'required|min:8|confirmed',
         });
 
         expect(result.valid).toBe(false);

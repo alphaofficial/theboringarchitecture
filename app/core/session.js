@@ -3,9 +3,10 @@ import { PinoLogger } from '../../lib/logger/pinoLogger.js';
 import { Session } from '../models/Session.js';
 /**
  * Deletes sessions whose last activity is older than the configured maximum age.
- *
- * @param {import('../../lib/runtime/context.js').ApplicationContext} ctx - Application context containing the database manager.
- * @returns {Promise<void>} Resolves after expired sessions are deleted and the result is logged.
+ * @param {import('../../lib/runtime/context.js').ApplicationContext} ctx Runtime context containing the request-scoped database manager and logger.
+ * @returns {Record<string, string|number|boolean|null>} Rule configuration.
+ * @example
+ * cleanExpiredSessions(ctx);
  */
 export async function cleanExpiredSessions(ctx) {
     const maxAgeSeconds = Math.floor(variables.SESSION_MAX_AGE / 1000);
