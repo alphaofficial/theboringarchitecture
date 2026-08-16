@@ -1,5 +1,5 @@
 import variables from '../../config/variables.js';
-import { renderPage } from '../primitives/inertia.js';
+import { renderPage } from '../../lib/primitives/inertia.js';
 import { PinoLogger } from '../../lib/logger/pinoLogger.js';
 
 /** Forwards unmatched requests as a 404 error to the global error handler.

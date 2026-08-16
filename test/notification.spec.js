@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { clearPrimitiveRuntime } from '../lib/runtime/primitiveRegistry.js';
-import { NotificationCenter } from '../app/primitives/notification.js';
+import { NotificationCenter } from '../lib/primitives/notification.js';
 
 /**
  * Creates an in-memory notification test driver.
