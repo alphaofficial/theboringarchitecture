@@ -1,5 +1,6 @@
 import { InertiaExpressAdapter, renderHtml } from '../primitives/inertia.js';
 import variables from '../../config/variables.js';
+
 /**
  * Attaches the Inertia adapter, shared auth props, and HTML renderer to a request.
  * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.

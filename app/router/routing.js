@@ -106,17 +106,8 @@ function appendQuery(path, query) {
 
 /**
  * Create an Express Router with named-route URLs, groups, and resource routes.
- *
- * @param {Record<string, string|number|boolean|string[]|undefined>} options Validation options including database access and custom messages.
- *   name: (name: string) => Record<string, (...args: never[]) => void>,
- *   group: (options: {prefix?: string, name?: string, middleware?: (...args: never[]) => void|Array<(...args: never[]) => void>}|string, callback: (...args: never[]) => void) => void,
- *   resource: (name: string, controller: Record<string, (...args: never[]) => void>, options?: {only?: string[], except?: string[], middleware?: (...args: never[]) => void|Array<(...args: never[]) => void>, param?: string, names?: Record<string, string>}) => void,
- *   url: (name: string, params?: Record<string, string|number|boolean|null|undefined>, options?: {query?: Record<string, string|number|boolean|null|undefined>}) => string,
- *   urls: () => import('express').RequestHandler,
- *   namedRoutes: Map<string, {method: string, path: string}>
- * }}
- * @param {import('express').RouterOptions} routerOptions Express router options.
- * @returns {import('express').Router} Express router enhanced with grouping, naming, resources, and URL generation.
+ * @param routerOptions Options passed to the Express Router constructor.
+ * @returns Express Router instance with additional methods for named routes, groups, and resources.
  */
 function create(routerOptions = {}) {
     const router = ExpressRouter(routerOptions);

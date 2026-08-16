@@ -1,6 +1,7 @@
 import { Link, useForm } from '@inertiajs/react';
 import AuthShell from '@/views/components/AuthShell.jsx';
 import { Button } from '@/views/components/ui/button';
+
 /**
  * Renders email-verification guidance and the resend action.
  * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.

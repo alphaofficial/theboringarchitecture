@@ -3,6 +3,7 @@ import { Link, useForm, usePage } from '@inertiajs/react';
 import { Menu, X } from 'lucide-react';
 import Brand from '@/views/components/Brand.jsx';
 import { Button } from '@/views/components/ui/button';
+
 /**
  * Renders the primary navigation for the current Inertia auth state.
  * Authenticated users see account links and a session-ending logout action;

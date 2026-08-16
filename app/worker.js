@@ -1,6 +1,7 @@
 import 'dotenv-defaults/config.js';
 import { shutdown } from './primitives/shutdown.js';
 import { startWorker } from '../lib/runtime/startWorker.js';
+
 /**
  * Starts the queue and scheduler worker and installs graceful-shutdown handlers.
  *

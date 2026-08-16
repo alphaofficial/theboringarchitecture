@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import DashboardShell from '@/views/components/dashboard/DashboardShell.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/views/components/ui/card';
+
 /**
  * Renders the authenticated overview and technology stack.
  * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
