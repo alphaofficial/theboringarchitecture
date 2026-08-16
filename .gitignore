@@ -6,8 +6,7 @@ dist/
 .vscode/
 .idea/
 .claude/
-
-
+.eslintcache
 
 # Ignore build output in public but keep template + static assets
 public/*

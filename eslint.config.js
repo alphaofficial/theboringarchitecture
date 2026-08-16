@@ -25,6 +25,7 @@ const serverRuntimePatterns = [
     },
 ];
 
+// Preserve the preset order because later flat-config entries override earlier rules.
 const airbnbPlugins = [
     plugins.importX,
     plugins.node,
@@ -47,20 +48,60 @@ const airbnbRules = [
     rules.react.hooks,
 ];
 
-const namedFunctions = [
+// Require documentation for named functions without targeting inline callbacks.
+const documentedFunctions = [
     'FunctionDeclaration',
     'VariableDeclarator[id.type="Identifier"] > ArrowFunctionExpression',
     'VariableDeclarator[id.type="Identifier"] > FunctionExpression',
 ];
 
-const publicFunctions = [
+// Public functions additionally need a usable example.
+const publicDocumentedFunctions = [
     'ExportNamedDeclaration > FunctionDeclaration',
     'ExportDefaultDeclaration > FunctionDeclaration',
     'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator[id.type="Identifier"] > ArrowFunctionExpression',
     'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator[id.type="Identifier"] > FunctionExpression',
 ];
 
+const developmentDependencyFiles = [
+    'eslint/**/*.spec.js',
+    'test/**/*.js',
+    'vite.config.mjs',
+    'vite.ssr.config.mjs',
+];
+
+const jsdocExemptFiles = [
+    'db/migrations/**/*.js',
+    'eslint.config.js',
+    'eslint/**/*.js',
+    'vite.config.mjs',
+    'vite.ssr.config.mjs',
+];
+
+const jsdocRules = {
+    'jsdoc/require-example': ['error', { contexts: publicDocumentedFunctions }],
+    'jsdoc/require-jsdoc': ['error', {
+        contexts: documentedFunctions,
+        enableFixer: false,
+        require: {
+            ArrowFunctionExpression: false,
+            ClassDeclaration: false,
+            ClassExpression: false,
+            FunctionDeclaration: false,
+            FunctionExpression: false,
+            MethodDefinition: false,
+        },
+    }],
+    'jsdoc/require-param': 'error',
+    'jsdoc/require-param-description': 'error',
+    'jsdoc/require-returns': 'error',
+    'jsdoc/require-returns-description': 'error',
+};
+
+const disabledJsdocRules = Object.fromEntries(Object.keys(jsdocRules).map(rule => [rule, 'off']));
+
 export default [
+    // Generated assets and dependencies are outside the authored source tree.
     {
         ignores: ['.ssr/**', '.vscode/**', 'dist/**', 'node_modules/**', 'public/**', 'config/pages.js'],
     },
@@ -85,6 +126,7 @@ export default [
             jsdoc,
         },
         rules: {
+            ...jsdocRules,
             'import-x/extensions': ['error', 'always', {
                 ignorePackages: true,
             }],
@@ -100,25 +142,9 @@ export default [
             'react/jsx-uses-vars': 'error',
             'react/prop-types': 'off',
             'react/react-in-jsx-scope': 'off',
-            'jsdoc/require-example': ['error', { contexts: publicFunctions }],
-            'jsdoc/require-jsdoc': ['error', {
-                contexts: namedFunctions,
-                enableFixer: false,
-                require: {
-                    ArrowFunctionExpression: false,
-                    ClassDeclaration: false,
-                    ClassExpression: false,
-                    FunctionDeclaration: false,
-                    FunctionExpression: false,
-                    MethodDefinition: false,
-                },
-            }],
-            'jsdoc/require-param': 'error',
-            'jsdoc/require-param-description': 'error',
-            'jsdoc/require-returns': 'error',
-            'jsdoc/require-returns-description': 'error',
         },
     },
+    // Architecture rules encode boundaries that generic presets cannot express.
     {
         files: ['app/router/**/*.js'],
         rules: {
@@ -181,8 +207,9 @@ export default [
             'no-restricted-imports': ['error', { patterns: serverRuntimePatterns }],
         },
     },
+    // Tests and build configuration may import development-only packages.
     {
-        files: ['test/**/*.js', 'eslint/**/*.spec.js'],
+        files: developmentDependencyFiles,
         languageOptions: {
             globals: globals.node,
         },
@@ -190,12 +217,7 @@ export default [
             'import-x/no-extraneous-dependencies': ['error', { devDependencies: true }],
         },
     },
-    {
-        files: ['vite.config.mjs', 'vite.ssr.config.mjs'],
-        rules: {
-            'import-x/no-extraneous-dependencies': ['error', { devDependencies: true }],
-        },
-    },
+    // CLI entry points intentionally use process control and synchronous operations.
     {
         files: ['bin/**/*.js'],
         rules: {
@@ -206,21 +228,18 @@ export default [
     },
     {
         files: ['eslint/**/*.js', 'eslint.config.js'],
+        settings: {
+            'import-x/ignore': ['eslint-plugin-jsdoc'],
+        },
         rules: {
             'import-x/extensions': 'off',
             'import-x/no-cycle': 'off',
             'import-x/no-useless-path-segments': 'off',
         },
     },
+    // Generated migrations and configuration modules are declarative, not public APIs.
     {
-        files: ['db/migrations/**/*.js', 'eslint/**/*.js', 'eslint.config.js', 'vite.config.mjs', 'vite.ssr.config.mjs'],
-        rules: {
-            'jsdoc/require-example': 'off',
-            'jsdoc/require-jsdoc': 'off',
-            'jsdoc/require-param': 'off',
-            'jsdoc/require-param-description': 'off',
-            'jsdoc/require-returns': 'off',
-            'jsdoc/require-returns-description': 'off',
-        },
+        files: jsdocExemptFiles,
+        rules: disabledJsdocRules,
     },
 ];
