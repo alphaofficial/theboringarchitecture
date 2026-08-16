@@ -1,4 +1,5 @@
 import { getPrimitiveRuntime, hasPrimitiveRuntime, registerPrimitiveRuntime } from '../../lib/runtime/primitiveRegistry.js';
+
 /**
  * Registers the cache driver once for the current runtime.
  *

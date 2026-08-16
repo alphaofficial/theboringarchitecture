@@ -133,6 +133,7 @@ export default [
             'import-x/no-cycle': 'error',
             'import-x/no-named-as-default': 'off',
             'import-x/no-rename-default': ['warn', { preventRenamingBindings: false }],
+            'import-x/newline-after-import': ['error', { considerComments: true }],
             'import-x/prefer-default-export': 'off',
             'padding-line-between-statements': ['error', {
                 blankLine: 'always',

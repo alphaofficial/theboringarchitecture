@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import DashboardShell from '@/views/components/dashboard/DashboardShell.jsx';
 import { Button } from '@/views/components/ui/button';
 import { Card, CardContent } from '@/views/components/ui/card';
+
 /**
  * Renders details for one example directory user.
  * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.

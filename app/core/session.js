@@ -1,6 +1,7 @@
 import variables from '../../config/variables.js';
 import { PinoLogger } from '../../lib/logger/pinoLogger.js';
 import { Session } from '../models/Session.js';
+
 /**
  * Deletes sessions whose last activity is older than the configured maximum age.
  * @param {import('../../lib/runtime/context.js').ApplicationContext} ctx Runtime context containing the request-scoped database manager and logger.

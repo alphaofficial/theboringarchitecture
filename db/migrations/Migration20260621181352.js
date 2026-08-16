@@ -1,4 +1,5 @@
 import { Migration } from '@mikro-orm/migrations';
+
 /**
  * Creates the initial authentication, session, and durable-queue schema.
  *

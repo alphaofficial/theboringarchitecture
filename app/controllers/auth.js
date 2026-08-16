@@ -1,4 +1,5 @@
 import * as auth from '../core/auth.js';
+
 /**
  * Renders the login form and reports a completed password reset when requested.
  * @param {import('express').Request} req Express request containing route, query, body, session, and application context data.

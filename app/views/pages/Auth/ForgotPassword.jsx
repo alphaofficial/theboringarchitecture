@@ -3,6 +3,7 @@ import AuthShell from '@/views/components/AuthShell.jsx';
 import { Button } from '@/views/components/ui/button';
 import { Input } from '@/views/components/ui/input';
 import { Label } from '@/views/components/ui/label';
+
 /**
  * Renders the email form used to request a password-reset link.
  * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
