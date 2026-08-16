@@ -3,9 +3,15 @@ import { cn } from '@/views/lib/utils';
 
 /**
  * Renders the shared product wordmark.
- *
- * @param {{name?: string, href?: string, inverse?: boolean, compact?: boolean, className?: string}} props - Wordmark options.
- * @returns {import('react').ReactElement} Linked brand mark and name.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {string} root0.name Display name used to personalize the generated content.
+ * @param {string} root0.href Destination followed when the brand link is activated.
+ * @param {boolean} root0.inverse Whether to use colors suitable for a dark background.
+ * @param {boolean} root0.compact Whether to render the condensed brand treatment.
+ * @param {string} root0.className Additional CSS classes applied to the rendered element.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <Brand />
  */
 export default function Brand({
     name = 'The Boring Architecture',

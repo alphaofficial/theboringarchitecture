@@ -2,6 +2,15 @@ import { Input as InputPrimitive } from "@base-ui/react/input"
 
 import { cn } from "@/views/lib/utils"
 
+/**
+ * Renders the Input UI primitive while forwarding supported element properties.
+ * @param {string} props.className Additional CSS classes.
+ * @param {string} props.type Input type.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} props Additional element properties.
+ * @returns {import('react').ReactElement} Rendered Input element.
+ * @example
+ * <Input />
+ */
 function Input({
   className,
   type,
@@ -19,4 +28,5 @@ function Input({
   );
 }
 
+/** Provides the Input public API for its configured application behavior. */
 export { Input }

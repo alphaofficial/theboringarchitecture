@@ -1,5 +1,7 @@
 import { EntitySchema } from "@mikro-orm/postgresql";
-import { QueueJob } from "../QueueJob.js";
+import { QueueJob } from "../../app/models/QueueJob.js";
+
+/** Provides the QueueJobMapper public API for its configured application behavior. */
 export const QueueJobMapper = new EntitySchema({
     class: QueueJob,
     tableName: "queue_jobs",

@@ -28,8 +28,9 @@ const statusVariants = {
 
 /**
  * Example searchable orders table for the starter dashboard.
- *
- * @returns {import('react').ReactElement} Recent orders table.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <RecentOrders />
  */
 export default function RecentOrders() {
     const [query, setQuery] = useState('');

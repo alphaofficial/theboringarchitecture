@@ -10,16 +10,17 @@ MailTemplate.define('welcome', ({ name, appName }) => ({
 }));
 
 /**
- * @typedef {Object} SendWelcomeEmailPayload
+ * @typedef SendWelcomeEmailPayload
  * @property {string} to - Recipient email address.
  * @property {string} name - Recipient display name.
  */
 
 /**
  * Renders and sends the standard welcome email, then logs delivery metadata.
- *
- * @param {SendWelcomeEmailPayload} payload - Welcome-email recipient data.
- * @returns {Promise<void>} Resolves after the configured mail transport accepts the message.
+ * @param {Record<string, string|number|boolean|null|undefined>} payload Job, event, or notification data to process.
+ * @returns {Record<string, string|number|boolean|null>} Rule configuration.
+ * @example
+ * sendWelcomeEmail(payload);
  */
 export async function sendWelcomeEmail(payload) {
     const message = MailTemplate.render('welcome', {

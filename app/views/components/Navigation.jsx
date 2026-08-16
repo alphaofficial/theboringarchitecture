@@ -5,17 +5,22 @@ import Brand from '@/views/components/Brand.jsx';
 import { Button } from '@/views/components/ui/button';
 /**
  * Renders the primary navigation for the current Inertia auth state.
- *
  * Authenticated users see account links and a session-ending logout action;
  * guests see login and registration links.
- *
- * @returns {import('react').ReactElement} The application navigation bar.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <Navigation />
  */
 export default function Navigation() {
     const { props } = usePage();
     const { applicationName, isAuthenticated, user } = props;
     const { post } = useForm();
     const [mobileOpen, setMobileOpen] = useState(false);
+    /**
+     * Signs out the current user.
+     *
+     * @param {import('react').FormEvent<HTMLFormElement>} e Form submission event.
+     */
     const handleLogout = (e) => {
         e.preventDefault();
         post('/logout');

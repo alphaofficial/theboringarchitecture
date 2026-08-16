@@ -1,5 +1,7 @@
 import { EntitySchema } from "@mikro-orm/postgresql";
-import { Session } from "../Session.js";
+import { Session } from "../../app/models/Session.js";
+
+/** Provides the SessionMapper public API for its configured application behavior. */
 export const SessionMapper = new EntitySchema({
     class: Session,
     tableName: "sessions",

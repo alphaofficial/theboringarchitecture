@@ -4,10 +4,25 @@ import { Button } from '@/views/components/ui/button';
 import { Input } from '@/views/components/ui/input';
 import { Label } from '@/views/components/ui/label';
 
+/**
+ * Field error.
+ *
+ * @param {{errors?: Record<string, string[]>, name?: string}} [options] Configuration options.
+ * @returns {import('react').ReactElement|null} First field error message, or null when the field has no errors.
+ */
 function FieldError({ errors, name }) {
     return errors?.[name] ? <p className="text-sm text-destructive">{errors[name][0]}</p> : null;
 }
 
+/** Renders profile, password, and account-deletion forms for the current user.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {{id: string|number, name?: string, email?: string}} root0.user Authenticated user displayed or managed by the page.
+ * @param {string} root0.status Optional outcome message displayed after an account action.
+ * @param {Record<string, string>} root0.errors Validation errors keyed by form field.
+ * @returns {import('react').ReactElement} Rendered page element.
+ * @example
+ * <Settings />
+ */
 export default function Settings({ user, status, errors }) {
     const profile = useForm({ name: user?.name || '', email: user?.email || '' });
     const password = useForm({ current_password: '', password: '', password_confirmation: '' });

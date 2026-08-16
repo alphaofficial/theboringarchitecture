@@ -19,8 +19,9 @@ const NODES = [
 
 /**
  * Renders the application request lifecycle as an animated SVG flow.
- *
- * @returns {import('react').ReactElement} Request-to-response architecture diagram.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <SystemDiagram />
  */
 export default function SystemDiagram() {
 	const pathRefs = useRef([]);
@@ -32,6 +33,11 @@ export default function SystemDiagram() {
 		const startedAt = performance.now();
 		let frame;
 
+		/**
+		 * Animate.
+		 *
+		 * @param {string|number|boolean|null|Record<string, string|number|boolean|null>} now Now value.
+		 */
 		const animate = (now) => {
 			const cycleTime = (now - startedAt) % cycleDuration;
 			const stage = Math.floor(cycleTime / stageDuration);
@@ -108,6 +114,12 @@ export default function SystemDiagram() {
 	);
 }
 
+/**
+ * Flow node.
+ *
+ * @param {{x?: number, y?: number, width?: number, label?: string, tone?: string}} [options] Configuration options.
+ * @returns {import('react').ReactElement} Diagram node positioned with the supplied dimensions and tone.
+ */
 function FlowNode({ x, y, width, label, tone }) {
 	return (
 		<g className={`request-flow-node request-flow-node-${tone}`}>

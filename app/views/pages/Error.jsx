@@ -1,18 +1,22 @@
 import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/views/components/ui/button';
 import { Card, CardContent } from '@/views/components/ui/card';
+
 const titles = {
     404: 'Page not found',
     500: 'Server error',
 };
 /**
  * Renders a friendly HTTP error page with optional development diagnostics.
- *
  * When a stack trace is present, the message and trace are shown in a
  * terminal-style panel.
- *
- * @param {{status?: number, message?: string, stack?: string}} props - HTTP error details.
- * @returns {import('react').ReactElement} The error page.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {string|number|boolean|null|Record<string, string|number|boolean|null>} root0.status Optional outcome message displayed after an account action.
+ * @param {{to: string|string[], subject: string, html?: string, text?: string}} root0.message Error summary displayed to the user.
+ * @param {string|number|boolean|null|Record<string, string|number|boolean|null>} root0.stack Optional server stack trace displayed in development.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <ErrorPage />
  */
 export default function ErrorPage({ status = 500, message, stack }) {
     const title = titles[status] || 'Something went wrong';

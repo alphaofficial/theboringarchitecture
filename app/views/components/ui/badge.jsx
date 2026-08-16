@@ -27,6 +27,16 @@ const badgeVariants = cva(
   }
 )
 
+/**
+ * Renders the Badge UI primitive while forwarding supported element properties.
+ * @param {string} props.className Additional CSS classes.
+ * @param {string} props.variant Visual variant.
+ * @param {string|number|boolean|null|Record<string, string|number|boolean|null>} props.render Element or component used for rendering.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} props Additional element properties.
+ * @returns {import('react').ReactElement} Rendered Badge element.
+ * @example
+ * <Badge />
+ */
 function Badge({
   className,
   variant = "default",
@@ -46,4 +56,5 @@ function Badge({
   });
 }
 
+/** Provides the Badge public API for its configured application behavior. */
 export { Badge, badgeVariants }

@@ -5,14 +5,22 @@ import { Input } from '@/views/components/ui/input';
 import { Label } from '@/views/components/ui/label';
 /**
  * Renders the email form used to request a password-reset link.
- *
- * @param {{status?: string, errors?: {email?: string[]}}} props - Submission status and validation errors.
- * @returns {import('react').ReactElement} The forgot-password page.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {string} root0.status Optional outcome message displayed after an account action.
+ * @param {Record<string, string>} root0.errors Validation errors keyed by form field.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <ForgotPassword />
  */
 export default function ForgotPassword({ status, errors }) {
     const { data, setData, post, processing } = useForm({
         email: ''
     });
+    /**
+     * Submits the form.
+     *
+     * @param {import('react').FormEvent<HTMLFormElement>} e Form submission event.
+     */
     const handleSubmit = (e) => {
         e.preventDefault();
         post('/forgot-password');

@@ -14,6 +14,13 @@ describe('routing helpers', () => {
             update: (req, res) => res.json({ action: 'update', id: req.params.post }),
             destroy: (req, res) => res.json({ action: 'destroy', id: req.params.post }),
         };
+        /**
+         * Records audit middleware execution.
+         *
+         * @param {import('express').Request} _req Express request.
+         * @param {import('express').Response} _res Express response.
+         * @param {import('express').Next(...args: never[]) => void} next Continues the middleware chain.
+         */
         const audit = (_req, _res, next) => { calls.push('audit'); next(); };
 
         route.resource('posts', controller, { middleware: [audit], except: ['create', 'edit'] });
@@ -24,7 +31,7 @@ describe('routing helpers', () => {
         await request(app).get('/posts/42').expect(200, { action: 'show', id: '42' });
         await request(app).patch('/posts/42').expect(200, { action: 'update', id: '42' });
         await request(app).delete('/posts/42').expect(200, { action: 'destroy', id: '42' });
-        expect(calls.length).toBe(5);
+        expect(calls).toHaveLength(5);
         expect(route.url('posts.index')).toBe('/posts');
         expect(route.url('posts.show', { post: 42 })).toBe('/posts/42');
     });
@@ -42,6 +49,14 @@ describe('routing helpers', () => {
     it('applies middleware groups with shared prefixes and name prefixes', async () => {
         const route = Router.create();
         const seen = [];
+        /**
+         * Allows requests carrying the admin header.
+         *
+         * @param {import('express').Request} _req Express request.
+         * @param {import('express').Response} res Express response.
+         * @param {import('express').Next(...args: never[]) => void} next Continues the middleware chain.
+         * @returns {void|import('express').Response} Continues authorized requests or sends a forbidden response.
+         */
         const requireAdmin = (_req, res, next) => {
             seen.push('admin');
             return _req.get('x-admin') === 'yes' ? next() : res.sendStatus(403);

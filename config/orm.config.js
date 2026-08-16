@@ -2,8 +2,9 @@ import "dotenv-defaults/config.js";
 import { Migrator } from "@mikro-orm/migrations";
 import { SqliteDriver } from "@mikro-orm/sqlite";
 import { env } from "./variables.js";
+
 const mikroOrmOptions = {
-    entities: ["app/models/mappings/*.map.js"],
+    entities: ["db/mappings/*.map.js"],
     dbName: env("DB_PATH"),
     driver: SqliteDriver,
     pool: {
@@ -29,6 +30,7 @@ const mikroOrmOptions = {
         emit: "js",
     },
 };
+/** Provides the Export public API for its configured application behavior. */
 export default {
     ...mikroOrmOptions,
 };

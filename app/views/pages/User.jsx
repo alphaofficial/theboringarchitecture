@@ -4,9 +4,11 @@ import { Button } from '@/views/components/ui/button';
 import { Card, CardContent } from '@/views/components/ui/card';
 /**
  * Renders details for one example directory user.
- *
- * @param {{user: {id: number, name: string, email: string}}} props - User selected by the route.
- * @returns {import('react').ReactElement} The user detail page.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {import('../models/User.js').User} root0.user Authenticated user displayed or managed by the page.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <User />
  */
 export default function User({ user }) {
     return (<>

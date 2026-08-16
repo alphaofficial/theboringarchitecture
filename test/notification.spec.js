@@ -2,6 +2,11 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { clearPrimitiveRuntime } from '../lib/runtime/primitiveRegistry.js';
 import { NotificationCenter } from '../app/primitives/notification.js';
 
+/**
+ * Creates an in-memory notification test driver.
+ *
+ * @returns {{records: Array<Record<string, string|number|boolean|null>>, send: (...args: never[]) => Promise<void>, unread: (...args: never[]) => Promise<Array<Record<string, string|number|boolean|null>>>, markRead: (...args: never[]) => Promise<void>}} Test notification driver.
+ */
 function fakeDriver() {
     const records = [];
     return {

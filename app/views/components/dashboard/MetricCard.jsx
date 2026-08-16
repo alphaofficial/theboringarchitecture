@@ -10,9 +10,16 @@ import {
 
 /**
  * Displays a single dashboard metric with its period-over-period change.
- *
- * @param {{label: string, value: string, change: string, summary: string, detail: string, positive?: boolean}} props
- * @returns {import('react').ReactElement} Metric card.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} root0 Component properties.
+ * @param {string} root0.label Metric name displayed above its value.
+ * @param {string|number|boolean|null} root0.value Primary metric value to display.
+ * @param {string|number} root0.change Change indicator shown beside the metric.
+ * @param {string} root0.summary Short explanation of the metric trend.
+ * @param {string} root0.detail Additional context displayed below the metric summary.
+ * @param {boolean} root0.positive Whether the change uses positive visual styling.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <MetricCard />
  */
 export default function MetricCard({
     label,

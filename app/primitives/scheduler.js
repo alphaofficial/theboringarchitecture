@@ -1,6 +1,8 @@
 import { PinoLogger } from '../../lib/logger/pinoLogger.js';
 import { loadRelativeDirectory } from '../../lib/runtime/loadRelativeDirectory.js';
 import { getPrimitiveRuntime, hasPrimitiveRuntime, registerPrimitiveRuntime } from '../../lib/runtime/primitiveRegistry.js';
+
+/** Provides the CronExpression public API for its configured application behavior. */
 export const CronExpression = Object.freeze({
     EVERY_SECOND: '* * * * * *',
     EVERY_5_SECONDS: '*/5 * * * * *',
@@ -17,6 +19,13 @@ export const CronExpression = Object.freeze({
     EVERY_MONTH: '0 0 0 1 * *',
     EVERY_YEAR: '0 0 0 1 1 *',
 });
+/**
+ * Configures the scheduler driver.
+ *
+ * @param {string|number|boolean|null|Record<string, string|number|boolean|null>} driver Primitive driver implementation.
+ * @param {import('../../lib/runtime/context.js').ApplicationContext} ctx Application context passed to handlers.
+ * @returns {void} No return value.
+ */
 const configure = (driver, ctx) => {
     if (hasPrimitiveRuntime('scheduler')) {
         return;
@@ -26,24 +35,60 @@ const configure = (driver, ctx) => {
         ctx,
     });
 };
+
+/**
+ * Registers a scheduled task.
+ *
+ * @param {string} expression Cron expression.
+ * @param {(...args: never[]) => Promise<string|number|boolean|null|void>} handler Registered handler.
+ * @param {Record<string, string|number|boolean|string[]|undefined>} options Configuration options.
+ * @returns {void} No return value.
+ */
 const on = (expression, handler, options) => {
     const runtime = getPrimitiveRuntime('scheduler');
     return runtime.driver.schedule(expression, async () => {
         await handler(runtime.ctx);
     }, options);
 };
-const schedule = (expression, handler, options) => {
-    return on(expression, handler, options);
-};
+
+/**
+ * Schedules a task.
+ *
+ * @param {string} expression Cron expression.
+ * @param {(...args: never[]) => Promise<string|number|boolean|null|void>} handler Registered handler.
+ * @param {Record<string, string|number|boolean|string[]|undefined>} options Configuration options.
+  * @returns {void} No return value.
+ */
+const schedule = (expression, handler, options) => on(expression, handler, options);
+/**
+ * Starts all scheduled tasks.
+ *
+ * @returns {void} No return value.
+ */
 const startAll = () => {
     getPrimitiveRuntime('scheduler').driver.startAll();
 };
+
+/**
+ * Stops all scheduled tasks.
+ *
+ * @returns {void} No return value.
+ */
 const stopAll = () => {
     getPrimitiveRuntime('scheduler').driver.stopAll();
 };
-const getRegisteredTasks = () => {
-    return getPrimitiveRuntime('scheduler').driver.getRegisteredTasks();
-};
+
+/**
+ * Returns the registered scheduled tasks.
+ *
+ * @returns {Record<string, string|number|boolean|null>} Registered values.
+ */
+const getRegisteredTasks = () => getPrimitiveRuntime('scheduler').driver.getRegisteredTasks();
+/**
+ * Starts the driver.
+ *
+ * @returns {Promise<void>} Resolves when finished.
+ */
 const start = async () => {
     await loadRelativeDirectory('scheduler');
     PinoLogger.info({ scope: 'start', message: 'Starting scheduler...' });
@@ -55,11 +100,19 @@ const start = async () => {
         tasks: registered.map(task => task.expression),
     });
 };
+
+/**
+ * Stops the driver.
+ *
+ * @returns {void} No return value.
+ */
 const stop = () => {
     PinoLogger.info({ scope: 'stop', message: 'Stopping scheduler...' });
     stopAll();
     PinoLogger.info({ scope: 'stop', message: 'Scheduler stopped.' });
 };
+
+/** Provides the Scheduler public API for its configured application behavior. */
 export const Scheduler = Object.freeze({
     CronExpression,
     configure,

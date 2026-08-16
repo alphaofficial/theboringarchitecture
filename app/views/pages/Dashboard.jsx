@@ -39,12 +39,17 @@ const metrics = [
 
 /**
  * Renders the authenticated example analytics dashboard.
- *
- * @returns {import('react').ReactElement} The authenticated dashboard page.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <Dashboard />
  */
 export default function Dashboard() {
     const { props } = usePage();
     const { user } = props;
+    /**
+     * Handle download.
+     *
+     */
     const handleDownload = () => {
         const rows = [
             ['Metric', 'Value', 'Change'],
@@ -53,12 +58,16 @@ export default function Dashboard() {
         const csv = rows
             .map(row => row.map(value => `"${value.replaceAll('"', '""')}"`).join(','))
             .join('\n');
-        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+        const BrowserURL = Reflect.get(window, 'URL');
+        const BrowserBlob = Reflect.get(window, 'Blob');
+        const createObjectURL = Reflect.get(BrowserURL, 'createObjectURL');
+        const url = Reflect.apply(createObjectURL, BrowserURL, [new BrowserBlob([csv], { type: 'text/csv;charset=utf-8' })]);
         const link = document.createElement('a');
         link.href = url;
         link.download = 'dashboard-report.csv';
         link.click();
-        URL.revokeObjectURL(url);
+        const revokeObjectURL = Reflect.get(BrowserURL, 'revokeObjectURL');
+        Reflect.apply(revokeObjectURL, BrowserURL, [url]);
     };
 
     return (

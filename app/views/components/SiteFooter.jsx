@@ -6,8 +6,9 @@ const GITHUB_URL = 'https://github.com/alphaofficial/theboringarchitecture';
 
 /**
  * Closes a page with the design system's single dark surface.
- *
- * @returns {import('react').ReactElement} Responsive project footer.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <SiteFooter />
  */
 export default function SiteFooter() {
     const { props } = usePage();

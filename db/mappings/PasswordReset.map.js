@@ -1,5 +1,7 @@
 import { EntitySchema } from "@mikro-orm/postgresql";
-import { PasswordReset } from "../PasswordReset.js";
+import { PasswordReset } from "../../app/models/PasswordReset.js";
+
+/** Provides the PasswordResetMapper public API for its configured application behavior. */
 export const PasswordResetMapper = new EntitySchema({
     class: PasswordReset,
     tableName: "password_resets",

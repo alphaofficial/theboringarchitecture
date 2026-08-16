@@ -39,6 +39,18 @@ const buttonVariants = cva(
   }
 )
 
+/**
+ * Renders the Button UI primitive while forwarding supported element properties.
+ * @param {string} props.className Additional CSS classes.
+ * @param {string} props.variant Visual variant.
+ * @param {string|number|boolean|null|Record<string, string|number|boolean|null>} props.size Control size.
+ * @param {string|number|boolean|null|Record<string, string|number|boolean|null>} props.asChild Whether to render through the child slot.
+ * @param {import('react').ReactNode} props.children Nested content.
+ * @param {Record<string, string|number|boolean|import('react').ReactNode|undefined>} props Additional element properties.
+ * @returns {import('react').ReactElement} Rendered Button element.
+ * @example
+ * <Button />
+ */
 function Button({
   className,
   variant = "default",
@@ -70,4 +82,5 @@ function Button({
   );
 }
 
+/** Provides the Button public API for its configured application behavior. */
 export { Button, buttonVariants }

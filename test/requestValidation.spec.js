@@ -9,7 +9,8 @@ describe('Validation.request', () => {
         app.use(express.json());
         app.post('/profile', Validation.request({ email: 'required|email' }), (req, res) => res.json(req.validated));
 
-        await request(app).post('/profile').send({ email: 'user@example.com', ignored: true }).expect(200, { email: 'user@example.com' });
+        const response = await request(app).post('/profile').send({ email: 'user@example.com', ignored: true }).expect(200, { email: 'user@example.com' });
+        expect(response.body).toEqual({ email: 'user@example.com' });
     });
 
     it('renders the configured page with errors on failure', async () => {

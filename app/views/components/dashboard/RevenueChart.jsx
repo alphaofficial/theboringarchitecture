@@ -28,6 +28,13 @@ const periods = [
     { label: '12 months', value: 12 },
 ];
 
+/**
+ * Converts chart values to SVG points.
+ *
+ * @param {Array<Record<string, number>>} data Chart rows.
+ * @param {string} key Cache key.
+ * @returns {Array<[number, number]>} Chart coordinates scaled from the selected data series.
+ */
 function makePoints(data, key) {
     const left = 50;
     const right = 780;
@@ -42,14 +49,21 @@ function makePoints(data, key) {
     });
 }
 
+/**
+ * Builds an SVG path through chart points.
+ *
+ * @param {Array<{x: number, y: number}>} points Points value.
+ * @returns {string} SVG path commands connecting the supplied points.
+ */
 function makeLine(points) {
     return points.map(([x, y], index) => `${index === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ');
 }
 
 /**
  * Lightweight SVG chart that keeps the starter free of a charting dependency.
- *
- * @returns {import('react').ReactElement} Responsive revenue chart.
+ * @returns {import('react').ReactElement|string} Rendered React content.
+ * @example
+ * <RevenueChart />
  */
 export default function RevenueChart() {
     const [period, setPeriod] = useState(12);

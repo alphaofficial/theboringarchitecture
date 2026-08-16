@@ -46,4 +46,5 @@ route.group({ middleware: [auth] }, authenticated => {
     authenticated.get('/users/:id', UsersController.show);
 });
 
+/** Exports the application router with public, guest, and authenticated routes registered. */
 export default route;

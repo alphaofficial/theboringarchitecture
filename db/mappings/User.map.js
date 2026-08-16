@@ -1,5 +1,7 @@
 import { EntitySchema } from "@mikro-orm/postgresql";
-import { User } from "../User.js";
+import { User } from "../../app/models/User.js";
+
+/** Provides the UserMapper public API for its configured application behavior. */
 export const UserMapper = new EntitySchema({
     class: User,
     tableName: "users",
