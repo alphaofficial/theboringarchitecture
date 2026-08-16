@@ -70,7 +70,7 @@ export default function Home({ message, user }) {
 
 A controller calls `res.render('Home', props)`. The Inertia middleware (`app/middleware/inertia.js`) overrides `res.render` to:
 
-1. Call `InertiaExpressAdapter.render` (in `app/primitives/inertia.js`) to build the Inertia page object (`{ component, props, url, version }`).
+1. Call `InertiaExpressAdapter.render` (in `lib/primitives/inertia.js`) to build the Inertia page object (`{ component, props, url, version }`).
 2. If the request is an Inertia navigation (`X-Inertia: true` header, e.g. a client-side `router.visit`), the adapter responds with the page object as JSON. **SSR only runs for the initial document request** — partial updates never hit the SSR bundle.
 3. Otherwise, call `renderHtml`. Unless `DISABLE_SSR=true`, it dynamically imports the SSR bundle from `.ssr/ssr.mjs` (the bundle's `mtimeMs` is appended as a cache-buster, so a fresh build is picked up on the next request) and invokes `render(page)`, which returns `{ head, body }`.
 4. Read `public/template.html` and substitute the four placeholders: `{{TITLE}}` (page title or `APP_NAME`), `{{HEAD}}` (controller-supplied head snippets + SSR-emitted head tags), `{{APP}}` (the rendered body, or the client-only `<div id="app" data-page="…">` shell), and `{{CLIENT_ENTRY}}` (`/app.js`).
@@ -194,7 +194,7 @@ Use `NotificationCenter` for user-facing delivery. This is separate from the eve
 - notifications deliver something to a recipient through channels (`database`, `mail`).
 
 ```js
-import { NotificationCenter } from './app/primitives/notification.js';
+import { NotificationCenter } from './lib/primitives/notification.js';
 
 await NotificationCenter.send(user, {
   type: 'invoice.paid',
@@ -223,7 +223,7 @@ Example job:
 
 ```js
 // app/jobs/sendDigest.js
-import { Queue } from '../primitives/queue.js';
+import { Queue } from '.../lib/primitives/queue.js';
 
 Queue.on('sendDigest', async (ctx, payload) => {
   // process payload
@@ -297,7 +297,7 @@ An in-process event bus for publishing and subscribing to domain events. Listene
 
 ```js
 // In app/events/auth.js — register a listener
-import { Bus } from '../primitives/bus.js';
+import { Bus } from '.../lib/primitives/bus.js';
 
 Bus.on('auth.registered', ({ email }) => {
   console.log(`New user: ${email}`);
@@ -312,7 +312,7 @@ Events are synchronous and in-process — listeners run immediately in the same 
 ### Cache
 
 ```js
-import { Cache } from './app/primitives/cache.js';
+import { Cache } from './lib/primitives/cache.js';
 
 await Cache.set('user:42', { name: 'Alice' });
 await Cache.set('session:token', 'abc123', 300); // TTL in seconds
@@ -329,7 +329,7 @@ The built-in mail driver sends through SMTP. Configure `MAIL_HOST`, `MAIL_PORT`,
 log a warning listing the missing settings.
 
 ```js
-import { Mailer } from './app/primitives/mail.js';
+import { Mailer } from './lib/primitives/mail.js';
 
 await Mailer.send('user@example.com', 'Welcome!', '<p>Thanks for signing up.</p>');
 ```
@@ -348,7 +348,7 @@ export async function sendWelcomeEmail(payload) {
 Dispatch from anywhere:
 
 ```js
-import { Queue } from './app/primitives/queue.js';
+import { Queue } from './lib/primitives/queue.js';
 
 await Queue.dispatch('send-welcome-email', { to: 'user@example.com', name: 'Alice' });
 ```
@@ -358,7 +358,7 @@ await Queue.dispatch('send-welcome-email', { to: 'user@example.com', name: 'Alic
 Register recurring tasks with a cron expression:
 
 ```js
-import { Scheduler } from './app/primitives/scheduler.js';
+import { Scheduler } from './lib/primitives/scheduler.js';
 
 Scheduler.on('0 * * * *', async () => {
   // runs at the start of every hour
@@ -369,7 +369,7 @@ Scheduler.on('0 * * * *', async () => {
 ### Storage
 
 ```js
-import { Storage } from './app/primitives/storage.js';
+import { Storage } from './lib/primitives/storage.js';
 
 await Storage.put('uploads/avatar.png', imageBuffer);
 const data = await Storage.get('uploads/avatar.png');
@@ -385,7 +385,7 @@ Each primitive has a `configure` method that takes a driver instance. Edit `lib/
 **Pattern:**
 
 ```js
-import { <Primitive> } from './app/primitives/<primitive>.js';
+import { <Primitive> } from './lib/primitives/<primitive>.js';
 import { create<My>Driver } from './lib/runtime/drivers/<primitive>/myDriver.js';
 
 // In bootstrapPrimitives(), replace the default driver:
@@ -395,7 +395,7 @@ import { create<My>Driver } from './lib/runtime/drivers/<primitive>/myDriver.js'
 **Example — Redis cache:**
 
 ```js
-import { Cache } from './app/primitives/cache.js';
+import { Cache } from './lib/primitives/cache.js';
 import { createRedisCacheDriver } from './lib/runtime/drivers/cache/redis.js';
 
 Cache.configure(createRedisCacheDriver());
@@ -404,7 +404,7 @@ Cache.configure(createRedisCacheDriver());
 **Example — Postmark mail:**
 
 ```js
-import { Mailer } from './app/primitives/mail.js';
+import { Mailer } from './lib/primitives/mail.js';
 import { createPostmarkDriver } from './lib/runtime/drivers/mail/postmark.js';
 
 Mailer.configure(createPostmarkDriver());
@@ -413,7 +413,7 @@ Mailer.configure(createPostmarkDriver());
 **Example — S3 storage:**
 
 ```js
-import { Storage } from './app/primitives/storage.js';
+import { Storage } from './lib/primitives/storage.js';
 import { createS3Driver } from './lib/runtime/drivers/storage/s3.js';
 
 Storage.configure(createS3Driver());
@@ -699,10 +699,10 @@ Use `MailTemplate` in mail composition code to render `{ subject, html }` before
 
 ```js
 import { MailTemplate } from './app/support/mailTemplate.js';
-import { Mailer } from './app/primitives/mail.js';
+import { Mailer } from './lib/primitives/mail.js';
 import { Command } from './app/support/command.js';
 import { Config } from './app/support/config.js';
-import { Cache } from './app/primitives/cache.js';
+import { Cache } from './lib/primitives/cache.js';
 
 MailTemplate.define('welcome', user => ({ subject: 'Welcome', html: `<p>${user.name}</p>` }));
 const message = MailTemplate.render('welcome', user);
@@ -723,7 +723,7 @@ Use `Storage` for app files, MikroORM factories for test/seed model instances, `
 
 ```js
 import { serialize } from '@mikro-orm/core';
-import { Storage } from './app/primitives/storage.js';
+import { Storage } from './lib/primitives/storage.js';
 import { User } from './app/models/User.js';
 
 await Storage.put('exports/users.json', `${JSON.stringify(users)}\n`);

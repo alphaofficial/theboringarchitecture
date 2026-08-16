@@ -1,7 +1,7 @@
 import 'dotenv-defaults/config.js';
 import variables from '../config/variables.js';
-import { Bus } from './primitives/bus.js';
-import { shutdown } from './primitives/shutdown.js';
+import { Bus } from '../lib/primitives/bus.js';
+import { shutdown } from '../lib/primitives/shutdown.js';
 import { createApp } from './router/app.js';
 import { PinoLogger } from '../lib/logger/pinoLogger.js';
 

@@ -1,4 +1,4 @@
-import { InertiaExpressAdapter, renderHtml } from '../primitives/inertia.js';
+import { InertiaExpressAdapter, renderHtml } from '../../lib/primitives/inertia.js';
 import variables from '../../config/variables.js';
 
 /**

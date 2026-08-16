@@ -1,7 +1,7 @@
 import variables from '../../config/variables.js';
 import { PinoLogger } from '../../lib/logger/pinoLogger.js';
 import { WelcomeEmail } from '../mail/templates/WelcomeEmail.js';
-import { Mailer } from '../primitives/mail.js';
+import { Mailer } from '../../lib/primitives/mail.js';
 import { MailTemplate } from '../support/mailTemplate.js';
 
 MailTemplate.define('welcome', ({ name, appName }) => ({

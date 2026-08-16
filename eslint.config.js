@@ -14,7 +14,7 @@ const serverRuntimePatterns = [
             '**/app/mail/**',
             '**/app/middleware/**',
             '**/app/models/**',
-            '**/app/primitives/**',
+            '**/lib/primitives/**',
             '**/app/requests/**',
             '**/app/router/**',
             '**/app/scheduler/**',
@@ -155,7 +155,7 @@ export default [
     {
         files: [
             'app/middleware/passwordConfirmation.js',
-            'app/primitives/**/*.js',
+            'lib/primitives/**/*.js',
             'app/router/routing.js',
             'app/support/**/*.js',
         ],

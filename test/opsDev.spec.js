@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { MailTemplate } from '../app/support/mailTemplate.js';
 import { Command } from '../app/support/command.js';
 import { Config } from '../app/support/config.js';
-import { Cache } from '../app/primitives/cache.js';
+import { Cache } from '../lib/primitives/cache.js';
 import { clearPrimitiveRuntime } from '../lib/runtime/primitiveRegistry.js';
 
 afterEach(() => {

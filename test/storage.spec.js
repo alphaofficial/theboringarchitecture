@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Storage } from '../app/primitives/storage.js';
+import { Storage } from '../lib/primitives/storage.js';
 import { clearPrimitiveRuntime } from '../lib/runtime/primitiveRegistry.js';
 import { createLocalDiskDriver } from '../lib/runtime/drivers/storage/localDisk.js';
 

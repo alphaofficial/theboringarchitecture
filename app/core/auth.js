@@ -4,9 +4,9 @@ import { User } from '../models/User.js';
 import { PasswordReset } from '../models/PasswordReset.js';
 import { Session } from '../models/Session.js';
 import { hash } from '../../lib/utilities/hash.js';
-import { Bus } from '../primitives/bus.js';
-import { Queue } from '../primitives/queue.js';
-import { Mailer } from '../primitives/mail.js';
+import { Bus } from '../../lib/primitives/bus.js';
+import { Queue } from '../../lib/primitives/queue.js';
+import { Mailer } from '../../lib/primitives/mail.js';
 import { MailTemplate } from '../support/mailTemplate.js';
 import { validate } from '../support/validation.js';
 

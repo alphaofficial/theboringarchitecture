@@ -1,5 +1,5 @@
 import 'dotenv-defaults/config.js';
-import { shutdown } from './primitives/shutdown.js';
+import { shutdown } from '../lib/primitives/shutdown.js';
 import { startWorker } from '../lib/runtime/startWorker.js';
 
 /**

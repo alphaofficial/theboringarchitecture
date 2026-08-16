@@ -7,7 +7,7 @@ This project includes small helpers for common application data workflows. They 
 `Storage` includes helpers for raw writes, text reads, appending, listing, and directory creation:
 
 ```js
-import { Storage } from '../app/primitives/storage.js';
+import { Storage } from '../lib/primitives/storage.js';
 
 await Storage.put('exports/users.json', `${JSON.stringify(users)}\n`);
 await Storage.append('logs/import.log', 'import complete\n');

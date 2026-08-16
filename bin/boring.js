@@ -114,7 +114,7 @@ function makeModel(name) {
  */
 function makeJob(name) {
     const jobName = className(name);
-    write(`app/jobs/${name}.js`, `import { Queue } from '../primitives/queue.js';\n\nQueue.on('${name}', async (_ctx, payload) => {\n    // Handle ${jobName}.\n    console.log('${name}', payload);\n});\n`);
+    write(`app/jobs/${name}.js`, `import { Queue } from '../../lib/primitives/queue.js';\n\nQueue.on('${name}', async (_ctx, payload) => {\n    // Handle ${jobName}.\n    console.log('${name}', payload);\n});\n`);
 }
 
 /**
@@ -123,7 +123,7 @@ function makeJob(name) {
  * @param {string} name Registered name.
  */
 function makeEvent(name) {
-    write(`app/events/${name}.js`, `import { Bus } from '../primitives/bus.js';\n\nBus.on('${name}', async (payload) => {\n    console.log('${name}', payload);\n});\n`);
+    write(`app/events/${name}.js`, `import { Bus } from '../../lib/primitives/bus.js';\n\nBus.on('${name}', async (payload) => {\n    console.log('${name}', payload);\n});\n`);
 }
 
 /**
