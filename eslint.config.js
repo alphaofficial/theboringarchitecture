@@ -109,6 +109,10 @@ export default [
     ...airbnbRules,
     sonarjs.configs.recommended,
     {
+        linterOptions: {
+            noInlineConfig: true,
+            reportUnusedDisableDirectives: 'error',
+        },
         languageOptions: {
             ecmaVersion: 'latest',
             globals: globals.node,
