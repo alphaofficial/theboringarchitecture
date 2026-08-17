@@ -360,14 +360,14 @@ $(ok "$APP_NAME is ready in ./$APP_SLUG")
 Next steps:
 
   cd $APP_SLUG
-  npm run dev
+  npm run start:dev
 
 Then open http://localhost:$APP_PORT
 
 Useful commands:
-  npm run dev              Start dev server
+  npm run start:dev        Start dev server
   npm run build            Production build
-  npm start                Run built server
+  npm run start:prod       Run built server
   npm run migration:run    Apply pending migrations
   npm run migration:create Create a blank migration
 
